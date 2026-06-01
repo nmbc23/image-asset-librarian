@@ -11,6 +11,7 @@ import {
   createAssetDetails,
   createAssetDescription,
   createAssetDescriptionList,
+  createAssetEmbedList,
   createAssetContactSheet,
   createAssetNavigation,
   createAssetCsv,
@@ -914,6 +915,31 @@ test("createAssetAltTextList exports accessibility alt text in display order", (
     "| --- | --- |",
     "| `flowers/rose.png` | Portrait character visual with warm, vivid colors and a rose, teal palette. Metadata suggests: Soft light portrait. |",
     "| `mint.svg` | Logo vector visual with cool, green colors and a teal palette. |",
+    ""
+  ].join("\n"));
+});
+
+test("createAssetEmbedList exports markdown and HTML image snippets", () => {
+  assert.equal(createAssetEmbedList([index.assets[0], { ...index.assets[2], width: undefined, height: undefined }], {
+    generatedAt: "2026-06-01T20:00:00.000Z",
+    label: "visible",
+    assetBaseUrl: "http://127.0.0.1:4173"
+  }), [
+    "# Image Asset Embeds",
+    "",
+    "Generated: 2026-06-01T20:00:00.000Z",
+    "Scope: visible",
+    "Count: 2",
+    "",
+    "## Markdown",
+    "",
+    "![Portrait character visual with warm, vivid colors and a rose, teal palette. Metadata suggests: Soft light portrait.](http://127.0.0.1:4173/assets/a)",
+    "![Logo vector visual with cool, green colors and a teal palette.](http://127.0.0.1:4173/assets/c)",
+    "",
+    "## HTML",
+    "",
+    "<img src=\"http://127.0.0.1:4173/assets/a\" alt=\"Portrait character visual with warm, vivid colors and a rose, teal palette. Metadata suggests: Soft light portrait.\" width=\"512\" height=\"768\">",
+    "<img src=\"http://127.0.0.1:4173/assets/c\" alt=\"Logo vector visual with cool, green colors and a teal palette.\">",
     ""
   ].join("\n"));
 });

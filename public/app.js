@@ -6,6 +6,7 @@ import {
   createAssetContactSheet,
   createAssetCsv,
   createAssetDescriptionList,
+  createAssetEmbedList,
   createAssetDetails,
   createAssetIssueReport,
   createAssetManifest,
@@ -76,6 +77,10 @@ const elements = {
   downloadSelectedAltText: document.querySelector("#download-selected-alt-text"),
   copyVisibleContactSheet: document.querySelector("#copy-visible-contact-sheet"),
   copySelectedContactSheet: document.querySelector("#copy-selected-contact-sheet"),
+  copyVisibleEmbeds: document.querySelector("#copy-visible-embeds"),
+  copySelectedEmbeds: document.querySelector("#copy-selected-embeds"),
+  downloadVisibleEmbeds: document.querySelector("#download-visible-embeds"),
+  downloadSelectedEmbeds: document.querySelector("#download-selected-embeds"),
   copyVisibleCsv: document.querySelector("#copy-visible-csv"),
   copySelectedCsv: document.querySelector("#copy-selected-csv"),
   copyVisibleManifest: document.querySelector("#copy-visible-manifest"),
@@ -252,6 +257,10 @@ function bindEvents() {
   elements.downloadSelectedAltText.addEventListener("click", downloadSelectedAltText);
   elements.copyVisibleContactSheet.addEventListener("click", copyVisibleContactSheet);
   elements.copySelectedContactSheet.addEventListener("click", copySelectedContactSheet);
+  elements.copyVisibleEmbeds.addEventListener("click", copyVisibleEmbeds);
+  elements.copySelectedEmbeds.addEventListener("click", copySelectedEmbeds);
+  elements.downloadVisibleEmbeds.addEventListener("click", downloadVisibleEmbeds);
+  elements.downloadSelectedEmbeds.addEventListener("click", downloadSelectedEmbeds);
   elements.copyVisibleCsv.addEventListener("click", copyVisibleCsv);
   elements.copySelectedCsv.addEventListener("click", copySelectedCsv);
   elements.copyVisibleManifest.addEventListener("click", copyVisibleManifest);
@@ -574,6 +583,10 @@ function renderWorkflow() {
   elements.downloadSelectedAltText.disabled = selectedAssetIds.size === 0;
   elements.copyVisibleContactSheet.disabled = !currentView?.assets.length;
   elements.copySelectedContactSheet.disabled = selectedAssetIds.size === 0;
+  elements.copyVisibleEmbeds.disabled = !currentView?.assets.length;
+  elements.copySelectedEmbeds.disabled = selectedAssetIds.size === 0;
+  elements.downloadVisibleEmbeds.disabled = !currentView?.assets.length;
+  elements.downloadSelectedEmbeds.disabled = selectedAssetIds.size === 0;
   elements.copyVisibleCsv.disabled = !currentView?.assets.length;
   elements.copySelectedCsv.disabled = selectedAssetIds.size === 0;
   elements.copyVisibleManifest.disabled = !currentView?.assets.length;
@@ -1245,6 +1258,38 @@ async function copyVisibleContactSheet() {
   await copyFromButton(elements.copyVisibleContactSheet, createAssetContactSheet(visibleAssets, createContactSheetOptions()));
 }
 
+async function copySelectedEmbeds() {
+  const selectedAssets = getSelectedAssets();
+  if (!selectedAssets.length) {
+    return;
+  }
+  await copyFromButton(elements.copySelectedEmbeds, createAssetEmbedList(selectedAssets, createEmbedOptions("selected")));
+}
+
+async function copyVisibleEmbeds() {
+  const visibleAssets = currentView?.assets ?? [];
+  if (!visibleAssets.length) {
+    return;
+  }
+  await copyFromButton(elements.copyVisibleEmbeds, createAssetEmbedList(visibleAssets, createEmbedOptions("visible")));
+}
+
+function downloadSelectedEmbeds() {
+  const selectedAssets = getSelectedAssets();
+  if (!selectedAssets.length) {
+    return;
+  }
+  downloadEmbedList(selectedAssets, "selected", elements.downloadSelectedEmbeds);
+}
+
+function downloadVisibleEmbeds() {
+  const visibleAssets = currentView?.assets ?? [];
+  if (!visibleAssets.length) {
+    return;
+  }
+  downloadEmbedList(visibleAssets, "visible", elements.downloadVisibleEmbeds);
+}
+
 async function copySelectedCsv() {
   const selectedAssets = getSelectedAssets();
   if (!selectedAssets.length) {
@@ -1334,10 +1379,25 @@ function createAltTextOptions(label, generatedAt = new Date().toISOString()) {
   };
 }
 
+function createEmbedOptions(label, generatedAt = new Date().toISOString()) {
+  return {
+    generatedAt,
+    label,
+    assetBaseUrl: window.location.origin
+  };
+}
+
 function downloadAltTextList(assets, label, button) {
   const generatedAt = new Date().toISOString();
   const list = createAssetAltTextList(assets, createAltTextOptions(label, generatedAt));
   const fileName = createExportFileName(`asset-alt-text-${label}`, "md", { generatedAt });
+  downloadTextFile(button, list, fileName, "text/markdown");
+}
+
+function downloadEmbedList(assets, label, button) {
+  const generatedAt = new Date().toISOString();
+  const list = createAssetEmbedList(assets, createEmbedOptions(label, generatedAt));
+  const fileName = createExportFileName(`asset-embeds-${label}`, "md", { generatedAt });
   downloadTextFile(button, list, fileName, "text/markdown");
 }
 

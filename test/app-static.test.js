@@ -293,6 +293,24 @@ test("visible and selected contact sheets can be copied as markdown", async () =
   assert.match(appSource, /copySelectedContactSheet/);
 });
 
+test("visible and selected image embeds can be copied and downloaded", async () => {
+  const [appSource, htmlSource] = await Promise.all([
+    readFile(new URL("../public/app.js", import.meta.url), "utf8"),
+    readFile(new URL("../public/index.html", import.meta.url), "utf8")
+  ]);
+
+  assert.match(htmlSource, /id="copy-visible-embeds"/);
+  assert.match(htmlSource, /id="copy-selected-embeds"/);
+  assert.match(htmlSource, /id="download-visible-embeds"/);
+  assert.match(htmlSource, /id="download-selected-embeds"/);
+  assert.match(appSource, /createAssetEmbedList/);
+  assert.match(appSource, /copyVisibleEmbeds/);
+  assert.match(appSource, /copySelectedEmbeds/);
+  assert.match(appSource, /downloadVisibleEmbeds/);
+  assert.match(appSource, /downloadSelectedEmbeds/);
+  assert.match(appSource, /asset-embeds/);
+});
+
 test("selected assets can be bulk marked from the workflow panel", async () => {
   const [appSource, htmlSource] = await Promise.all([
     readFile(new URL("../public/app.js", import.meta.url), "utf8"),

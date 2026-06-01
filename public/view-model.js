@@ -726,6 +726,36 @@ export function createAssetAltTextList(assets, options = {}) {
   return lines.join("\n");
 }
 
+export function createAssetEmbedList(assets, options = {}) {
+  const embedAssets = Array.isArray(assets) ? assets : [];
+  const markdownLines = [];
+  const htmlLines = [];
+
+  for (const asset of embedAssets) {
+    const url = createAssetContactSheetUrl(asset, options.assetBaseUrl);
+    const altText = createAssetAltText(asset);
+    markdownLines.push(`![${escapeMarkdownImageAlt(altText)}](${url})`);
+    htmlLines.push(createAssetHtmlEmbed(asset, url, altText));
+  }
+
+  return [
+    "# Image Asset Embeds",
+    "",
+    `Generated: ${options.generatedAt ?? new Date().toISOString()}`,
+    `Scope: ${String(options.label ?? "assets")}`,
+    `Count: ${embedAssets.length}`,
+    "",
+    "## Markdown",
+    "",
+    ...markdownLines,
+    "",
+    "## HTML",
+    "",
+    ...htmlLines,
+    ""
+  ].join("\n");
+}
+
 export function createSuggestedFileName(asset = {}) {
   const themes = getAssetThemes(asset);
   const colorThemes = getAssetColorThemes(asset);
@@ -1450,6 +1480,19 @@ function createAssetContactSheetUrl(asset = {}, assetBaseUrl = "") {
   const route = `/assets/${encodeURIComponent(asset.id ?? "")}`;
   const base = String(assetBaseUrl ?? "").replace(/\/$/, "");
   return base ? `${base}${route}` : route;
+}
+
+function createAssetHtmlEmbed(asset = {}, url, altText) {
+  const dimensions = asset.width && asset.height ? ` width="${escapeHtmlAttribute(asset.width)}" height="${escapeHtmlAttribute(asset.height)}"` : "";
+  return `<img src="${escapeHtmlAttribute(url)}" alt="${escapeHtmlAttribute(altText)}"${dimensions}>`;
+}
+
+function escapeHtmlAttribute(value) {
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;");
 }
 
 function summarizeAssets(assets, duplicateAssetIds, savedAssetIds, reviewAssetIds, assetTags = {}, assetNotes = {}) {
