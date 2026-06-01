@@ -507,6 +507,21 @@ export function createCurationBackup(options = {}) {
   }, null, 2)}\n`;
 }
 
+export function createExportFileName(label, extension, options = {}) {
+  const safeLabel = String(label ?? "export")
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "")
+    .slice(0, 48) || "export";
+  const safeExtension = String(extension ?? "txt")
+    .trim()
+    .replace(/^\./, "")
+    .replace(/[^a-z0-9]/gi, "")
+    .toLowerCase() || "txt";
+  return `image-asset-librarian-${safeLabel}-${formatExportTimestamp(options.generatedAt)}.${safeExtension}`;
+}
+
 export function parseMarkBackup(value) {
   let parsed;
   try {
@@ -1081,6 +1096,20 @@ function createSavedFilterViewId(createdAt, name) {
     .replace(/^-|-$/g, "")
     .slice(0, 36) || "view";
   return `view-${Date.parse(createdAt) || Date.now()}-${safeName}`;
+}
+
+function formatExportTimestamp(value) {
+  const date = new Date(value ?? Date.now());
+  if (!Number.isFinite(date.getTime())) {
+    return "export";
+  }
+
+  return date.toISOString()
+    .replace(/\.\d{3}Z$/, "Z")
+    .replaceAll("-", "")
+    .replaceAll(":", "")
+    .replace("T", "-")
+    .replace("Z", "");
 }
 
 function formatExtensionLabel(extension) {

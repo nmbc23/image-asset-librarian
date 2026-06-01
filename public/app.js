@@ -11,6 +11,7 @@ import {
   createCurationBackup,
   createDefaultViewState,
   createDuplicateGroupDetails,
+  createExportFileName,
   createLibraryView,
   createMarkBackup,
   createPathList,
@@ -75,9 +76,11 @@ const elements = {
   tagSelectedAssets: document.querySelector("#tag-selected-assets"),
   untagSelectedAssets: document.querySelector("#untag-selected-assets"),
   copyWorkflowReport: document.querySelector("#copy-workflow-report"),
+  downloadWorkflowReport: document.querySelector("#download-workflow-report"),
   copyMarksBackup: document.querySelector("#copy-marks-backup"),
   importMarksBackup: document.querySelector("#import-marks-backup"),
   copyCurationBackup: document.querySelector("#copy-curation-backup"),
+  downloadCurationBackup: document.querySelector("#download-curation-backup"),
   importCurationBackup: document.querySelector("#import-curation-backup"),
   clearSelection: document.querySelector("#clear-selection"),
   sourceBreakdown: document.querySelector("#source-breakdown"),
@@ -230,9 +233,11 @@ function bindEvents() {
   elements.tagSelectedAssets.addEventListener("click", () => applySelectedTagBatch("add", elements.tagSelectedAssets));
   elements.untagSelectedAssets.addEventListener("click", () => applySelectedTagBatch("remove", elements.untagSelectedAssets));
   elements.copyWorkflowReport.addEventListener("click", copyWorkflowReport);
+  elements.downloadWorkflowReport.addEventListener("click", downloadWorkflowReport);
   elements.copyMarksBackup.addEventListener("click", copyMarksBackup);
   elements.importMarksBackup.addEventListener("click", importMarksBackup);
   elements.copyCurationBackup.addEventListener("click", copyCurationBackup);
+  elements.downloadCurationBackup.addEventListener("click", downloadCurationBackup);
   elements.importCurationBackup.addEventListener("click", importCurationBackup);
   elements.clearSelection.addEventListener("click", () => {
     selectedAssetIds.clear();
@@ -522,8 +527,10 @@ function renderWorkflow() {
   elements.tagSelectedAssets.disabled = selectedAssetIds.size === 0;
   elements.untagSelectedAssets.disabled = selectedAssetIds.size === 0;
   elements.copyWorkflowReport.disabled = selectedAssetIds.size + marks.saved.size + marks.review.size === 0;
+  elements.downloadWorkflowReport.disabled = selectedAssetIds.size + marks.saved.size + marks.review.size === 0;
   elements.copyMarksBackup.disabled = marks.saved.size + marks.review.size === 0;
   elements.copyCurationBackup.disabled = !hasCurationState();
+  elements.downloadCurationBackup.disabled = !hasCurationState();
   elements.clearSelection.disabled = selectedAssetIds.size === 0;
 }
 
@@ -1296,15 +1303,15 @@ async function copySimilarGroupPaths(button, groupIndex) {
 }
 
 async function copyWorkflowReport() {
-  const report = createWorkflowReport(libraryIndex, {
-    generatedAt: new Date().toISOString(),
-    selectedAssetIds,
-    savedAssetIds: marks.saved,
-    reviewAssetIds: marks.review,
-    assetTags,
-    assetNotes
-  });
+  const report = createWorkflowReport(libraryIndex, createWorkflowReportOptions());
   await copyFromButton(elements.copyWorkflowReport, report);
+}
+
+function downloadWorkflowReport() {
+  const generatedAt = new Date().toISOString();
+  const report = createWorkflowReport(libraryIndex, createWorkflowReportOptions(generatedAt));
+  const fileName = createExportFileName("workflow-report", "md", { generatedAt });
+  downloadTextFile(elements.downloadWorkflowReport, report, fileName, "text/markdown");
 }
 
 async function copyMarksBackup() {
@@ -1317,15 +1324,15 @@ async function copyMarksBackup() {
 }
 
 async function copyCurationBackup() {
-  const backup = createCurationBackup({
-    generatedAt: new Date().toISOString(),
-    savedAssetIds: marks.saved,
-    reviewAssetIds: marks.review,
-    assetTags,
-    assetNotes,
-    savedFilterViews
-  });
+  const backup = createCurationBackup(createCurationBackupOptions());
   await copyFromButton(elements.copyCurationBackup, backup);
+}
+
+function downloadCurationBackup() {
+  const generatedAt = new Date().toISOString();
+  const backup = createCurationBackup(createCurationBackupOptions(generatedAt));
+  const fileName = createExportFileName("curation-backup", "json", { generatedAt });
+  downloadTextFile(elements.downloadCurationBackup, backup, fileName, "application/json");
 }
 
 async function importMarksBackup() {
@@ -1367,6 +1374,28 @@ function hasCurationState() {
     || Object.keys(assetTags).length > 0
     || Object.keys(assetNotes).length > 0
     || savedFilterViews.length > 0;
+}
+
+function createWorkflowReportOptions(generatedAt = new Date().toISOString()) {
+  return {
+    generatedAt,
+    selectedAssetIds,
+    savedAssetIds: marks.saved,
+    reviewAssetIds: marks.review,
+    assetTags,
+    assetNotes
+  };
+}
+
+function createCurationBackupOptions(generatedAt = new Date().toISOString()) {
+  return {
+    generatedAt,
+    savedAssetIds: marks.saved,
+    reviewAssetIds: marks.review,
+    assetTags,
+    assetNotes,
+    savedFilterViews
+  };
 }
 
 function getSelectedAssets() {
@@ -1473,6 +1502,19 @@ function saveMarks() {
 async function copyFromButton(button, value) {
   await navigator.clipboard.writeText(value);
   showButtonFeedback(button, "Copied");
+}
+
+function downloadTextFile(button, value, fileName, mimeType = "text/plain") {
+  const blob = new Blob([value], { type: `${mimeType};charset=utf-8` });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = fileName;
+  document.body.append(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+  showButtonFeedback(button, "Downloaded");
 }
 
 function showButtonFeedback(button, message) {

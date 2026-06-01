@@ -291,10 +291,11 @@ test("visible and selected asset metadata can be copied as JSON manifests", asyn
 test("workflow report includes browser-local tags and notes", async () => {
   const appSource = await readFile(new URL("../public/app.js", import.meta.url), "utf8");
   const workflowReportFunction = appSource.match(/async function copyWorkflowReport\(\) \{[\s\S]*?\n\}/)?.[0] ?? "";
+  const workflowReportOptionsFunction = appSource.match(/function createWorkflowReportOptions\([\s\S]*?\n\}/)?.[0] ?? "";
 
   assert.match(workflowReportFunction, /createWorkflowReport\(libraryIndex/);
-  assert.match(workflowReportFunction, /assetTags,/);
-  assert.match(workflowReportFunction, /assetNotes/);
+  assert.match(workflowReportOptionsFunction, /assetTags,/);
+  assert.match(workflowReportOptionsFunction, /assetNotes/);
 });
 
 test("saved filter views can be created, applied, and deleted", async () => {
@@ -371,4 +372,18 @@ test("full curation state can be copied and restored from the workflow panel", a
   assert.match(appSource, /copyCurationBackup/);
   assert.match(appSource, /importCurationBackup/);
   assert.match(appSource, /saveAllCurationState/);
+});
+
+test("workflow reports and curation backups can be downloaded as files", async () => {
+  const [appSource, htmlSource] = await Promise.all([
+    readFile(new URL("../public/app.js", import.meta.url), "utf8"),
+    readFile(new URL("../public/index.html", import.meta.url), "utf8")
+  ]);
+
+  assert.match(htmlSource, /id="download-workflow-report"/);
+  assert.match(htmlSource, /id="download-curation-backup"/);
+  assert.match(appSource, /createExportFileName/);
+  assert.match(appSource, /downloadWorkflowReport/);
+  assert.match(appSource, /downloadCurationBackup/);
+  assert.match(appSource, /downloadTextFile/);
 });

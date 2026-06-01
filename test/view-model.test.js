@@ -15,6 +15,7 @@ import {
   createCurationBackup,
   createDefaultViewState,
   createDuplicateGroupDetails,
+  createExportFileName,
   createLibraryView,
   createMarkBackup,
   createPathList,
@@ -855,6 +856,17 @@ test("createCurationBackup and parseCurationBackup round-trip local curation sta
     },
     savedFilterViews: [savedView]
   });
+});
+
+test("createExportFileName builds stable safe download names", () => {
+  assert.equal(
+    createExportFileName("Workflow Report", "md", { generatedAt: "2026-06-01T15:04:05.000Z" }),
+    "image-asset-librarian-workflow-report-20260601-150405.md"
+  );
+  assert.equal(
+    createExportFileName("  Curation/Backup  ", ".json", { generatedAt: "bad date" }),
+    "image-asset-librarian-curation-backup-export.json"
+  );
 });
 
 test("parseCurationBackup rejects malformed or incompatible backups", () => {
