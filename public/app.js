@@ -3,6 +3,7 @@ import {
   applyTagBatch,
   createActiveFilterChips,
   createAssetCsv,
+  createAssetDescriptionList,
   createAssetDetails,
   createAssetManifest,
   createAssetNavigation,
@@ -59,6 +60,8 @@ const elements = {
   selectVisibleAssets: document.querySelector("#select-visible-assets"),
   copyVisiblePaths: document.querySelector("#copy-visible-paths"),
   copySelectedPaths: document.querySelector("#copy-selected-paths"),
+  copyVisibleDescriptions: document.querySelector("#copy-visible-descriptions"),
+  copySelectedDescriptions: document.querySelector("#copy-selected-descriptions"),
   copyVisibleCsv: document.querySelector("#copy-visible-csv"),
   copySelectedCsv: document.querySelector("#copy-selected-csv"),
   copyVisibleManifest: document.querySelector("#copy-visible-manifest"),
@@ -210,6 +213,8 @@ function bindEvents() {
   elements.selectVisibleAssets.addEventListener("click", selectVisibleAssets);
   elements.copyVisiblePaths.addEventListener("click", copyVisiblePaths);
   elements.copySelectedPaths.addEventListener("click", copySelectedPaths);
+  elements.copyVisibleDescriptions.addEventListener("click", copyVisibleDescriptions);
+  elements.copySelectedDescriptions.addEventListener("click", copySelectedDescriptions);
   elements.copyVisibleCsv.addEventListener("click", copyVisibleCsv);
   elements.copySelectedCsv.addEventListener("click", copySelectedCsv);
   elements.copyVisibleManifest.addEventListener("click", copyVisibleManifest);
@@ -498,6 +503,8 @@ function renderWorkflow() {
   elements.selectVisibleAssets.disabled = !currentView?.assets.length;
   elements.copyVisiblePaths.disabled = !currentView?.assets.length;
   elements.copySelectedPaths.disabled = selectedAssetIds.size === 0;
+  elements.copyVisibleDescriptions.disabled = !currentView?.assets.length;
+  elements.copySelectedDescriptions.disabled = selectedAssetIds.size === 0;
   elements.copyVisibleCsv.disabled = !currentView?.assets.length;
   elements.copySelectedCsv.disabled = selectedAssetIds.size === 0;
   elements.copyVisibleManifest.disabled = !currentView?.assets.length;
@@ -1070,6 +1077,22 @@ async function copySelectedPaths() {
     return;
   }
   await copyFromButton(elements.copySelectedPaths, createPathList(selectedAssets));
+}
+
+async function copySelectedDescriptions() {
+  const selectedAssets = getSelectedAssets();
+  if (!selectedAssets.length) {
+    return;
+  }
+  await copyFromButton(elements.copySelectedDescriptions, createAssetDescriptionList(selectedAssets));
+}
+
+async function copyVisibleDescriptions() {
+  const visibleAssets = currentView?.assets ?? [];
+  if (!visibleAssets.length) {
+    return;
+  }
+  await copyFromButton(elements.copyVisibleDescriptions, createAssetDescriptionList(visibleAssets));
 }
 
 async function copySelectedCsv() {

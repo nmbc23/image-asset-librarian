@@ -43,7 +43,7 @@ UI responsibilities:
 - Use source, file-type, resolution, inferred theme, and color-vibe breakdowns as quick filter controls.
 - Review similar visual groups and jump into the matching search query.
 - Show compact palette swatches on asset cards and in the detail drawer.
-- Generate concise local image descriptions from indexed visual signals, then copy them or save them as local notes.
+- Generate concise local image descriptions from indexed visual signals, then copy them one-by-one, export selected/visible description batches, or save them as local notes.
 - Show embedded metadata in the detail drawer with copy controls.
 - Sort by date, file size, resolution, or name.
 - Highlight duplicate assets.

@@ -557,6 +557,14 @@ export function createPathList(assets) {
     .join("\n");
 }
 
+export function createAssetDescriptionList(assets) {
+  const lines = (Array.isArray(assets) ? assets : []).map((asset) => {
+    const name = asset.name ?? asset.relativePath ?? asset.id ?? "Asset";
+    return `- **${escapeMarkdownText(name)}**: ${createAssetDescription(asset)}`;
+  });
+  return `${lines.join("\n")}${lines.length ? "\n" : ""}`;
+}
+
 export function createAssetCsv(assets) {
   const columns = [
     ["id", (asset) => asset.id],
@@ -1077,6 +1085,10 @@ function formatResolutionLabel(value) {
 
 function formatCsvCell(value) {
   return `"${String(value ?? "").replaceAll('"', '""')}"`;
+}
+
+function escapeMarkdownText(value) {
+  return String(value ?? "").replaceAll("\\", "\\\\").replaceAll("*", "\\*").replaceAll("_", "\\_").replaceAll("`", "\\`");
 }
 
 function summarizeAssets(assets, duplicateAssetIds, savedAssetIds, reviewAssetIds, assetTags = {}, assetNotes = {}) {

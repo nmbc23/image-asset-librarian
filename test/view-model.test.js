@@ -7,6 +7,7 @@ import {
   createActiveFilterChips,
   createAssetDetails,
   createAssetDescription,
+  createAssetDescriptionList,
   createAssetNavigation,
   createAssetCsv,
   createAssetManifest,
@@ -642,6 +643,14 @@ test("createPathList exports asset paths in display order", () => {
   assert.equal(createPathList([index.assets[0], { id: "missing-path" }, index.assets[2]]), [
     "P:/AI/Codex/generated_images/rose.png",
     "mint.svg"
+  ].join("\n"));
+});
+
+test("createAssetDescriptionList exports markdown descriptions in display order", () => {
+  assert.equal(createAssetDescriptionList([index.assets[0], index.assets[2]]), [
+    "- **rose.png**: A portrait character image with warm, vivid colors and a rose, teal palette. Metadata suggests: Soft light portrait.",
+    "- **mint.svg**: A logo vector image with cool, green colors and a teal palette.",
+    ""
   ].join("\n"));
 });
 

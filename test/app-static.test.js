@@ -201,6 +201,19 @@ test("suggested image descriptions can be copied or saved as local notes", async
   assert.match(cssSource, /\.suggested-description/);
 });
 
+test("visible and selected image descriptions can be copied in batches", async () => {
+  const [appSource, htmlSource] = await Promise.all([
+    readFile(new URL("../public/app.js", import.meta.url), "utf8"),
+    readFile(new URL("../public/index.html", import.meta.url), "utf8")
+  ]);
+
+  assert.match(htmlSource, /id="copy-visible-descriptions"/);
+  assert.match(htmlSource, /id="copy-selected-descriptions"/);
+  assert.match(appSource, /createAssetDescriptionList/);
+  assert.match(appSource, /copyVisibleDescriptions/);
+  assert.match(appSource, /copySelectedDescriptions/);
+});
+
 test("selected assets can be bulk marked from the workflow panel", async () => {
   const [appSource, htmlSource] = await Promise.all([
     readFile(new URL("../public/app.js", import.meta.url), "utf8"),
