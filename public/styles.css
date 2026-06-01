@@ -448,7 +448,8 @@ dd {
   text-decoration: none;
 }
 
-.asset-actions a {
+.asset-actions a,
+.asset-actions .primary-action {
   background: var(--accent);
   color: var(--accent-ink);
 }

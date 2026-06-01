@@ -85,6 +85,12 @@ function bindEvents() {
     render();
   });
   elements.gallery.addEventListener("click", async (event) => {
+    const openButton = event.target.closest("[data-open-asset]");
+    if (openButton) {
+      window.location.assign(openButton.dataset.openAsset);
+      return;
+    }
+
     const detailsButton = event.target.closest("[data-show-details]");
     if (detailsButton) {
       showDetails(detailsButton.dataset.showDetails);
@@ -238,7 +244,7 @@ function renderAssetCard(asset, isDuplicate) {
           <div><dt>Frame</dt><dd>${dimensions}</dd></div>
         </dl>
         <div class="asset-actions">
-          <a href="/assets/${encodeURIComponent(asset.id)}" target="_blank" rel="noreferrer">Open</a>
+          <button type="button" class="primary-action" data-open-asset="/assets/${encodeURIComponent(asset.id)}">Open</button>
           <button type="button" data-show-details="${escapeHtml(asset.id)}">Details</button>
           <button type="button" data-copy-path="${escapeHtml(asset.path)}">Copy path</button>
         </div>
