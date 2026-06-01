@@ -20,6 +20,8 @@ export function createLibraryView(index, state = {}) {
     assets: sortAssets(filteredAssets, normalizedState.sort),
     roots: uniqueSorted(assets.map((asset) => asset.rootName)),
     extensions: uniqueSorted(assets.map((asset) => asset.extension)),
+    sourceBreakdown: createBreakdown(assets, "rootName"),
+    extensionBreakdown: createBreakdown(assets, "extension"),
     duplicateAssetIds
   };
 }
@@ -90,4 +92,19 @@ function sortAssets(assets, sort) {
 
 function uniqueSorted(values) {
   return [...new Set(values.filter(Boolean))].sort((a, b) => a.localeCompare(b));
+}
+
+function createBreakdown(assets, field) {
+  const counts = new Map();
+  for (const asset of assets) {
+    const label = asset[field];
+    if (!label) {
+      continue;
+    }
+    counts.set(label, (counts.get(label) ?? 0) + 1);
+  }
+
+  return [...counts.entries()]
+    .map(([label, count]) => ({ label, count }))
+    .sort((a, b) => b.count - a.count || a.label.localeCompare(b.label));
 }

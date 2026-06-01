@@ -11,6 +11,10 @@ const elements = {
   extension: document.querySelector("#extension-filter"),
   sort: document.querySelector("#sort-select"),
   duplicateToggle: document.querySelector("#duplicate-toggle"),
+  sourceBreakdown: document.querySelector("#source-breakdown"),
+  sourceBreakdownCount: document.querySelector("#source-breakdown-count"),
+  typeBreakdown: document.querySelector("#type-breakdown"),
+  typeBreakdownCount: document.querySelector("#type-breakdown-count"),
   duplicateSummary: document.querySelector("#duplicate-summary"),
   duplicateList: document.querySelector("#duplicate-list"),
   resultCount: document.querySelector("#result-count"),
@@ -87,6 +91,7 @@ function render() {
   const view = createLibraryView(libraryIndex, state);
   renderSummary(libraryIndex);
   renderFilters(view);
+  renderBreakdowns(view);
   renderDuplicates(libraryIndex);
   renderGallery(view);
 }
@@ -106,6 +111,27 @@ function renderFilters(view) {
     [["all", "All types"], ...view.extensions.map((extension) => [extension, extension.replace(".", "").toUpperCase()])],
     state.extension
   );
+}
+
+function renderBreakdowns(view) {
+  elements.sourceBreakdownCount.textContent = `${view.sourceBreakdown.length} sources`;
+  elements.typeBreakdownCount.textContent = `${view.extensionBreakdown.length} types`;
+  elements.sourceBreakdown.innerHTML = view.sourceBreakdown.map(renderBreakdownItem).join("");
+  elements.typeBreakdown.innerHTML = view.extensionBreakdown.map((item) =>
+    renderBreakdownItem({
+      label: item.label.replace(".", "").toUpperCase(),
+      count: item.count
+    })
+  ).join("");
+}
+
+function renderBreakdownItem(item) {
+  return `
+    <div class="breakdown-item">
+      <span title="${escapeHtml(item.label)}">${escapeHtml(item.label)}</span>
+      <strong>${item.count}</strong>
+    </div>
+  `;
 }
 
 function renderDuplicates(index) {

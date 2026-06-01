@@ -48,6 +48,14 @@ test("createLibraryView filters by search, root, extension, and duplicate state"
   assert.deepEqual(view.assets.map((asset) => asset.id), ["a"]);
   assert.deepEqual(view.roots, ["Archive", "Codex"]);
   assert.deepEqual(view.extensions, [".png", ".svg"]);
+  assert.deepEqual(view.sourceBreakdown, [
+    { label: "Codex", count: 2 },
+    { label: "Archive", count: 1 }
+  ]);
+  assert.deepEqual(view.extensionBreakdown, [
+    { label: ".png", count: 2 },
+    { label: ".svg", count: 1 }
+  ]);
   assert.equal(view.duplicateAssetIds.has("a"), true);
   assert.equal(view.duplicateAssetIds.has("c"), false);
 });

@@ -82,6 +82,7 @@ h1 {
 
 .metrics div,
 .toolbar,
+.breakdown-panel,
 .duplicates-panel,
 .gallery-section {
   background: rgba(255, 255, 255, 0.82);
@@ -114,6 +115,46 @@ h1 {
   margin-bottom: 16px;
   padding: 14px;
   border-radius: 8px;
+}
+
+.breakdown-panel {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  margin-bottom: 16px;
+  padding: 16px;
+  border-radius: 8px;
+}
+
+.breakdown-list {
+  display: grid;
+  gap: 8px;
+}
+
+.breakdown-item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  min-height: 34px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: var(--surface);
+  padding: 0 10px;
+}
+
+.breakdown-item span {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 0.86rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.breakdown-item strong {
+  color: var(--accent);
+  font-size: 0.9rem;
 }
 
 label {
@@ -414,7 +455,8 @@ dd {
   }
 
   .metrics,
-  .toolbar {
+  .toolbar,
+  .breakdown-panel {
     grid-template-columns: 1fr;
   }
 
