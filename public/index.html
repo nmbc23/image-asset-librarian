@@ -99,6 +99,20 @@
       </section>
     </main>
 
+    <aside id="detail-drawer" class="detail-drawer" aria-hidden="true" aria-label="Asset details">
+      <div class="drawer-scrim" data-close-details></div>
+      <section class="drawer-panel">
+        <header class="drawer-header">
+          <div>
+            <p class="eyebrow">Asset Details</p>
+            <h2 id="drawer-title">Select an asset</h2>
+          </div>
+          <button type="button" class="icon-button" data-close-details aria-label="Close details">x</button>
+        </header>
+        <div id="drawer-content" class="drawer-content"></div>
+      </section>
+    </aside>
+
     <script type="module" src="/app.js"></script>
   </body>
 </html>

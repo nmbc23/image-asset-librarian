@@ -1,4 +1,4 @@
-import { createLibraryView, formatBytes, formatDate } from "./view-model.js";
+import { createAssetDetails, createLibraryView, formatBytes, formatDate } from "./view-model.js";
 
 const elements = {
   status: document.querySelector("#scan-status"),
@@ -19,7 +19,10 @@ const elements = {
   duplicateList: document.querySelector("#duplicate-list"),
   resultCount: document.querySelector("#result-count"),
   gallery: document.querySelector("#gallery"),
-  emptyState: document.querySelector("#empty-state")
+  emptyState: document.querySelector("#empty-state"),
+  detailDrawer: document.querySelector("#detail-drawer"),
+  drawerTitle: document.querySelector("#drawer-title"),
+  drawerContent: document.querySelector("#drawer-content")
 };
 
 const state = {
@@ -71,15 +74,33 @@ function bindEvents() {
     render();
   });
   elements.gallery.addEventListener("click", async (event) => {
+    const detailsButton = event.target.closest("[data-show-details]");
+    if (detailsButton) {
+      showDetails(detailsButton.dataset.showDetails);
+      return;
+    }
+
     const button = event.target.closest("[data-copy-path]");
     if (!button) {
       return;
     }
-    await navigator.clipboard.writeText(button.dataset.copyPath);
-    button.textContent = "Copied";
-    setTimeout(() => {
-      button.textContent = "Copy path";
-    }, 1100);
+    await copyFromButton(button, button.dataset.copyPath);
+  });
+  elements.detailDrawer.addEventListener("click", async (event) => {
+    if (event.target.closest("[data-close-details]")) {
+      hideDetails();
+      return;
+    }
+
+    const copyButton = event.target.closest("[data-copy-value]");
+    if (copyButton) {
+      await copyFromButton(copyButton, copyButton.dataset.copyValue);
+    }
+  });
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && elements.detailDrawer.getAttribute("aria-hidden") === "false") {
+      hideDetails();
+    }
   });
 }
 
@@ -191,11 +212,61 @@ function renderAssetCard(asset, isDuplicate) {
         </dl>
         <div class="asset-actions">
           <a href="/assets/${encodeURIComponent(asset.id)}" target="_blank" rel="noreferrer">Open</a>
+          <button type="button" data-show-details="${escapeHtml(asset.id)}">Details</button>
           <button type="button" data-copy-path="${escapeHtml(asset.path)}">Copy path</button>
         </div>
       </div>
     </article>
   `;
+}
+
+function showDetails(assetId) {
+  const details = createAssetDetails(libraryIndex, assetId);
+  if (!details) {
+    return;
+  }
+
+  elements.drawerTitle.textContent = details.name;
+  elements.drawerContent.innerHTML = renderDetails(details);
+  elements.detailDrawer.setAttribute("aria-hidden", "false");
+}
+
+function hideDetails() {
+  elements.detailDrawer.setAttribute("aria-hidden", "true");
+}
+
+function renderDetails(details) {
+  return `
+    <a class="drawer-preview" href="${details.imageUrl}" target="_blank" rel="noreferrer">
+      <img src="${details.imageUrl}" alt="${escapeHtml(details.name)}">
+    </a>
+    ${details.isDuplicate ? `<div class="drawer-alert">${details.duplicateGroup.count} duplicate files, ${details.duplicateGroup.reclaimable} reclaimable</div>` : ""}
+    <dl class="detail-list">
+      ${details.fields.map(renderDetailField).join("")}
+    </dl>
+  `;
+}
+
+function renderDetailField(field) {
+  const copyButton = field.copyValue
+    ? `<button type="button" data-copy-value="${escapeHtml(field.copyValue)}">Copy</button>`
+    : "";
+  return `
+    <div>
+      <dt>${escapeHtml(field.label)}</dt>
+      <dd title="${escapeHtml(field.value)}">${escapeHtml(field.value)}</dd>
+      ${copyButton}
+    </div>
+  `;
+}
+
+async function copyFromButton(button, value) {
+  await navigator.clipboard.writeText(value);
+  const originalText = button.textContent;
+  button.textContent = "Copied";
+  setTimeout(() => {
+    button.textContent = originalText;
+  }, 1100);
 }
 
 function syncSelect(select, options, selectedValue) {

@@ -26,6 +26,44 @@ export function createLibraryView(index, state = {}) {
   };
 }
 
+export function createAssetDetails(index, assetId) {
+  const asset = (index.assets ?? []).find((candidate) => candidate.id === assetId);
+  if (!asset) {
+    return null;
+  }
+
+  const duplicateGroup = (index.duplicates ?? []).find((group) => (group.assetIds ?? []).includes(assetId));
+  const dimensions = asset.width && asset.height ? `${asset.width} x ${asset.height}` : "Unknown";
+
+  return {
+    id: asset.id,
+    name: asset.name,
+    imageUrl: `/assets/${encodeURIComponent(asset.id)}`,
+    path: asset.path,
+    hash: asset.hash,
+    size: formatBytes(asset.sizeBytes),
+    dimensions,
+    modified: formatDate(asset.modifiedAt),
+    isDuplicate: Boolean(duplicateGroup),
+    duplicateGroup: duplicateGroup
+      ? {
+          count: duplicateGroup.count,
+          reclaimable: formatBytes(duplicateGroup.reclaimableBytes ?? 0),
+          hash: duplicateGroup.hash
+        }
+      : null,
+    fields: [
+      { label: "Source", value: asset.rootName },
+      { label: "Type", value: asset.extension?.replace(".", "").toUpperCase() ?? "Unknown" },
+      { label: "Size", value: formatBytes(asset.sizeBytes) },
+      { label: "Dimensions", value: dimensions },
+      { label: "Modified", value: formatDate(asset.modifiedAt) },
+      { label: "Hash", value: asset.hash ?? "Unknown", copyValue: asset.hash },
+      { label: "Path", value: asset.path ?? "Unknown", copyValue: asset.path }
+    ]
+  };
+}
+
 export function formatBytes(bytes) {
   if (!Number.isFinite(bytes) || bytes <= 0) {
     return "0 B";

@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { createLibraryView, formatBytes } from "../public/view-model.js";
+import { createAssetDetails, createLibraryView, formatBytes } from "../public/view-model.js";
 
 const index = {
   assets: [
@@ -12,6 +12,10 @@ const index = {
       rootName: "Codex",
       extension: ".png",
       sizeBytes: 1200,
+      width: 512,
+      height: 768,
+      hash: "hash-a",
+      path: "P:/AI/Codex/generated_images/rose.png",
       modifiedAt: "2026-06-01T01:00:00.000Z"
     },
     {
@@ -76,4 +80,29 @@ test("formatBytes uses compact readable units", () => {
   assert.equal(formatBytes(999), "999 B");
   assert.equal(formatBytes(1536), "1.5 KB");
   assert.equal(formatBytes(1024 * 1024 * 2), "2 MB");
+});
+
+test("createAssetDetails formats metadata and duplicate context", () => {
+  const details = createAssetDetails(index, "a");
+
+  assert.equal(details.id, "a");
+  assert.equal(details.name, "rose.png");
+  assert.equal(details.size, "1.2 KB");
+  assert.equal(details.dimensions, "512 x 768");
+  assert.equal(details.isDuplicate, true);
+  assert.equal(details.duplicateGroup.count, 2);
+  assert.equal(details.duplicateGroup.reclaimable, "1.2 KB");
+  assert.deepEqual(details.fields.map((field) => field.label), [
+    "Source",
+    "Type",
+    "Size",
+    "Dimensions",
+    "Modified",
+    "Hash",
+    "Path"
+  ]);
+});
+
+test("createAssetDetails returns null for unknown assets", () => {
+  assert.equal(createAssetDetails(index, "missing"), null);
 });
