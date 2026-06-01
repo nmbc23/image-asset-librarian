@@ -433,7 +433,8 @@ dd {
 .asset-actions a,
 .asset-actions button,
 .detail-list button,
-.icon-button {
+.icon-button,
+.secondary-button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -450,6 +451,11 @@ dd {
 .asset-actions a {
   background: var(--accent);
   color: var(--accent-ink);
+}
+
+.secondary-button {
+  min-height: 42px;
+  align-self: end;
 }
 
 .detail-drawer {

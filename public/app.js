@@ -1,4 +1,4 @@
-import { createAssetDetails, createLibraryView, formatBytes, formatDate } from "./view-model.js";
+import { createAssetDetails, createDefaultViewState, createLibraryView, formatBytes, formatDate } from "./view-model.js";
 
 const elements = {
   status: document.querySelector("#scan-status"),
@@ -13,6 +13,7 @@ const elements = {
   age: document.querySelector("#age-filter"),
   sort: document.querySelector("#sort-select"),
   duplicateToggle: document.querySelector("#duplicate-toggle"),
+  resetFilters: document.querySelector("#reset-filters"),
   sourceBreakdown: document.querySelector("#source-breakdown"),
   sourceBreakdownCount: document.querySelector("#source-breakdown-count"),
   typeBreakdown: document.querySelector("#type-breakdown"),
@@ -28,15 +29,7 @@ const elements = {
   drawerContent: document.querySelector("#drawer-content")
 };
 
-const state = {
-  query: "",
-  root: "all",
-  extension: "all",
-  orientation: "all",
-  maxAgeDays: "all",
-  duplicateOnly: false,
-  sort: "newest"
-};
+const state = createDefaultViewState();
 
 let libraryIndex = null;
 
@@ -86,6 +79,11 @@ function bindEvents() {
     state.duplicateOnly = elements.duplicateToggle.checked;
     render();
   });
+  elements.resetFilters.addEventListener("click", () => {
+    Object.assign(state, createDefaultViewState());
+    syncControlsFromState();
+    render();
+  });
   elements.gallery.addEventListener("click", async (event) => {
     const detailsButton = event.target.closest("[data-show-details]");
     if (detailsButton) {
@@ -115,6 +113,16 @@ function bindEvents() {
       hideDetails();
     }
   });
+}
+
+function syncControlsFromState() {
+  elements.search.value = state.query;
+  elements.root.value = state.root;
+  elements.extension.value = state.extension;
+  elements.orientation.value = state.orientation;
+  elements.age.value = state.maxAgeDays;
+  elements.sort.value = state.sort;
+  elements.duplicateToggle.checked = state.duplicateOnly;
 }
 
 function render() {

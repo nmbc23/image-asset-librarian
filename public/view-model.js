@@ -1,15 +1,21 @@
-export function createLibraryView(index, state = {}) {
-  const assets = Array.isArray(index.assets) ? index.assets : [];
-  const duplicateAssetIds = new Set((index.duplicates ?? []).flatMap((group) => group.assetIds ?? []));
-  const normalizedState = {
+export function createDefaultViewState() {
+  return {
     query: "",
     root: "all",
     extension: "all",
     orientation: "all",
     maxAgeDays: "all",
-    now: new Date().toISOString(),
     duplicateOnly: false,
-    sort: "newest",
+    sort: "newest"
+  };
+}
+
+export function createLibraryView(index, state = {}) {
+  const assets = Array.isArray(index.assets) ? index.assets : [];
+  const duplicateAssetIds = new Set((index.duplicates ?? []).flatMap((group) => group.assetIds ?? []));
+  const normalizedState = {
+    now: new Date().toISOString(),
+    ...createDefaultViewState(),
     ...state
   };
 

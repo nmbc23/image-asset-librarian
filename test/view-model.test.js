@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { createAssetDetails, createLibraryView, formatBytes } from "../public/view-model.js";
+import { createAssetDetails, createDefaultViewState, createLibraryView, formatBytes } from "../public/view-model.js";
 
 const index = {
   assets: [
@@ -134,4 +134,16 @@ test("createAssetDetails formats metadata and duplicate context", () => {
 
 test("createAssetDetails returns null for unknown assets", () => {
   assert.equal(createAssetDetails(index, "missing"), null);
+});
+
+test("createDefaultViewState returns resettable filter defaults", () => {
+  assert.deepEqual(createDefaultViewState(), {
+    query: "",
+    root: "all",
+    extension: "all",
+    orientation: "all",
+    maxAgeDays: "all",
+    duplicateOnly: false,
+    sort: "newest"
+  });
 });
