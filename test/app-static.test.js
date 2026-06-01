@@ -23,6 +23,20 @@ test("detail drawer exposes previous and next asset navigation", async () => {
   assert.match(cssSource, /\.drawer-nav/);
 });
 
+test("detail drawer supports asset marking controls and keyboard shortcuts", async () => {
+  const [appSource, cssSource] = await Promise.all([
+    readFile(new URL("../public/app.js", import.meta.url), "utf8"),
+    readFile(new URL("../public/styles.css", import.meta.url), "utf8")
+  ]);
+
+  assert.match(appSource, /data-toggle-detail-save/);
+  assert.match(appSource, /data-toggle-detail-review/);
+  assert.match(appSource, /toggleDetailMark/);
+  assert.match(appSource, /event\.key\.toLowerCase\(\) === "s"/);
+  assert.match(appSource, /event\.key\.toLowerCase\(\) === "r"/);
+  assert.match(cssSource, /\.drawer-mark-actions/);
+});
+
 test("review workflow exposes saved, review, and selected asset controls", async () => {
   const [appSource, htmlSource] = await Promise.all([
     readFile(new URL("../public/app.js", import.meta.url), "utf8"),

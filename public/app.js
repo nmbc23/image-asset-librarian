@@ -291,6 +291,18 @@ function bindEvents() {
       return;
     }
 
+    const detailSaveButton = event.target.closest("[data-toggle-detail-save]");
+    if (detailSaveButton) {
+      toggleDetailMark("saved", detailSaveButton.dataset.toggleDetailSave);
+      return;
+    }
+
+    const detailReviewButton = event.target.closest("[data-toggle-detail-review]");
+    if (detailReviewButton) {
+      toggleDetailMark("review", detailReviewButton.dataset.toggleDetailReview);
+      return;
+    }
+
     const copyButton = event.target.closest("[data-copy-value]");
     if (copyButton) {
       await copyFromButton(copyButton, copyButton.dataset.copyValue);
@@ -320,6 +332,12 @@ function bindEvents() {
     } else if (event.key === "ArrowRight") {
       event.preventDefault();
       showAdjacentDetails("next");
+    } else if (event.key.toLowerCase() === "s") {
+      event.preventDefault();
+      toggleDetailMark("saved", activeDetailAssetId);
+    } else if (event.key.toLowerCase() === "r") {
+      event.preventDefault();
+      toggleDetailMark("review", activeDetailAssetId);
     }
   });
 }
@@ -665,6 +683,8 @@ function showDetails(assetId) {
   activeDetailAssetId = assetId;
   details.note = getAssetNote(assetNotes, assetId);
   details.navigation = createAssetNavigation(getDetailNavigationAssets(), assetId);
+  details.isSaved = marks.saved.has(assetId);
+  details.isReview = marks.review.has(assetId);
   elements.drawerTitle.textContent = details.name;
   elements.drawerContent.innerHTML = renderDetails(details);
   elements.detailDrawer.setAttribute("aria-hidden", "false");
@@ -678,6 +698,7 @@ function hideDetails() {
 function renderDetails(details) {
   return `
     ${renderDetailNavigation(details.navigation)}
+    ${renderDetailMarkActions(details)}
     <a class="drawer-preview" href="${details.imageUrl}" target="_blank" rel="noreferrer">
       <img src="${details.imageUrl}" alt="${escapeHtml(details.name)}">
     </a>
@@ -692,6 +713,15 @@ function renderDetails(details) {
     <dl class="detail-list">
       ${details.fields.map(renderDetailField).join("")}
     </dl>
+  `;
+}
+
+function renderDetailMarkActions(details) {
+  return `
+    <div class="drawer-mark-actions" aria-label="Asset marks">
+      <button type="button" class="${details.isSaved ? "is-active" : ""}" data-toggle-detail-save="${escapeHtml(details.id)}" aria-pressed="${details.isSaved}">Saved</button>
+      <button type="button" class="${details.isReview ? "is-active" : ""}" data-toggle-detail-review="${escapeHtml(details.id)}" aria-pressed="${details.isReview}">Review</button>
+    </div>
   `;
 }
 
@@ -723,6 +753,15 @@ function showAdjacentDetails(direction) {
 
 function getDetailNavigationAssets() {
   return currentView?.assets?.length ? currentView.assets : libraryIndex?.assets ?? [];
+}
+
+function toggleDetailMark(kind, assetId) {
+  if (!assetId) {
+    return;
+  }
+  toggleMark(kind, assetId);
+  render();
+  showDetails(assetId);
 }
 
 function isTextEditingTarget(target) {

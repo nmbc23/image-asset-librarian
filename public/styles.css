@@ -839,6 +839,29 @@ button:disabled {
   white-space: nowrap;
 }
 
+.drawer-mark-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.drawer-mark-actions button {
+  min-height: 34px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: var(--surface);
+  color: var(--muted);
+  cursor: pointer;
+  font-weight: 800;
+  padding: 0 12px;
+}
+
+.drawer-mark-actions button.is-active {
+  border-color: rgba(31, 138, 112, 0.45);
+  background: rgba(31, 138, 112, 0.12);
+  color: var(--accent);
+}
+
 .drawer-preview {
   display: grid;
   height: 260px;
