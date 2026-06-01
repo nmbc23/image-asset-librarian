@@ -1,7 +1,13 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { createAssetDetails, createDefaultViewState, createLibraryView, formatBytes } from "../public/view-model.js";
+import {
+  createAssetDetails,
+  createDefaultViewState,
+  createLibraryView,
+  createWorkflowReport,
+  formatBytes
+} from "../public/view-model.js";
 
 const index = {
   assets: [
@@ -166,6 +172,26 @@ test("createAssetDetails formats metadata and duplicate context", () => {
 
 test("createAssetDetails returns null for unknown assets", () => {
   assert.equal(createAssetDetails(index, "missing"), null);
+});
+
+test("createWorkflowReport exports selected, saved, and review queues as markdown", () => {
+  const report = createWorkflowReport(index, {
+    generatedAt: "2026-06-01T12:00:00.000Z",
+    selectedAssetIds: ["a", "c"],
+    savedAssetIds: new Set(["a"]),
+    reviewAssetIds: ["b"]
+  });
+
+  assert.match(report, /# Image Asset Workflow Report/);
+  assert.match(report, /Generated: 2026-06-01T12:00:00.000Z/);
+  assert.match(report, /Selected: 2/);
+  assert.match(report, /Saved: 1/);
+  assert.match(report, /Review queue: 1/);
+  assert.match(report, /## Selected Assets/);
+  assert.match(report, /`flowers\/rose\.png` \(Codex, 1\.2 KB, duplicate\)/);
+  assert.match(report, /## Saved Assets/);
+  assert.match(report, /## Review Queue/);
+  assert.match(report, /`copies\/rose-copy\.png` \(Archive, 1\.2 KB, duplicate\)/);
 });
 
 test("createDefaultViewState returns resettable filter defaults", () => {

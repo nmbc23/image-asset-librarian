@@ -105,6 +105,33 @@ export function createAssetDetails(index, assetId) {
   };
 }
 
+export function createWorkflowReport(index, options = {}) {
+  const assets = Array.isArray(index?.assets) ? index.assets : [];
+  const assetsById = new Map(assets.map((asset) => [asset.id, asset]));
+  const duplicateAssetIds = new Set((index?.duplicates ?? []).flatMap((group) => group.assetIds ?? []));
+  const selectedAssetIds = toAssetIdSet(options.selectedAssetIds);
+  const savedAssetIds = toAssetIdSet(options.savedAssetIds);
+  const reviewAssetIds = toAssetIdSet(options.reviewAssetIds);
+  const lines = [
+    "# Image Asset Workflow Report",
+    "",
+    `Generated: ${options.generatedAt ?? new Date().toISOString()}`,
+    "",
+    "## Summary",
+    "",
+    `- Total assets: ${assets.length}`,
+    `- Selected: ${selectedAssetIds.size}`,
+    `- Saved: ${savedAssetIds.size}`,
+    `- Review queue: ${reviewAssetIds.size}`,
+    "",
+    ...renderReportSection("Selected Assets", selectedAssetIds, assetsById, duplicateAssetIds),
+    ...renderReportSection("Saved Assets", savedAssetIds, assetsById, duplicateAssetIds),
+    ...renderReportSection("Review Queue", reviewAssetIds, assetsById, duplicateAssetIds)
+  ];
+
+  return lines.join("\n");
+}
+
 export function formatBytes(bytes) {
   if (!Number.isFinite(bytes) || bytes <= 0) {
     return "0 B";
@@ -211,6 +238,25 @@ function summarizeAssets(assets, duplicateAssetIds, savedAssetIds, reviewAssetId
     sources: new Set(assets.map((asset) => asset.rootName).filter(Boolean)).size,
     extensions: new Set(assets.map((asset) => asset.extension).filter(Boolean)).size
   };
+}
+
+function renderReportSection(title, assetIds, assetsById, duplicateAssetIds) {
+  const assets = [...assetIds].map((assetId) => assetsById.get(assetId)).filter(Boolean);
+  const lines = [`## ${title}`, ""];
+  if (!assets.length) {
+    lines.push("No assets.", "");
+    return lines;
+  }
+
+  for (const asset of assets) {
+    const duplicateLabel = duplicateAssetIds.has(asset.id) ? ", duplicate" : "";
+    lines.push(`- \`${asset.relativePath}\` (${asset.rootName}, ${formatBytes(asset.sizeBytes)}${duplicateLabel})`);
+    if (asset.path) {
+      lines.push(`  - Path: \`${asset.path}\``);
+    }
+  }
+  lines.push("");
+  return lines;
 }
 
 function toAssetIdSet(value) {

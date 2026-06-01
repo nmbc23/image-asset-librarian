@@ -5,10 +5,10 @@ This roadmap focuses on practical improvements for local AI image workflows.
 ## Near Term
 
 - Add richer metadata extraction for PNG, JPEG, and WebP.
-- Add a details drawer for path, hash, dimensions, and modified date.
-- Add exportable duplicate review reports.
 - Add keyboard shortcuts for gallery navigation.
 - Add more tests around server path boundaries.
+- Add import/export for saved and review mark state.
+- Add richer cleanup suggestions for duplicate clusters.
 
 ## AI-Assisted Features
 

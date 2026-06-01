@@ -1,4 +1,11 @@
-import { createAssetDetails, createDefaultViewState, createLibraryView, formatBytes, formatDate } from "./view-model.js";
+import {
+  createAssetDetails,
+  createDefaultViewState,
+  createLibraryView,
+  createWorkflowReport,
+  formatBytes,
+  formatDate
+} from "./view-model.js";
 
 const elements = {
   status: document.querySelector("#scan-status"),
@@ -19,6 +26,7 @@ const elements = {
   reviewCount: document.querySelector("#review-count"),
   selectedCount: document.querySelector("#selected-count"),
   copySelectedPaths: document.querySelector("#copy-selected-paths"),
+  copyWorkflowReport: document.querySelector("#copy-workflow-report"),
   clearSelection: document.querySelector("#clear-selection"),
   sourceBreakdown: document.querySelector("#source-breakdown"),
   sourceBreakdownCount: document.querySelector("#source-breakdown-count"),
@@ -98,6 +106,7 @@ function bindEvents() {
     render();
   });
   elements.copySelectedPaths.addEventListener("click", copySelectedPaths);
+  elements.copyWorkflowReport.addEventListener("click", copyWorkflowReport);
   elements.clearSelection.addEventListener("click", () => {
     selectedAssetIds.clear();
     render();
@@ -202,6 +211,7 @@ function renderWorkflow() {
   elements.reviewCount.textContent = `${marks.review.size} review`;
   elements.selectedCount.textContent = `${selectedAssetIds.size} selected`;
   elements.copySelectedPaths.disabled = selectedAssetIds.size === 0;
+  elements.copyWorkflowReport.disabled = selectedAssetIds.size + marks.saved.size + marks.review.size === 0;
   elements.clearSelection.disabled = selectedAssetIds.size === 0;
 }
 
@@ -367,6 +377,16 @@ async function copySelectedPaths() {
     return;
   }
   await copyFromButton(elements.copySelectedPaths, selectedAssets.map((asset) => asset.path).join("\n"));
+}
+
+async function copyWorkflowReport() {
+  const report = createWorkflowReport(libraryIndex, {
+    generatedAt: new Date().toISOString(),
+    selectedAssetIds,
+    savedAssetIds: marks.saved,
+    reviewAssetIds: marks.review
+  });
+  await copyFromButton(elements.copyWorkflowReport, report);
 }
 
 function getSelectedAssets() {

@@ -38,6 +38,7 @@ UI responsibilities:
 - Highlight duplicate assets.
 - Store saved/review marks in browser local storage so the generated index stays disposable.
 - Copy selected asset paths as a batch for downstream cleanup, curation, or prompt-tracking work.
+- Copy a Markdown workflow report summarizing selected, saved, and review-queue assets.
 - Keep private local paths visible only to the local user.
 
 ## Data Flow
