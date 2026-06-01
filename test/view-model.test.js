@@ -37,6 +37,7 @@ const index = {
       sizeBytes: 1200,
       width: 512,
       height: 768,
+      themes: ["portrait", "character"],
       hash: "hash-a",
       path: "P:/AI/Codex/generated_images/rose.png",
       modifiedAt: "2026-06-01T01:00:00.000Z"
@@ -48,6 +49,7 @@ const index = {
       rootName: "Archive",
       extension: ".png",
       sizeBytes: 1200,
+      themes: ["portrait"],
       modifiedAt: "2026-06-01T02:00:00.000Z"
     },
     {
@@ -57,6 +59,7 @@ const index = {
       rootName: "Codex",
       extension: ".svg",
       sizeBytes: 90,
+      themes: ["logo", "vector"],
       modifiedAt: "2026-05-30T00:00:00.000Z"
     }
   ],
@@ -86,6 +89,7 @@ test("createLibraryView filters by search, root, extension, and duplicate state"
   });
   assert.deepEqual(view.roots, ["Archive", "Codex"]);
   assert.deepEqual(view.extensions, [".png", ".svg"]);
+  assert.deepEqual(view.themes, ["character", "logo", "portrait", "vector"]);
   assert.deepEqual(view.sourceBreakdown, [
     { label: "Codex", count: 2 },
     { label: "Archive", count: 1 }
@@ -93,6 +97,12 @@ test("createLibraryView filters by search, root, extension, and duplicate state"
   assert.deepEqual(view.extensionBreakdown, [
     { label: ".png", count: 2 },
     { label: ".svg", count: 1 }
+  ]);
+  assert.deepEqual(view.themeBreakdown, [
+    { label: "portrait", count: 2 },
+    { label: "character", count: 1 },
+    { label: "logo", count: 1 },
+    { label: "vector", count: 1 }
   ]);
   assert.equal(view.duplicateAssetIds.has("a"), true);
   assert.equal(view.duplicateAssetIds.has("c"), false);
@@ -153,6 +163,18 @@ test("createLibraryView filters by local asset tags", () => {
     sources: 1,
     extensions: 1
   });
+});
+
+test("createLibraryView filters by inferred theme", () => {
+  const view = createLibraryView(index, {
+    theme: "logo",
+    sort: "name"
+  });
+
+  assert.deepEqual(view.assets.map((asset) => asset.id), ["c"]);
+
+  const searchView = createLibraryView(index, { query: "character", sort: "name" });
+  assert.deepEqual(searchView.assets.map((asset) => asset.id), ["a"]);
 });
 
 test("createLibraryView filters and searches browser-local asset notes", () => {
@@ -436,6 +458,7 @@ test("createAssetDetails formats metadata and duplicate context", () => {
     "Type",
     "Size",
     "Dimensions",
+    "Themes",
     "Modified",
     "Hash",
     "Path"
@@ -536,9 +559,9 @@ test("createAssetCsv exports escaped asset metadata in display order", () => {
   ]);
 
   assert.equal(csv, [
-    "id,name,source,type,sizeBytes,width,height,modifiedAt,relativePath,path,hash",
-    '"a","rose, ""study"".png","Codex",".png","1200","512","768","2026-06-01T01:00:00.000Z","flowers/rose.png","P:/AI/Codex/generated_images/rose.png","hash-a"',
-    '"c","mint.svg","Codex",".svg","90","","","2026-05-30T00:00:00.000Z","mint.svg","",""',
+    "id,name,source,type,sizeBytes,width,height,themes,modifiedAt,relativePath,path,hash",
+    '"a","rose, ""study"".png","Codex",".png","1200","512","768","portrait; character","2026-06-01T01:00:00.000Z","flowers/rose.png","P:/AI/Codex/generated_images/rose.png","hash-a"',
+    '"c","mint.svg","Codex",".svg","90","","","logo; vector","2026-05-30T00:00:00.000Z","mint.svg","",""',
     ""
   ].join("\n"));
 });
@@ -566,6 +589,7 @@ test("createAssetManifest exports selected asset metadata as stable JSON", () =>
         sizeBytes: 1200,
         width: 512,
         height: 768,
+        themes: ["portrait", "character"],
         modifiedAt: "2026-06-01T01:00:00.000Z",
         relativePath: "flowers/rose.png",
         path: "P:/AI/Codex/generated_images/rose.png",
@@ -579,6 +603,7 @@ test("createAssetManifest exports selected asset metadata as stable JSON", () =>
         sizeBytes: 90,
         width: null,
         height: null,
+        themes: ["logo", "vector"],
         modifiedAt: "2026-05-30T00:00:00.000Z",
         relativePath: "mint.svg",
         path: null,
@@ -710,6 +735,7 @@ test("createDefaultViewState returns resettable filter defaults", () => {
     extension: "all",
     orientation: "all",
     resolution: "all",
+    theme: "all",
     maxAgeDays: "all",
     mark: "all",
     tag: "all",
@@ -728,6 +754,7 @@ test("createActiveFilterChips describes only non-default filters", () => {
     extension: ".png",
     orientation: "portrait",
     resolution: "large",
+    theme: "logo",
     maxAgeDays: "30",
     mark: "review",
     tag: "keeper",
@@ -740,6 +767,7 @@ test("createActiveFilterChips describes only non-default filters", () => {
     { key: "extension", label: "Type", value: "PNG" },
     { key: "orientation", label: "Orientation", value: "Portrait" },
     { key: "resolution", label: "Resolution", value: "Large" },
+    { key: "theme", label: "Theme", value: "logo" },
     { key: "maxAgeDays", label: "Age", value: "Last 30 days" },
     { key: "mark", label: "Mark", value: "Review queue" },
     { key: "tag", label: "Tag", value: "keeper" },
@@ -771,6 +799,7 @@ test("createSavedFilterView stores a normalized filter state snapshot", () => {
       extension: ".png",
       orientation: "portrait",
       resolution: "all",
+      theme: "all",
       maxAgeDays: "all",
       mark: "all",
       tag: "all",
@@ -806,6 +835,7 @@ test("normalizeSavedFilterViews drops invalid entries and restores missing defau
         extension: "all",
         orientation: "all",
         resolution: "all",
+        theme: "all",
         maxAgeDays: "all",
         mark: "all",
         tag: "all",

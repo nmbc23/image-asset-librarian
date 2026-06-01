@@ -647,13 +647,15 @@ a:focus-visible {
   white-space: nowrap;
 }
 
-.asset-tags {
+.asset-tags,
+.asset-themes {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
 }
 
-.asset-tags button {
+.asset-tags button,
+.asset-themes button {
   min-height: 26px;
   border: 1px solid rgba(31, 138, 112, 0.32);
   border-radius: 999px;
@@ -663,6 +665,12 @@ a:focus-visible {
   font-size: 0.72rem;
   font-weight: 800;
   padding: 0 8px;
+}
+
+.asset-themes button {
+  border-color: rgba(104, 115, 122, 0.28);
+  background: var(--surface-strong);
+  color: var(--muted);
 }
 
 .asset-note-preview {

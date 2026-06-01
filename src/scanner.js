@@ -15,6 +15,20 @@ export const IMAGE_EXTENSIONS = new Set([
   ".webp"
 ]);
 
+const THEME_RULES = [
+  ["character", ["avatar", "character", "mascot", "person", "people", "model", "npc"]],
+  ["portrait", ["portrait", "face", "headshot", "selfie"]],
+  ["background", ["background", "backdrop", "wallpaper"]],
+  ["landscape", ["landscape", "scenery", "scene", "environment", "forest", "mountain", "sky", "city", "street", "ocean"]],
+  ["nature", ["flower", "rose", "tree", "forest", "mountain", "sky", "ocean", "river", "garden", "nature"]],
+  ["icon", ["icon", "glyph", "symbol", "sprite", "favicon"]],
+  ["logo", ["logo", "brand", "mark", "badge", "emblem", "wordmark"]],
+  ["pattern", ["pattern", "texture", "material", "tile", "seamless"]],
+  ["ui", ["ui", "screen", "screenshot", "wireframe", "dashboard"]],
+  ["product", ["product", "packshot", "mockup", "item", "commerce"]],
+  ["illustration", ["illustration", "anime", "manga", "comic", "drawing", "concept", "art"]]
+];
+
 export async function scanLibrary(options = {}) {
   const generatedAt = options.generatedAt ?? new Date().toISOString();
   const roots = normalizeRoots(options.roots ?? []);
@@ -123,7 +137,13 @@ async function createAssetRecord(root, filePath, extension) {
     modifiedAt: fileStat.mtime.toISOString(),
     hash,
     width: dimensions.width,
-    height: dimensions.height
+    height: dimensions.height,
+    themes: inferAssetThemes({
+      relativePath,
+      extension,
+      width: dimensions.width,
+      height: dimensions.height
+    })
   };
 }
 
@@ -194,6 +214,51 @@ function readDimensions(extension, bytes) {
     return readWebpDimensions(bytes);
   }
   return { width: null, height: null };
+}
+
+function inferAssetThemes(asset) {
+  const haystack = tokenizeThemeText(asset.relativePath);
+  const themes = [];
+
+  for (const [theme, terms] of THEME_RULES) {
+    if (terms.some((term) => haystack.has(term))) {
+      themes.push(theme);
+    }
+  }
+
+  if (!themes.length) {
+    const shapeTheme = inferShapeTheme(asset.width, asset.height);
+    if (shapeTheme) {
+      themes.push(shapeTheme);
+    }
+  }
+
+  if (asset.extension === ".svg") {
+    themes.push("vector");
+  }
+
+  return [...new Set(themes)].slice(0, 6);
+}
+
+function inferShapeTheme(width, height) {
+  const numericWidth = Number(width);
+  const numericHeight = Number(height);
+  if (!Number.isFinite(numericWidth) || !Number.isFinite(numericHeight) || numericWidth <= 0 || numericHeight <= 0) {
+    return null;
+  }
+  if (Math.abs(numericWidth - numericHeight) / Math.max(numericWidth, numericHeight) <= 0.08) {
+    return "square";
+  }
+  return numericWidth > numericHeight ? "landscape" : "portrait";
+}
+
+function tokenizeThemeText(value) {
+  return new Set(
+    String(value ?? "")
+      .toLowerCase()
+      .split(/[^a-z0-9]+/)
+      .filter(Boolean)
+  );
 }
 
 function readSvgDimensions(svg) {

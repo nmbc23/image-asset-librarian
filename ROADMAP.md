@@ -15,6 +15,7 @@ This roadmap focuses on practical improvements for local AI image workflows.
 These should remain optional and privacy-conscious.
 
 - Opt-in image captioning.
+- Optional embedding-based theme clustering for users who want heavier local image recognition.
 - Style, subject, and quality tags.
 - Semantic search over generated tags.
 - Duplicate cluster summaries.

@@ -124,6 +124,23 @@ test("resolution breakdown is exposed and wired into filter state", async () => 
   assert.match(appSource, /applyBreakdownFilter\("resolution"/);
 });
 
+test("theme grouping is exposed in filters, breakdowns, and asset cards", async () => {
+  const [appSource, htmlSource, cssSource] = await Promise.all([
+    readFile(new URL("../public/app.js", import.meta.url), "utf8"),
+    readFile(new URL("../public/index.html", import.meta.url), "utf8"),
+    readFile(new URL("../public/styles.css", import.meta.url), "utf8")
+  ]);
+
+  assert.match(htmlSource, /id="theme-filter"/);
+  assert.match(htmlSource, /id="theme-breakdown"/);
+  assert.match(htmlSource, /id="theme-breakdown-count"/);
+  assert.match(appSource, /theme: document\.querySelector\("#theme-filter"\)/);
+  assert.match(appSource, /state\.theme = elements\.theme\.value/);
+  assert.match(appSource, /data-set-theme-filter/);
+  assert.match(appSource, /renderAssetThemes/);
+  assert.match(cssSource, /\.asset-themes/);
+});
+
 test("selected assets can be bulk marked from the workflow panel", async () => {
   const [appSource, htmlSource] = await Promise.all([
     readFile(new URL("../public/app.js", import.meta.url), "utf8"),

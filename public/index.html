@@ -38,7 +38,7 @@
       <section class="toolbar" aria-label="Gallery filters">
         <label class="search-field">
           <span>Search</span>
-          <input id="search-input" type="search" placeholder="Name, folder, source, type, note">
+          <input id="search-input" type="search" placeholder="Name, folder, source, type, theme, note">
         </label>
         <label>
           <span>Source</span>
@@ -68,6 +68,10 @@
             <option value="large">Large 2-8 MP</option>
             <option value="huge">Huge 8 MP+</option>
           </select>
+        </label>
+        <label>
+          <span>Theme</span>
+          <select id="theme-filter"></select>
         </label>
         <label>
           <span>Age</span>
@@ -180,6 +184,13 @@
             <span id="resolution-breakdown-count">0 buckets</span>
           </div>
           <div id="resolution-breakdown" class="breakdown-list"></div>
+        </div>
+        <div>
+          <div class="section-heading">
+            <h2>Themes</h2>
+            <span id="theme-breakdown-count">0 themes</span>
+          </div>
+          <div id="theme-breakdown" class="breakdown-list"></div>
         </div>
       </section>
 

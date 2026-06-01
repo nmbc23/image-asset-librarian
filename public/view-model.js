@@ -5,6 +5,7 @@ export function createDefaultViewState() {
     extension: "all",
     orientation: "all",
     resolution: "all",
+    theme: "all",
     maxAgeDays: "all",
     mark: "all",
     tag: "all",
@@ -116,6 +117,14 @@ export function getAssetTags(assetTags = {}, assetId) {
   return normalizeAssetTags(assetTags)[assetId] ?? [];
 }
 
+export function getAllAssetThemes(assets = []) {
+  return uniqueSorted((Array.isArray(assets) ? assets : []).flatMap(getAssetThemes));
+}
+
+export function getAssetThemes(asset = {}) {
+  return uniqueStrings((Array.isArray(asset.themes) ? asset.themes : []).map(normalizeTheme));
+}
+
 export function setAssetNote(assetNotes = {}, assetId, note) {
   const updatedNotes = normalizeAssetNotes(assetNotes);
   const normalizedId = String(assetId ?? "").trim();
@@ -169,6 +178,9 @@ export function createActiveFilterChips(state = {}) {
       value: formatResolutionLabel(normalizedState.resolution)
     });
   }
+  if (normalizedState.theme !== defaults.theme) {
+    chips.push({ key: "theme", label: "Theme", value: normalizedState.theme });
+  }
   if (normalizedState.maxAgeDays !== defaults.maxAgeDays) {
     chips.push({
       key: "maxAgeDays",
@@ -218,6 +230,7 @@ export function createLibraryView(index, state = {}) {
     .filter((asset) => normalizedState.extension === "all" || asset.extension === normalizedState.extension)
     .filter((asset) => normalizedState.orientation === "all" || getOrientation(asset) === normalizedState.orientation)
     .filter((asset) => matchesResolution(asset, normalizedState.resolution))
+    .filter((asset) => matchesTheme(asset, normalizedState.theme))
     .filter((asset) => isWithinAge(asset, normalizedState.maxAgeDays, normalizedState.now))
     .filter((asset) => matchesMark(asset, normalizedState.mark, savedAssetIds, reviewAssetIds))
     .filter((asset) => matchesTag(asset, normalizedState.tag, assetTags))
@@ -229,10 +242,12 @@ export function createLibraryView(index, state = {}) {
     filteredSummary: summarizeAssets(filteredAssets, duplicateAssetIds, savedAssetIds, reviewAssetIds, assetTags, assetNotes),
     roots: uniqueSorted(assets.map((asset) => asset.rootName)),
     extensions: uniqueSorted(assets.map((asset) => asset.extension)),
+    themes: getAllAssetThemes(assets),
     tags: getAllAssetTags(assetTags),
     sourceBreakdown: createBreakdown(assets, "rootName"),
     extensionBreakdown: createBreakdown(assets, "extension"),
     resolutionBreakdown: createResolutionBreakdown(assets),
+    themeBreakdown: createThemeBreakdown(assets),
     duplicateAssetIds
   };
 }
@@ -270,6 +285,8 @@ export function createAssetDetails(index, assetId) {
 
   const duplicateGroup = (index.duplicates ?? []).find((group) => (group.assetIds ?? []).includes(assetId));
   const dimensions = asset.width && asset.height ? `${asset.width} x ${asset.height}` : "Unknown";
+  const themes = getAssetThemes(asset);
+  const themeLabel = themes.length ? themes.join(", ") : "Uncategorized";
 
   return {
     id: asset.id,
@@ -293,6 +310,7 @@ export function createAssetDetails(index, assetId) {
       { label: "Type", value: asset.extension?.replace(".", "").toUpperCase() ?? "Unknown" },
       { label: "Size", value: formatBytes(asset.sizeBytes) },
       { label: "Dimensions", value: dimensions },
+      { label: "Themes", value: themeLabel },
       { label: "Modified", value: formatDate(asset.modifiedAt) },
       { label: "Hash", value: asset.hash ?? "Unknown", copyValue: asset.hash },
       { label: "Path", value: asset.path ?? "Unknown", copyValue: asset.path }
@@ -452,6 +470,7 @@ export function createAssetCsv(assets) {
     ["sizeBytes", (asset) => asset.sizeBytes],
     ["width", (asset) => asset.width],
     ["height", (asset) => asset.height],
+    ["themes", (asset) => getAssetThemes(asset).join("; ")],
     ["modifiedAt", (asset) => asset.modifiedAt],
     ["relativePath", (asset) => asset.relativePath],
     ["path", (asset) => asset.path],
@@ -482,6 +501,7 @@ export function createAssetManifest(assets, options = {}) {
       sizeBytes: Number.isFinite(asset.sizeBytes) ? asset.sizeBytes : null,
       width: Number.isFinite(asset.width) ? asset.width : null,
       height: Number.isFinite(asset.height) ? asset.height : null,
+      themes: getAssetThemes(asset),
       modifiedAt: asset.modifiedAt ?? null,
       relativePath: asset.relativePath ?? null,
       path: asset.path ?? null,
@@ -549,6 +569,7 @@ function matchesSearch(asset, query, assetNotes = {}) {
     asset.relativePath,
     asset.rootName,
     asset.extension,
+    getAssetThemes(asset).join(" "),
     assetNotes[asset.id]
   ].join(" ").toLowerCase();
 
@@ -573,6 +594,13 @@ function matchesTag(asset, tag, assetTags) {
     return true;
   }
   return (assetTags[asset.id] ?? []).includes(tag);
+}
+
+function matchesTheme(asset, theme) {
+  if (theme === "all") {
+    return true;
+  }
+  return getAssetThemes(asset).includes(theme);
 }
 
 function matchesNote(asset, note, assetNotes) {
@@ -689,6 +717,19 @@ function createResolutionBreakdown(assets) {
     .filter((bucket) => bucket.count > 0);
 }
 
+function createThemeBreakdown(assets) {
+  const counts = new Map();
+  for (const asset of assets) {
+    for (const theme of getAssetThemes(asset)) {
+      counts.set(theme, (counts.get(theme) ?? 0) + 1);
+    }
+  }
+
+  return [...counts.entries()]
+    .map(([label, count]) => ({ label, count }))
+    .sort((a, b) => b.count - a.count || a.label.localeCompare(b.label));
+}
+
 function createFilterStateSnapshot(state = {}) {
   const defaults = createDefaultViewState();
   const normalizedState = { ...defaults, ...(state ?? {}) };
@@ -734,6 +775,10 @@ function hasManifestCurationOptions(options) {
 }
 
 function normalizeTag(value) {
+  return String(value ?? "").trim().replace(/\s+/g, " ").toLowerCase();
+}
+
+function normalizeTheme(value) {
   return String(value ?? "").trim().replace(/\s+/g, " ").toLowerCase();
 }
 

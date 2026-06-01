@@ -19,6 +19,7 @@ import {
   getAllAssetTags,
   getAssetNote,
   getAssetTags,
+  getAssetThemes,
   normalizeSavedFilterViews,
   parseCurationBackup,
   parseMarkBackup,
@@ -36,6 +37,7 @@ const elements = {
   extension: document.querySelector("#extension-filter"),
   orientation: document.querySelector("#orientation-filter"),
   resolution: document.querySelector("#resolution-filter"),
+  theme: document.querySelector("#theme-filter"),
   age: document.querySelector("#age-filter"),
   sort: document.querySelector("#sort-select"),
   mark: document.querySelector("#mark-filter"),
@@ -74,6 +76,8 @@ const elements = {
   typeBreakdownCount: document.querySelector("#type-breakdown-count"),
   resolutionBreakdown: document.querySelector("#resolution-breakdown"),
   resolutionBreakdownCount: document.querySelector("#resolution-breakdown-count"),
+  themeBreakdown: document.querySelector("#theme-breakdown"),
+  themeBreakdownCount: document.querySelector("#theme-breakdown-count"),
   duplicateSummary: document.querySelector("#duplicate-summary"),
   duplicateList: document.querySelector("#duplicate-list"),
   resultCount: document.querySelector("#result-count"),
@@ -136,6 +140,10 @@ function bindEvents() {
   });
   elements.resolution.addEventListener("change", () => {
     state.resolution = elements.resolution.value;
+    render();
+  });
+  elements.theme.addEventListener("change", () => {
+    state.theme = elements.theme.value;
     render();
   });
   elements.age.addEventListener("change", () => {
@@ -226,6 +234,12 @@ function bindEvents() {
       applyBreakdownFilter("resolution", button.dataset.setResolutionFilter);
     }
   });
+  elements.themeBreakdown.addEventListener("click", (event) => {
+    const button = event.target.closest("[data-set-theme-filter]");
+    if (button) {
+      applyBreakdownFilter("theme", button.dataset.setThemeFilter);
+    }
+  });
   elements.duplicateList.addEventListener("click", async (event) => {
     const cleanupButton = event.target.closest("[data-copy-duplicate-candidates]");
     if (cleanupButton) {
@@ -240,6 +254,14 @@ function bindEvents() {
     await copyDuplicateGroupPaths(button, Number.parseInt(button.dataset.copyDuplicateGroup, 10));
   });
   elements.gallery.addEventListener("click", async (event) => {
+    const themeButton = event.target.closest("[data-asset-theme]");
+    if (themeButton) {
+      state.theme = themeButton.dataset.assetTheme;
+      syncControlsFromState();
+      render();
+      return;
+    }
+
     const tagButton = event.target.closest("[data-asset-tag]");
     if (tagButton) {
       state.tag = tagButton.dataset.assetTag;
@@ -356,6 +378,7 @@ function syncControlsFromState() {
   elements.extension.value = state.extension;
   elements.orientation.value = state.orientation;
   elements.resolution.value = state.resolution;
+  elements.theme.value = state.theme;
   elements.age.value = state.maxAgeDays;
   elements.sort.value = state.sort;
   elements.mark.value = state.mark;
@@ -424,6 +447,7 @@ function renderFilters(view) {
     [["all", "All types"], ...view.extensions.map((extension) => [extension, extension.replace(".", "").toUpperCase()])],
     state.extension
   );
+  syncSelect(elements.theme, [["all", "All themes"], ...view.themes.map((theme) => [theme, theme])], state.theme);
   syncSelect(elements.tag, [["all", "All tags"], ...view.tags.map((tag) => [tag, tag])], state.tag);
 }
 
@@ -478,6 +502,7 @@ function renderBreakdowns(view) {
   elements.sourceBreakdownCount.textContent = `${view.sourceBreakdown.length} sources`;
   elements.typeBreakdownCount.textContent = `${view.extensionBreakdown.length} types`;
   elements.resolutionBreakdownCount.textContent = `${view.resolutionBreakdown.length} buckets`;
+  elements.themeBreakdownCount.textContent = `${view.themeBreakdown.length} themes`;
   elements.sourceBreakdown.innerHTML = view.sourceBreakdown
     .map((item) => renderBreakdownItem(item, "root", item.label))
     .join("");
@@ -490,13 +515,17 @@ function renderBreakdowns(view) {
   elements.resolutionBreakdown.innerHTML = view.resolutionBreakdown
     .map((item) => renderBreakdownItem(item, "resolution", item.value))
     .join("");
+  elements.themeBreakdown.innerHTML = view.themeBreakdown
+    .map((item) => renderBreakdownItem(item, "theme", item.label))
+    .join("");
 }
 
 function renderBreakdownItem(item, filterType, filterValue) {
   const filterAttributes = {
     root: "data-set-root-filter",
     extension: "data-set-extension-filter",
-    resolution: "data-set-resolution-filter"
+    resolution: "data-set-resolution-filter",
+    theme: "data-set-theme-filter"
   };
   const filterAttribute = `${filterAttributes[filterType]}="${escapeHtml(filterValue)}"`;
   return `
@@ -512,6 +541,8 @@ function applyBreakdownFilter(filterType, filterValue) {
     state.root = filterValue;
   } else if (filterType === "resolution") {
     state.resolution = filterValue;
+  } else if (filterType === "theme") {
+    state.theme = filterValue;
   } else {
     state.extension = filterValue;
   }
@@ -651,6 +682,7 @@ function renderAssetCard(asset, isDuplicate) {
           ${duplicateBadge}
         </div>
         <p title="${escapeHtml(asset.relativePath)}">${escapeHtml(asset.relativePath)}</p>
+        ${renderAssetThemes(asset)}
         ${renderAssetTags(asset.id)}
         ${renderAssetNotePreview(asset.id)}
         <dl>
@@ -676,6 +708,19 @@ function renderAssetNotePreview(assetId) {
   }
 
   return `<div class="asset-note-preview" title="${escapeHtml(note)}">${escapeHtml(note)}</div>`;
+}
+
+function renderAssetThemes(asset) {
+  const themes = getAssetThemes(asset);
+  if (!themes.length) {
+    return "";
+  }
+
+  return `
+    <div class="asset-themes">
+      ${themes.map((theme) => `<button type="button" data-asset-theme="${escapeHtml(theme)}">${escapeHtml(theme)}</button>`).join("")}
+    </div>
+  `;
 }
 
 function renderAssetTags(assetId) {

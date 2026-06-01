@@ -8,6 +8,7 @@ import { scanLibrary } from "../src/scanner.js";
 
 const svgA = `<svg xmlns="http://www.w3.org/2000/svg" width="120" height="80"><rect width="120" height="80" fill="#d94f70"/></svg>`;
 const svgB = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 90 60"><circle cx="45" cy="30" r="24" fill="#1f8a70"/></svg>`;
+const svgSquare = `<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80"><rect width="80" height="80" fill="#1f8a70"/></svg>`;
 
 async function withTempLibrary(run) {
   const dir = await mkdtemp(path.join(os.tmpdir(), "image-asset-librarian-"));
@@ -38,6 +39,27 @@ test("scanLibrary indexes image assets with searchable metadata", async () => {
     assert.deepEqual(index.summary.extensions, { ".svg": 1 });
     assert.deepEqual(index.summary.sources, { Demo: 1 });
     assert.equal(index.errors.length, 0);
+  });
+});
+
+test("scanLibrary infers local visual themes from image metadata and paths", async () => {
+  await withTempLibrary(async (dir) => {
+    await writeFile(path.join(dir, "portrait-avatar.svg"), svgA);
+    await writeFile(path.join(dir, "wide-forest-background.svg"), svgB);
+    await writeFile(path.join(dir, "brand-logo-icon.svg"), svgB);
+    await writeFile(path.join(dir, "untitled.svg"), svgSquare);
+
+    const index = await scanLibrary({
+      roots: [{ name: "Theme Demo", path: dir }],
+      generatedAt: "2026-06-01T00:00:00.000Z"
+    });
+
+    const byName = new Map(index.assets.map((asset) => [asset.name, asset]));
+
+    assert.deepEqual(byName.get("portrait-avatar.svg").themes, ["character", "portrait", "vector"]);
+    assert.deepEqual(byName.get("wide-forest-background.svg").themes, ["background", "landscape", "nature", "vector"]);
+    assert.deepEqual(byName.get("brand-logo-icon.svg").themes, ["icon", "logo", "vector"]);
+    assert.deepEqual(byName.get("untitled.svg").themes, ["square", "vector"]);
   });
 });
 
