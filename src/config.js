@@ -8,13 +8,17 @@ export async function loadConfig(configPath = DEFAULT_CONFIG_FILE) {
   const resolvedConfigPath = path.resolve(configPath);
   const configDir = path.dirname(resolvedConfigPath);
   const raw = await readFile(resolvedConfigPath, "utf8");
-  const parsed = JSON.parse(raw);
+  const parsed = JSON.parse(stripJsonBom(raw));
 
   return {
     configPath: resolvedConfigPath,
     roots: normalizeRoots(parsed.roots ?? [], configDir),
     outputPath: resolveFromConfig(configDir, parsed.output ?? DEFAULT_OUTPUT_FILE)
   };
+}
+
+function stripJsonBom(value) {
+  return String(value ?? "").replace(/^\uFEFF/, "");
 }
 
 function normalizeRoots(roots, configDir) {

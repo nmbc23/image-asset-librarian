@@ -10,8 +10,7 @@ Run:
 
 ```bash
 npm install
-npm run scan
-npm run serve
+npm start
 ```
 
 Open `http://127.0.0.1:4173`.
@@ -43,7 +42,7 @@ There are no OpenAI calls, no image uploads, no telemetry, and no required API k
 
 When testing a personal folder:
 
-1. Start the server with `npm run serve`.
+1. Start the server with `npm start`.
 2. Paste a folder path into "Scan by path" and scan it.
 3. Confirm the gallery refreshes and the badge no longer identifies the data as the sample library.
 4. Use "Scan by path" only when you need to update `data/index.json`.

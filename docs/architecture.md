@@ -29,11 +29,11 @@ Responsibilities:
 
 The server is intentionally small and uses Node.js built-ins only.
 
-## Browser Folder Picker
+## Browser-Only Index Helpers
 
 `public/browser-folder-index.js` contains browser-only indexing helpers for environments that can safely expose directory handles or directory file inputs. The default app flow uses the server-backed path scanner instead, because embedded Windows browsers can be unstable around native directory picker dialogs.
 
-This picker is optimized for fast first render, so it does not hash every file or read every image dimension by default. It also does not expose absolute filesystem paths and does not update `data/index.json`. The server-backed "Scan by path" fallback remains available when users want a persistent index file with exact duplicate hashes and dimensions.
+Those helpers are optimized for fast first render, so they do not hash every file or read every image dimension by default. They also do not expose absolute filesystem paths and do not update `data/index.json`. The default "Scan by path" workflow remains the supported path for a persistent index file with exact duplicate hashes and dimensions.
 
 ## Browser UI
 
@@ -42,7 +42,7 @@ This picker is optimized for fast first render, so it does not hash every file o
 UI responsibilities:
 
 - Search by name, relative path, source, extension, inferred theme, inferred color vibe, palette hex color, generated description, or embedded metadata.
-- Choose a local image folder through the browser folder picker for a temporary local gallery, or scan a typed local path through `POST /api/scan` to update the local index file.
+- Scan a typed local path through `POST /api/scan` to update the local index file.
 - Label the loaded index as a sample library or actual library from its root metadata so users can tell whether they are looking at the demo assets or their own folders.
 - Filter by source, file type, orientation, resolution bucket, inferred theme, inferred color vibe, local asset issue, age, duplicate state, and local review marks.
 - Apply browser-local tags to selected assets and use those tags as gallery filters.

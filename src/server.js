@@ -72,6 +72,67 @@ export function createAssetServer(options = {}) {
   });
 }
 
+export async function ensureIndexFile(config) {
+  try {
+    await stat(config.outputPath);
+    return { created: false, outputPath: config.outputPath };
+  } catch (error) {
+    if (error.code !== "ENOENT") {
+      throw error;
+    }
+  }
+
+  const index = await scanLibrary({ roots: config.roots });
+  await mkdir(path.dirname(config.outputPath), { recursive: true });
+  await writeFile(config.outputPath, `${JSON.stringify(index, null, 2)}\n`, "utf8");
+
+  return { created: true, outputPath: config.outputPath, index };
+}
+
+export async function listenOnAvailablePort(createServer, options = {}) {
+  const host = options.host ?? "127.0.0.1";
+  const initialPort = Number.parseInt(String(options.port ?? 4173), 10);
+  const attempts = Math.max(1, Number.parseInt(String(options.attempts ?? 10), 10));
+
+  for (let offset = 0; offset < attempts; offset += 1) {
+    const port = initialPort + offset;
+    const server = createServer();
+    try {
+      await listen(server, port, host);
+      const address = server.address();
+      return { server, host, port: address?.port ?? port };
+    } catch (error) {
+      await closeServer(server);
+      if (error.code === "EADDRINUSE" && offset < attempts - 1) {
+        continue;
+      }
+      throw error;
+    }
+  }
+
+  throw new Error("Could not find an available port");
+}
+
+function listen(server, port, host) {
+  return new Promise((resolve, reject) => {
+    server.once("error", reject);
+    server.listen(port, host, () => {
+      server.off("error", reject);
+      resolve();
+    });
+  });
+}
+
+function closeServer(server) {
+  return new Promise((resolve) => {
+    if (!server.listening) {
+      resolve();
+      return;
+    }
+    server.close(resolve);
+  });
+}
+
 async function scanPostedFolder(request, response, indexPath) {
   const body = await readJsonBody(request);
   const folderPath = String(body.folderPath ?? "").trim();
@@ -176,20 +237,29 @@ function sendJson(response, status, value) {
 }
 
 async function startServer() {
-  const configFlag = process.argv.indexOf("--config");
-  const configPath = configFlag >= 0 ? process.argv[configFlag + 1] : path.join(projectRoot, "asset-librarian.config.json");
+  const configPath = readFlag(process.argv, "--config") ?? path.join(projectRoot, "asset-librarian.config.json");
   const config = await loadConfig(configPath);
-  const port = Number.parseInt(process.env.PORT || "4173", 10);
-  const host = process.env.HOST || "127.0.0.1";
-  const server = createAssetServer({
-    indexPath: config.outputPath,
-    publicDir: path.join(projectRoot, "public")
-  });
+  const preparedIndex = await ensureIndexFile(config);
+  const port = Number.parseInt(readFlag(process.argv, "--port") ?? process.env.PORT ?? "4173", 10);
+  const host = readFlag(process.argv, "--host") ?? process.env.HOST ?? "127.0.0.1";
+  const result = await listenOnAvailablePort(
+    () => createAssetServer({
+      indexPath: config.outputPath,
+      publicDir: path.join(projectRoot, "public")
+    }),
+    { host, port }
+  );
 
-  server.listen(port, host, () => {
-    console.log(`Image Asset Librarian running at http://${host}:${port}`);
-    console.log(`Serving index: ${config.outputPath}`);
-  });
+  if (preparedIndex.created) {
+    console.log(`Prepared index: ${config.outputPath}`);
+  }
+  console.log(`Image Asset Librarian running at http://${result.host}:${result.port}`);
+  console.log(`Serving index: ${config.outputPath}`);
+}
+
+function readFlag(argv, flag) {
+  const index = argv.indexOf(flag);
+  return index >= 0 ? argv[index + 1] : null;
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === modulePath) {

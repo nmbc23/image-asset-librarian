@@ -12,13 +12,12 @@ Image Asset Librarian is a small local web app for people with messy AI image ou
 
 ```bash
 npm install
-npm run scan
-npm run serve
+npm start
 ```
 
 Open `http://127.0.0.1:4173`.
 
-The default config scans `sample-library/`, so a fresh clone opens with a safe demo library. In the gallery, try:
+`npm start` prepares `data/index.json` from the bundled `sample-library/` if the index is missing, then starts the local server. If port `4173` is already busy, it automatically tries the next port and prints the URL. In the gallery, try:
 
 - Search for `terrace` or `mint`.
 - Open a card to inspect metadata, generated description, AI-style review, and copy buttons.
@@ -36,6 +35,12 @@ The sample library is intentionally small and public-repo friendly. It includes 
 5. Switch to a real folder and confirm the badge changes to an actual library.
 
 See [docs/demo.md](docs/demo.md) for a guided walkthrough.
+
+To verify the runnable app without leaving a server open:
+
+```bash
+npm run smoke
+```
 
 ## Why It Exists
 
@@ -100,9 +105,11 @@ Keep `asset-librarian.config.local.json` and `data/index.json` out of public com
 ## Scripts
 
 - `npm test` runs the Node test suite.
+- `npm start` prepares the sample index if needed and starts the local gallery at `http://127.0.0.1:4173`.
+- `npm run smoke` starts an ephemeral local server and verifies the app, index API, and client bundle respond.
 - `npm run scan` builds `data/index.json` from `asset-librarian.config.json`.
 - `npm run report` writes a duplicate review report to `reports/duplicates.md`.
-- `npm run serve` starts the local gallery at `http://127.0.0.1:4173`.
+- `npm run serve` is an alias for the local server.
 
 ## Project Structure
 

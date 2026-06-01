@@ -1,11 +1,11 @@
 import assert from "node:assert/strict";
-import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import http from "node:http";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 
-import { createAssetServer } from "../src/server.js";
+import { createAssetServer, ensureIndexFile, listenOnAvailablePort } from "../src/server.js";
 
 const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"><rect width="20" height="20" fill="#3949ab"/></svg>`;
 
@@ -108,4 +108,96 @@ test("createAssetServer rejects missing scan folders without replacing the index
     assert.equal(index.summary.totalAssets, 1);
     assert.equal(index.assets[0].id, "asset-one");
   });
+});
+
+test("ensureIndexFile creates a missing index from configured roots", async () => {
+  const dir = await mkdtemp(path.join(os.tmpdir(), "image-asset-librarian-ensure-"));
+  try {
+    const sampleDir = path.join(dir, "sample-library");
+    const indexPath = path.join(dir, "data", "index.json");
+    await mkdir(sampleDir, { recursive: true });
+    await writeFile(path.join(sampleDir, "sample.svg"), svg);
+
+    const result = await ensureIndexFile({
+      roots: [{ name: "Sample", path: sampleDir }],
+      outputPath: indexPath
+    });
+    const index = JSON.parse(await readFile(indexPath, "utf8"));
+
+    assert.equal(result.created, true);
+    assert.equal(index.summary.totalAssets, 1);
+    assert.equal(index.assets[0].name, "sample.svg");
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test("ensureIndexFile keeps an existing index in place", async () => {
+  const dir = await mkdtemp(path.join(os.tmpdir(), "image-asset-librarian-ensure-existing-"));
+  try {
+    const sampleDir = path.join(dir, "sample-library");
+    const indexPath = path.join(dir, "data", "index.json");
+    await mkdir(sampleDir, { recursive: true });
+    await mkdir(path.dirname(indexPath), { recursive: true });
+    await writeFile(path.join(sampleDir, "sample.svg"), svg);
+    await writeFile(indexPath, JSON.stringify({ version: 1, summary: { totalAssets: 99 } }));
+
+    const result = await ensureIndexFile({
+      roots: [{ name: "Sample", path: sampleDir }],
+      outputPath: indexPath
+    });
+    const index = JSON.parse(await readFile(indexPath, "utf8"));
+
+    assert.equal(result.created, false);
+    assert.equal(index.summary.totalAssets, 99);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test("listenOnAvailablePort skips an occupied port", async () => {
+  const dir = await mkdtemp(path.join(os.tmpdir(), "image-asset-librarian-port-"));
+  const occupiedServer = http.createServer((request, response) => response.end("occupied"));
+  let appServer;
+
+  try {
+    const publicDir = path.join(dir, "public");
+    const dataDir = path.join(dir, "data");
+    const assetPath = path.join(dir, "image.svg");
+    const indexPath = path.join(dataDir, "index.json");
+    await mkdir(publicDir);
+    await mkdir(dataDir);
+    await writeFile(path.join(publicDir, "index.html"), "<main>Gallery</main>");
+    await writeFile(assetPath, svg);
+    await writeFile(
+      indexPath,
+      JSON.stringify({
+        version: 1,
+        generatedAt: "2026-06-01T00:00:00.000Z",
+        roots: [],
+        summary: { totalAssets: 1 },
+        assets: [{ id: "asset-one", path: assetPath, extension: ".svg" }],
+        duplicates: [],
+        errors: []
+      })
+    );
+
+    await new Promise((resolve) => occupiedServer.listen(0, "127.0.0.1", resolve));
+    const occupiedPort = occupiedServer.address().port;
+    const result = await listenOnAvailablePort(
+      () => createAssetServer({ indexPath, publicDir }),
+      { host: "127.0.0.1", port: occupiedPort, attempts: 2 }
+    );
+    appServer = result.server;
+
+    const response = await fetch(`http://127.0.0.1:${result.port}/`);
+    assert.equal(result.port, occupiedPort + 1);
+    assert.equal(response.status, 200);
+  } finally {
+    if (appServer) {
+      await new Promise((resolve) => appServer.close(resolve));
+    }
+    await new Promise((resolve) => occupiedServer.close(resolve));
+    await rm(dir, { recursive: true, force: true });
+  }
 });

@@ -9,6 +9,12 @@ test("asset Open action navigates the current tab instead of relying on a new ta
   assert.match(appSource, /window\.location\.assign/);
 });
 
+test("package exposes a smoke command for runnable app verification", async () => {
+  const packageSource = await readFile(new URL("../package.json", import.meta.url), "utf8");
+
+  assert.match(packageSource, /"smoke": "node scripts\/smoke.js"/);
+});
+
 test("detail drawer exposes previous and next asset navigation", async () => {
   const [appSource, cssSource] = await Promise.all([
     readFile(new URL("../public/app.js", import.meta.url), "utf8"),

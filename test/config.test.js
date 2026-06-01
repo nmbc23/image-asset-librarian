@@ -55,3 +55,22 @@ test("loadConfig accepts string roots and derives a readable source name", async
     assert.equal(config.outputPath, path.join(dir, "data", "index.json"));
   });
 });
+
+test("loadConfig accepts UTF-8 JSON files with a BOM", async () => {
+  await withTempProject(async (dir) => {
+    const configPath = path.join(dir, "asset-librarian.config.json");
+    await writeFile(
+      configPath,
+      `\uFEFF${JSON.stringify({
+        roots: ["sample-library"],
+        output: "data/index.json"
+      })}`,
+      "utf8"
+    );
+
+    const config = await loadConfig(configPath);
+
+    assert.equal(config.roots[0].path, path.join(dir, "sample-library"));
+    assert.equal(config.outputPath, path.join(dir, "data", "index.json"));
+  });
+});
