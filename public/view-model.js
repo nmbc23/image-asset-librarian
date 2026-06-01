@@ -388,6 +388,7 @@ export function createAssetDetails(index, assetId) {
   const colorThemeLabel = colorThemes.length ? colorThemes.join(", ") : "Uncategorized";
   const palette = getAssetPalette(asset);
   const paletteLabel = palette.length ? palette.join(", ") : "Unavailable";
+  const suggestedFileName = createSuggestedFileName(asset);
   const metadataEntries = getAssetMetadataEntries(asset);
   const metadataSummary = formatAssetMetadata(asset);
   const description = createAssetDescription(asset);
@@ -421,6 +422,7 @@ export function createAssetDetails(index, assetId) {
       { label: "Themes", value: themeLabel },
       { label: "Color vibes", value: colorThemeLabel },
       { label: "Palette", value: paletteLabel },
+      { label: "Suggested filename", value: suggestedFileName, copyValue: suggestedFileName },
       { label: "Metadata", value: metadataSummary || "Unavailable", copyValue: metadataSummary },
       { label: "Modified", value: formatDate(asset.modifiedAt) },
       { label: "Hash", value: asset.hash ?? "Unknown", copyValue: asset.hash },
@@ -648,6 +650,51 @@ export function createAssetDescriptionList(assets) {
     return `- **${escapeMarkdownText(name)}**: ${createAssetDescription(asset)}`;
   });
   return `${lines.join("\n")}${lines.length ? "\n" : ""}`;
+}
+
+export function createSuggestedFileName(asset = {}) {
+  const themes = getAssetThemes(asset);
+  const colorThemes = getAssetColorThemes(asset);
+  const dimensions = formatSuggestedFileNameDimensions(asset);
+  const fallbackName = removeFileExtension(asset.name ?? asset.relativePath ?? asset.id ?? "asset");
+  const descriptiveParts = uniqueStrings([
+    ...themes.slice(0, 2),
+    ...colorThemes.slice(0, 2)
+  ]);
+  const parts = descriptiveParts.length ? uniqueStrings([...descriptiveParts, dimensions]) : uniqueStrings([fallbackName, dimensions]);
+  const slug = slugifyFileName(parts.length ? parts.join(" ") : fallbackName) || "asset";
+  const extension = normalizeSuggestedExtension(asset.extension) || normalizeSuggestedExtension(getFileExtension(asset.name));
+
+  return `${slug}${extension}`;
+}
+
+export function createAssetRenamePlan(assets, options = {}) {
+  const planAssets = Array.isArray(assets) ? assets : [];
+  const usedFileNames = new Map();
+  const lines = [
+    "# Image Asset Rename Plan",
+    "",
+    `Generated: ${options.generatedAt ?? new Date().toISOString()}`,
+    `Scope: ${String(options.label ?? "assets")}`,
+    `Count: ${planAssets.length}`,
+    "",
+    "| Current path | Suggested filename | Description |",
+    "| --- | --- | --- |"
+  ];
+
+  for (const asset of planAssets) {
+    const currentPath = asset.relativePath ?? asset.path ?? asset.name ?? asset.id ?? "";
+    const suggestedFileName = createUniqueSuggestedFileName(asset, usedFileNames);
+    const cells = [
+      `\`${escapeMarkdownCodeText(currentPath)}\``,
+      `\`${escapeMarkdownCodeText(suggestedFileName)}\``,
+      escapeMarkdownTableText(createAssetDescription(asset))
+    ];
+    lines.push(`| ${cells.join(" | ")} |`);
+  }
+
+  lines.push("");
+  return lines.join("\n");
 }
 
 export function createAssetContactSheet(assets, options = {}) {
@@ -1276,6 +1323,53 @@ function escapeMarkdownImageAlt(value) {
 
 function formatContactSheetDimensions(asset = {}) {
   return asset.width && asset.height ? `${asset.width}x${asset.height}` : "Unknown dimensions";
+}
+
+function formatSuggestedFileNameDimensions(asset = {}) {
+  return asset.width && asset.height ? `${asset.width}x${asset.height}` : "";
+}
+
+function createUniqueSuggestedFileName(asset, usedFileNames) {
+  const fileName = createSuggestedFileName(asset);
+  const key = fileName.toLowerCase();
+  const count = (usedFileNames.get(key) ?? 0) + 1;
+  usedFileNames.set(key, count);
+
+  if (count === 1) {
+    return fileName;
+  }
+
+  const extension = getFileExtension(fileName);
+  const baseName = removeFileExtension(fileName);
+  return `${baseName}-${count}${extension}`;
+}
+
+function slugifyFileName(value) {
+  return String(value ?? "")
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "")
+    .slice(0, 80)
+    .replace(/-$/g, "");
+}
+
+function normalizeSuggestedExtension(value) {
+  const extension = String(value ?? "").trim().toLowerCase();
+  if (!extension) {
+    return "";
+  }
+  const normalized = extension.startsWith(".") ? extension : `.${extension}`;
+  return /^\.[a-z0-9]+$/.test(normalized) ? normalized : "";
+}
+
+function getFileExtension(value) {
+  const match = String(value ?? "").match(/(\.[a-z0-9]+)$/i);
+  return match?.[1] ?? "";
+}
+
+function removeFileExtension(value) {
+  return String(value ?? "").replace(/\.[a-z0-9]+$/i, "");
 }
 
 function createAssetContactSheetUrl(asset = {}, assetBaseUrl = "") {

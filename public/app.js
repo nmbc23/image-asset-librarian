@@ -9,6 +9,7 @@ import {
   createAssetIssueReport,
   createAssetManifest,
   createAssetNavigation,
+  createAssetRenamePlan,
   createCurationBackup,
   createDefaultViewState,
   createDuplicateGroupDetails,
@@ -73,6 +74,10 @@ const elements = {
   copySelectedCsv: document.querySelector("#copy-selected-csv"),
   copyVisibleManifest: document.querySelector("#copy-visible-manifest"),
   copySelectedManifest: document.querySelector("#copy-selected-manifest"),
+  copyVisibleRenamePlan: document.querySelector("#copy-visible-rename-plan"),
+  copySelectedRenamePlan: document.querySelector("#copy-selected-rename-plan"),
+  downloadVisibleRenamePlan: document.querySelector("#download-visible-rename-plan"),
+  downloadSelectedRenamePlan: document.querySelector("#download-selected-rename-plan"),
   saveSelectedAssets: document.querySelector("#save-selected-assets"),
   reviewSelectedAssets: document.querySelector("#review-selected-assets"),
   unmarkSelectedAssets: document.querySelector("#unmark-selected-assets"),
@@ -239,6 +244,10 @@ function bindEvents() {
   elements.copySelectedCsv.addEventListener("click", copySelectedCsv);
   elements.copyVisibleManifest.addEventListener("click", copyVisibleManifest);
   elements.copySelectedManifest.addEventListener("click", copySelectedManifest);
+  elements.copyVisibleRenamePlan.addEventListener("click", copyVisibleRenamePlan);
+  elements.copySelectedRenamePlan.addEventListener("click", copySelectedRenamePlan);
+  elements.downloadVisibleRenamePlan.addEventListener("click", downloadVisibleRenamePlan);
+  elements.downloadSelectedRenamePlan.addEventListener("click", downloadSelectedRenamePlan);
   elements.saveSelectedAssets.addEventListener("click", () => applySelectedMarkBatch("save", elements.saveSelectedAssets));
   elements.reviewSelectedAssets.addEventListener("click", () => applySelectedMarkBatch("review", elements.reviewSelectedAssets));
   elements.unmarkSelectedAssets.addEventListener("click", () => applySelectedMarkBatch("clear", elements.unmarkSelectedAssets));
@@ -551,6 +560,10 @@ function renderWorkflow() {
   elements.copySelectedCsv.disabled = selectedAssetIds.size === 0;
   elements.copyVisibleManifest.disabled = !currentView?.assets.length;
   elements.copySelectedManifest.disabled = selectedAssetIds.size === 0;
+  elements.copyVisibleRenamePlan.disabled = !currentView?.assets.length;
+  elements.copySelectedRenamePlan.disabled = selectedAssetIds.size === 0;
+  elements.downloadVisibleRenamePlan.disabled = !currentView?.assets.length;
+  elements.downloadSelectedRenamePlan.disabled = selectedAssetIds.size === 0;
   elements.saveSelectedAssets.disabled = selectedAssetIds.size === 0;
   elements.reviewSelectedAssets.disabled = selectedAssetIds.size === 0;
   elements.unmarkSelectedAssets.disabled = selectedAssetIds.size === 0;
@@ -1212,6 +1225,38 @@ async function copyVisibleManifest() {
   await copyFromButton(elements.copyVisibleManifest, createAssetManifest(visibleAssets, createManifestOptions("visible")));
 }
 
+async function copySelectedRenamePlan() {
+  const selectedAssets = getSelectedAssets();
+  if (!selectedAssets.length) {
+    return;
+  }
+  await copyFromButton(elements.copySelectedRenamePlan, createAssetRenamePlan(selectedAssets, createRenamePlanOptions("selected")));
+}
+
+async function copyVisibleRenamePlan() {
+  const visibleAssets = currentView?.assets ?? [];
+  if (!visibleAssets.length) {
+    return;
+  }
+  await copyFromButton(elements.copyVisibleRenamePlan, createAssetRenamePlan(visibleAssets, createRenamePlanOptions("visible")));
+}
+
+function downloadSelectedRenamePlan() {
+  const selectedAssets = getSelectedAssets();
+  if (!selectedAssets.length) {
+    return;
+  }
+  downloadRenamePlan(selectedAssets, "selected", elements.downloadSelectedRenamePlan);
+}
+
+function downloadVisibleRenamePlan() {
+  const visibleAssets = currentView?.assets ?? [];
+  if (!visibleAssets.length) {
+    return;
+  }
+  downloadRenamePlan(visibleAssets, "visible", elements.downloadVisibleRenamePlan);
+}
+
 function createManifestOptions(label) {
   return {
     label,
@@ -1221,6 +1266,20 @@ function createManifestOptions(label) {
     assetNotes,
     duplicateAssetIds: currentView?.duplicateAssetIds
   };
+}
+
+function createRenamePlanOptions(label, generatedAt = new Date().toISOString()) {
+  return {
+    generatedAt,
+    label
+  };
+}
+
+function downloadRenamePlan(assets, label, button) {
+  const generatedAt = new Date().toISOString();
+  const plan = createAssetRenamePlan(assets, createRenamePlanOptions(label, generatedAt));
+  const fileName = createExportFileName(`asset-rename-plan-${label}`, "md", { generatedAt });
+  downloadTextFile(button, plan, fileName, "text/markdown");
 }
 
 function createContactSheetOptions() {

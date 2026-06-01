@@ -322,6 +322,24 @@ test("visible and selected asset metadata can be copied as JSON manifests", asyn
   assert.match(appSource, /assetNotes/);
 });
 
+test("visible and selected rename plans can be copied and downloaded", async () => {
+  const [appSource, htmlSource] = await Promise.all([
+    readFile(new URL("../public/app.js", import.meta.url), "utf8"),
+    readFile(new URL("../public/index.html", import.meta.url), "utf8")
+  ]);
+
+  assert.match(htmlSource, /id="copy-visible-rename-plan"/);
+  assert.match(htmlSource, /id="copy-selected-rename-plan"/);
+  assert.match(htmlSource, /id="download-visible-rename-plan"/);
+  assert.match(htmlSource, /id="download-selected-rename-plan"/);
+  assert.match(appSource, /createAssetRenamePlan/);
+  assert.match(appSource, /copyVisibleRenamePlan/);
+  assert.match(appSource, /copySelectedRenamePlan/);
+  assert.match(appSource, /downloadVisibleRenamePlan/);
+  assert.match(appSource, /downloadSelectedRenamePlan/);
+  assert.match(appSource, /asset-rename-plan/);
+});
+
 test("workflow report includes browser-local tags and notes", async () => {
   const appSource = await readFile(new URL("../public/app.js", import.meta.url), "utf8");
   const workflowReportFunction = appSource.match(/async function copyWorkflowReport\(\) \{[\s\S]*?\n\}/)?.[0] ?? "";

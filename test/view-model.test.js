@@ -13,6 +13,7 @@ import {
   createAssetNavigation,
   createAssetCsv,
   createAssetManifest,
+  createAssetRenamePlan,
   createCurationBackup,
   createDefaultViewState,
   createDuplicateGroupDetails,
@@ -22,6 +23,7 @@ import {
   createPathList,
   createSavedFilterView,
   createSimilarGroupDetails,
+  createSuggestedFileName,
   createWorkflowReport,
   formatBytes,
   getAllAssetTags,
@@ -669,11 +671,13 @@ test("createAssetDetails formats metadata and duplicate context", () => {
     "Themes",
     "Color vibes",
     "Palette",
+    "Suggested filename",
     "Metadata",
     "Modified",
     "Hash",
     "Path"
   ]);
+  assert.equal(details.fields.find((field) => field.label === "Suggested filename")?.value, "portrait-character-warm-vivid-512x768.png");
   assert.deepEqual(details.metadataEntries, [
     { label: "Title", value: "Rose prompt" },
     { label: "Description", value: "Soft light portrait" },
@@ -772,6 +776,46 @@ test("createWorkflowReport exports selected, saved, and review queues as markdow
   assert.match(report, /`copies\/rose-copy\.png` \(Archive, 1\.2 KB, duplicate\)/);
   assert.match(report, /Tags: cleanup/);
   assert.match(report, /Note: Duplicate candidate for removal/);
+});
+
+test("createSuggestedFileName builds stable descriptive names", () => {
+  assert.equal(createSuggestedFileName(index.assets[0]), "portrait-character-warm-vivid-512x768.png");
+  assert.equal(createSuggestedFileName(index.assets[2]), "logo-vector-cool-green.svg");
+  assert.equal(createSuggestedFileName({
+    id: "fallback",
+    name: "My Weird File!!.jpg",
+    extension: ".jpg",
+    width: 800,
+    height: 600,
+    themes: [],
+    colorThemes: []
+  }), "my-weird-file-800x600.jpg");
+});
+
+test("createAssetRenamePlan exports markdown filename suggestions", () => {
+  const plan = createAssetRenamePlan([
+    index.assets[0],
+    index.assets[2],
+    { ...index.assets[2], id: "d", name: "mint-copy.svg", relativePath: "drafts/mint-copy.svg" }
+  ], {
+    generatedAt: "2026-06-01T17:00:00.000Z",
+    label: "visible"
+  });
+
+  assert.equal(plan, [
+    "# Image Asset Rename Plan",
+    "",
+    "Generated: 2026-06-01T17:00:00.000Z",
+    "Scope: visible",
+    "Count: 3",
+    "",
+    "| Current path | Suggested filename | Description |",
+    "| --- | --- | --- |",
+    "| `flowers/rose.png` | `portrait-character-warm-vivid-512x768.png` | A portrait character image with warm, vivid colors and a rose, teal palette. Metadata suggests: Soft light portrait. |",
+    "| `mint.svg` | `logo-vector-cool-green.svg` | A logo vector image with cool, green colors and a teal palette. |",
+    "| `drafts/mint-copy.svg` | `logo-vector-cool-green-2.svg` | A logo vector image with cool, green colors and a teal palette. |",
+    ""
+  ].join("\n"));
 });
 
 test("createPathList exports asset paths in display order", () => {

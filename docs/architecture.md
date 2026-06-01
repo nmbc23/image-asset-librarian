@@ -45,6 +45,7 @@ UI responsibilities:
 - Review similar visual groups and jump into the matching search query.
 - Show compact palette swatches on asset cards and in the detail drawer.
 - Generate concise local image descriptions from indexed visual signals, then copy them one-by-one, export selected/visible description batches, or save them as local notes.
+- Generate stable suggested filenames from local theme, color, dimension, and source-name signals, then copy or download selected/visible Markdown rename plans without modifying files.
 - Copy selected or visible assets as Markdown contact sheets with local preview links, descriptions, paths, dimensions, and file sizes.
 - Show embedded metadata in the detail drawer with copy controls.
 - Sort by date, file size, resolution, or name.
@@ -58,6 +59,7 @@ UI responsibilities:
 - Select all currently visible filtered assets and copy selected or visible asset paths as a batch for downstream cleanup, curation, or prompt-tracking work.
 - Copy selected or visible asset metadata, including palettes, generated descriptions, and embedded prompt/title metadata, as CSV for spreadsheets, issue reports, and lightweight inventory work.
 - Copy selected or visible asset metadata, including palettes, generated descriptions, and embedded prompt/title metadata, as a structured JSON manifest that can include local curation annotations for automation and reproducible downstream workflows.
+- Copy or download selected or visible rename plans as Markdown so downstream cleanup can review proposed filenames before any file operation happens.
 - Copy or download a Markdown workflow report summarizing selected, saved, and review-queue assets, including local tags and notes when present.
 - Keep private local paths visible only to the local user.
 
