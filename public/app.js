@@ -16,6 +16,7 @@ import {
   createDuplicateGroupDetails,
   createExportFileName,
   createLibraryView,
+  createLibraryHealthReport,
   createMarkBackup,
   createPathList,
   createSavedFilterView,
@@ -90,6 +91,8 @@ const elements = {
   untagSelectedAssets: document.querySelector("#untag-selected-assets"),
   copyWorkflowReport: document.querySelector("#copy-workflow-report"),
   downloadWorkflowReport: document.querySelector("#download-workflow-report"),
+  copyHealthReport: document.querySelector("#copy-health-report"),
+  downloadHealthReport: document.querySelector("#download-health-report"),
   copyIssueReport: document.querySelector("#copy-issue-report"),
   downloadIssueReport: document.querySelector("#download-issue-report"),
   copyMarksBackup: document.querySelector("#copy-marks-backup"),
@@ -264,6 +267,8 @@ function bindEvents() {
   elements.untagSelectedAssets.addEventListener("click", () => applySelectedTagBatch("remove", elements.untagSelectedAssets));
   elements.copyWorkflowReport.addEventListener("click", copyWorkflowReport);
   elements.downloadWorkflowReport.addEventListener("click", downloadWorkflowReport);
+  elements.copyHealthReport.addEventListener("click", copyHealthReport);
+  elements.downloadHealthReport.addEventListener("click", downloadHealthReport);
   elements.copyIssueReport.addEventListener("click", copyIssueReport);
   elements.downloadIssueReport.addEventListener("click", downloadIssueReport);
   elements.copyMarksBackup.addEventListener("click", copyMarksBackup);
@@ -584,6 +589,8 @@ function renderWorkflow() {
   elements.untagSelectedAssets.disabled = selectedAssetIds.size === 0;
   elements.copyWorkflowReport.disabled = selectedAssetIds.size + marks.saved.size + marks.review.size === 0;
   elements.downloadWorkflowReport.disabled = selectedAssetIds.size + marks.saved.size + marks.review.size === 0;
+  elements.copyHealthReport.disabled = !libraryIndex?.assets?.length;
+  elements.downloadHealthReport.disabled = !libraryIndex?.assets?.length;
   elements.copyIssueReport.disabled = !hasAssetIssues();
   elements.downloadIssueReport.disabled = !hasAssetIssues();
   elements.copyMarksBackup.disabled = marks.saved.size + marks.review.size === 0;
@@ -1485,6 +1492,18 @@ function downloadWorkflowReport() {
   const report = createWorkflowReport(libraryIndex, createWorkflowReportOptions(generatedAt));
   const fileName = createExportFileName("workflow-report", "md", { generatedAt });
   downloadTextFile(elements.downloadWorkflowReport, report, fileName, "text/markdown");
+}
+
+async function copyHealthReport() {
+  const report = createLibraryHealthReport(libraryIndex, { generatedAt: new Date().toISOString() });
+  await copyFromButton(elements.copyHealthReport, report);
+}
+
+function downloadHealthReport() {
+  const generatedAt = new Date().toISOString();
+  const report = createLibraryHealthReport(libraryIndex, { generatedAt });
+  const fileName = createExportFileName("library-health-report", "md", { generatedAt });
+  downloadTextFile(elements.downloadHealthReport, report, fileName, "text/markdown");
 }
 
 async function copyIssueReport() {

@@ -11,6 +11,7 @@ Image Asset Librarian is designed to run locally. The default workflow scans a l
 - Generated descriptions derived from local file metadata, color labels, palettes, and embedded metadata.
 - Generated alt text derived from local file metadata, color labels, palettes, and embedded metadata.
 - Duplicate group information.
+- Library health reports, which summarize local metadata and only leave the browser when copied or downloaded by the user.
 - Asset issue reports, which are generated locally and only leave the browser when copied or downloaded by the user.
 - Rename plans, which can include local relative paths and only leave the browser when copied or downloaded by the user.
 - Saved and review marks, which are stored in browser local storage as asset ids and can be copied or downloaded as JSON backups only when the user clicks the backup controls.

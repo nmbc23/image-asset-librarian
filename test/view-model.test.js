@@ -21,6 +21,7 @@ import {
   createDuplicateGroupDetails,
   createExportFileName,
   createLibraryView,
+  createLibraryHealthReport,
   createMarkBackup,
   createPathList,
   createSavedFilterView,
@@ -484,6 +485,67 @@ test("createAssetIssueReport exports markdown issue groups", () => {
   assert.match(report, /## Tiny resolution/);
   assert.match(report, /`tiny\.png` \(Test, 1000 B, 320 x 320\): tiny\.png/);
   assert.match(report, /\n$/);
+});
+
+test("createLibraryHealthReport exports summary breakdowns and recommendations", () => {
+  const report = createLibraryHealthReport(index, { generatedAt: "2026-06-01T19:00:00.000Z" });
+
+  assert.equal(report, [
+    "# Image Asset Health Report",
+    "",
+    "Generated: 2026-06-01T19:00:00.000Z",
+    "",
+    "## Summary",
+    "",
+    "- Total assets: 3",
+    "- Total size: 2.4 KB",
+    "- Duplicate groups: 1",
+    "- Duplicate assets: 2",
+    "- Reclaimable: 1.2 KB",
+    "- Similar groups: 1",
+    "",
+    "## Issues",
+    "",
+    "- Duplicate: 2",
+    "- Missing dimensions: 2",
+    "- Tiny resolution: 1",
+    "",
+    "## Sources",
+    "",
+    "- Codex: 2",
+    "- Archive: 1",
+    "",
+    "## Types",
+    "",
+    "- .png: 2",
+    "- .svg: 1",
+    "",
+    "## Resolutions",
+    "",
+    "- Tiny < 0.5 MP: 1",
+    "- Missing dimensions: 2",
+    "",
+    "## Themes",
+    "",
+    "- portrait: 2",
+    "- character: 1",
+    "- logo: 1",
+    "- vector: 1",
+    "",
+    "## Color Vibes",
+    "",
+    "- warm: 2",
+    "- cool: 1",
+    "- green: 1",
+    "- vivid: 1",
+    "",
+    "## Recommendations",
+    "",
+    "- Review 1 duplicate group to reclaim about 1.2 KB.",
+    "- Add dimensions for 2 assets with missing size metadata.",
+    "- Review 1 tiny asset before publishing.",
+    ""
+  ].join("\n"));
 });
 
 test("createLibraryView creates a resolution breakdown", () => {

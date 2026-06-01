@@ -158,6 +158,20 @@ test("asset issue reports can be copied and downloaded", async () => {
   assert.match(appSource, /asset-issue-report/);
 });
 
+test("library health reports can be copied and downloaded", async () => {
+  const [appSource, htmlSource] = await Promise.all([
+    readFile(new URL("../public/app.js", import.meta.url), "utf8"),
+    readFile(new URL("../public/index.html", import.meta.url), "utf8")
+  ]);
+
+  assert.match(htmlSource, /id="copy-health-report"/);
+  assert.match(htmlSource, /id="download-health-report"/);
+  assert.match(appSource, /createLibraryHealthReport/);
+  assert.match(appSource, /copyHealthReport/);
+  assert.match(appSource, /downloadHealthReport/);
+  assert.match(appSource, /library-health-report/);
+});
+
 test("theme grouping is exposed in filters, breakdowns, and asset cards", async () => {
   const [appSource, htmlSource, cssSource] = await Promise.all([
     readFile(new URL("../public/app.js", import.meta.url), "utf8"),

@@ -57,6 +57,7 @@ UI responsibilities:
 - Apply saved/review/unmarked states to selected assets in batches for faster curation.
 - Copy, download, and import saved/review mark backups as JSON.
 - Copy and import full curation backups containing marks, asset tags, asset notes, and saved filter views, and download those backups as timestamped JSON files.
+- Copy or download a Markdown library health report summarizing total size, duplicate pressure, issue counts, source/type/resolution/theme/color breakdowns, and cleanup recommendations.
 - Select all currently visible filtered assets and copy selected or visible asset paths as a batch for downstream cleanup, curation, or prompt-tracking work.
 - Copy or download selected or visible alt text lists as Markdown for README, documentation, and web publishing tasks.
 - Copy selected or visible asset metadata, including palettes, generated descriptions, and embedded prompt/title metadata, as CSV for spreadsheets, issue reports, and lightweight inventory work.

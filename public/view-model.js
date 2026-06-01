@@ -556,6 +556,45 @@ export function createAssetIssueReport(index, options = {}) {
   return `${lines.join("\n")}\n`;
 }
 
+export function createLibraryHealthReport(index, options = {}) {
+  const assets = Array.isArray(index?.assets) ? index.assets : [];
+  const duplicateGroups = Array.isArray(index?.duplicates) ? index.duplicates : [];
+  const similarGroups = Array.isArray(index?.similarGroups) ? index.similarGroups : [];
+  const duplicateAssetIds = new Set(duplicateGroups.flatMap((group) => group.assetIds ?? []));
+  const totalBytes = assets.reduce((sum, asset) => sum + (Number(asset.sizeBytes) || 0), 0);
+  const reclaimableBytes = duplicateGroups.reduce((sum, group) => sum + (Number(group.reclaimableBytes) || 0), 0);
+  const view = createLibraryView(index);
+  const lines = [
+    "# Image Asset Health Report",
+    "",
+    `Generated: ${options.generatedAt ?? new Date().toISOString()}`,
+    "",
+    "## Summary",
+    "",
+    `- Total assets: ${assets.length}`,
+    `- Total size: ${formatBytes(totalBytes)}`,
+    `- Duplicate groups: ${duplicateGroups.length}`,
+    `- Duplicate assets: ${duplicateAssetIds.size}`,
+    `- Reclaimable: ${formatBytes(reclaimableBytes)}`,
+    `- Similar groups: ${similarGroups.length}`,
+    "",
+    ...renderHealthBreakdown("Issues", view.issueBreakdown),
+    ...renderHealthBreakdown("Sources", view.sourceBreakdown),
+    ...renderHealthBreakdown("Types", view.extensionBreakdown),
+    ...renderHealthBreakdown("Resolutions", view.resolutionBreakdown),
+    ...renderHealthBreakdown("Themes", view.themeBreakdown),
+    ...renderHealthBreakdown("Color Vibes", view.colorThemeBreakdown),
+    ...renderHealthRecommendations({
+      duplicateGroups: duplicateGroups.length,
+      reclaimableBytes,
+      missingDimensions: getBreakdownCount(view.issueBreakdown, "missing-dimensions"),
+      tinyAssets: getBreakdownCount(view.issueBreakdown, "tiny-resolution")
+    })
+  ];
+
+  return lines.join("\n");
+}
+
 export function createMarkBackup(options = {}) {
   return `${JSON.stringify({
     schema: "image-asset-librarian-marks-v1",
@@ -1467,6 +1506,54 @@ function formatIssueReportAsset(asset = {}) {
     .join(", ");
 
   return `- \`${escapeMarkdownCodeText(name)}\` (${escapeMarkdownText(details)}): ${escapeMarkdownText(path)}`;
+}
+
+function renderHealthBreakdown(title, items = []) {
+  const lines = [`## ${title}`, ""];
+  if (!items.length) {
+    lines.push("No data.", "");
+    return lines;
+  }
+
+  for (const item of items) {
+    lines.push(`- ${item.label}: ${item.count}`);
+  }
+  lines.push("");
+  return lines;
+}
+
+function renderHealthRecommendations(context) {
+  const recommendations = [];
+  if (context.duplicateGroups > 0) {
+    recommendations.push(
+      `Review ${context.duplicateGroups} ${formatCountNoun(context.duplicateGroups, "duplicate group")} to reclaim about ${formatBytes(context.reclaimableBytes)}.`
+    );
+  }
+  if (context.missingDimensions > 0) {
+    recommendations.push(
+      `Add dimensions for ${context.missingDimensions} ${formatCountNoun(context.missingDimensions, "asset")} with missing size metadata.`
+    );
+  }
+  if (context.tinyAssets > 0) {
+    recommendations.push(
+      `Review ${context.tinyAssets} ${formatCountNoun(context.tinyAssets, "tiny asset")} before publishing.`
+    );
+  }
+
+  return [
+    "## Recommendations",
+    "",
+    ...(recommendations.length ? recommendations.map((recommendation) => `- ${recommendation}`) : ["No recommendations."]),
+    ""
+  ];
+}
+
+function getBreakdownCount(items = [], value) {
+  return items.find((item) => item.value === value)?.count ?? 0;
+}
+
+function formatCountNoun(count, noun) {
+  return count === 1 ? noun : `${noun}s`;
 }
 
 function formatReportNote(note) {
