@@ -16,6 +16,7 @@ import {
   createMarkBackup,
   createPathList,
   createSavedFilterView,
+  createSimilarGroupDetails,
   createWorkflowReport,
   formatBytes,
   getAllAssetTags,
@@ -69,7 +70,16 @@ const index = {
       modifiedAt: "2026-05-30T00:00:00.000Z"
     }
   ],
-  duplicates: [{ hash: "same", count: 2, assetIds: ["a", "b"], reclaimableBytes: 1200 }]
+  duplicates: [{ hash: "same", count: 2, assetIds: ["a", "b"], reclaimableBytes: 1200 }],
+  similarGroups: [
+    {
+      signature: "portrait|portrait|warm|#d94f70",
+      label: "Portrait / warm / #d94f70",
+      query: "portrait warm #d94f70",
+      count: 2,
+      assetIds: ["a", "b"]
+    }
+  ]
 };
 
 test("createLibraryView filters by search, root, extension, and duplicate state", () => {
@@ -117,6 +127,7 @@ test("createLibraryView filters by search, root, extension, and duplicate state"
     { label: "green", count: 1 },
     { label: "vivid", count: 1 }
   ]);
+  assert.deepEqual(view.similarGroups.map((group) => group.label), ["Portrait / warm / #d94f70"]);
   assert.equal(view.duplicateAssetIds.has("a"), true);
   assert.equal(view.duplicateAssetIds.has("c"), false);
 });
@@ -533,6 +544,19 @@ test("createDuplicateGroupDetails recommends a stable asset to keep and exports 
   assert.equal(details.recommendedKeepAsset.id, "a");
   assert.deepEqual(details.cleanupCandidateAssets.map((asset) => asset.id), ["b"]);
   assert.equal(details.cleanupPathList, "copies/rose-copy.png");
+  assert.deepEqual(details.assets.map((asset) => asset.id), ["a", "b"]);
+  assert.equal(details.pathList, [
+    "P:/AI/Codex/generated_images/rose.png",
+    "copies/rose-copy.png"
+  ].join("\n"));
+});
+
+test("createSimilarGroupDetails describes a local visual similarity group", () => {
+  const details = createSimilarGroupDetails(index, index.similarGroups[0]);
+
+  assert.equal(details.count, 2);
+  assert.equal(details.label, "Portrait / warm / #d94f70");
+  assert.equal(details.query, "portrait warm #d94f70");
   assert.deepEqual(details.assets.map((asset) => asset.id), ["a", "b"]);
   assert.equal(details.pathList, [
     "P:/AI/Codex/generated_images/rose.png",

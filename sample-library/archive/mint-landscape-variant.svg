@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 520">
+  <rect width="900" height="520" fill="#e9f1ef"/>
+  <circle cx="680" cy="128" r="54" fill="#f0b94a"/>
+  <path d="M0 344c92-76 188-96 288-58 116 44 208 26 276-54 80-94 182-80 306 42l30 30v216H0z" fill="#1f8a70"/>
+  <path d="M0 420c118-46 226-58 324-34 104 26 216 22 336-14 96-28 176-18 240 30v118H0z" fill="#273238"/>
+  <text x="64" y="94" fill="#1e2528" font-family="Segoe UI, sans-serif" font-size="36" font-weight="800">mint landscape variant</text>
+</svg>

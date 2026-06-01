@@ -42,6 +42,7 @@ const COLOR_THEME_RULES = [
 ];
 
 const COLOR_THEME_ORDER = COLOR_THEME_RULES.map(([theme]) => theme);
+const SIMILAR_GROUP_COLOR_THEMES = new Set(["warm", "cool", "green", "dark", "light", "monochrome"]);
 const PNG_COLOR_SAMPLE_LIMIT = 256;
 const PNG_COLOR_MAX_PIXELS = 4_000_000;
 const PALETTE_COLOR_LIMIT = 5;
@@ -111,14 +112,16 @@ export async function scanLibrary(options = {}) {
 
   assets.sort((a, b) => a.path.localeCompare(b.path));
   const duplicates = findDuplicates(assets);
+  const similarGroups = findSimilarGroups(assets);
 
   return {
     version: 1,
     generatedAt,
     roots,
-    summary: summarize(assets, duplicates),
+    summary: summarize(assets, duplicates, similarGroups),
     assets,
     duplicates,
+    similarGroups,
     errors
   };
 }
@@ -225,12 +228,89 @@ function findDuplicates(assets) {
     .sort((a, b) => b.reclaimableBytes - a.reclaimableBytes || b.count - a.count);
 }
 
-function summarize(assets, duplicates) {
+function findSimilarGroups(assets) {
+  const groups = new Map();
+
+  for (const asset of assets) {
+    const signature = createVisualSignature(asset);
+    if (!signature) {
+      continue;
+    }
+
+    if (!groups.has(signature.key)) {
+      groups.set(signature.key, {
+        signature: signature.key,
+        label: signature.label,
+        query: signature.query,
+        assets: []
+      });
+    }
+    groups.get(signature.key).assets.push(asset);
+  }
+
+  return [...groups.values()]
+    .filter((group) => group.assets.length > 1)
+    .filter((group) => new Set(group.assets.map((asset) => asset.hash).filter(Boolean)).size > 1)
+    .map((group) => ({
+      signature: group.signature,
+      label: group.label,
+      query: group.query,
+      count: group.assets.length,
+      assetIds: group.assets.map((asset) => asset.id)
+    }))
+    .sort((a, b) => b.count - a.count || a.label.localeCompare(b.label));
+}
+
+function createVisualSignature(asset) {
+  const theme = selectSimilarTheme(asset.themes);
+  const shape = inferShapeTheme(asset.width, asset.height);
+  const colorTheme = selectSimilarColorTheme(asset.colorThemes);
+  const paletteColor = selectSimilarPaletteColor(asset.palette);
+
+  if (!theme || !colorTheme || !paletteColor) {
+    return null;
+  }
+
+  const shapeKey = shape ?? "unknown";
+  return {
+    key: `${theme}|${shapeKey}|${colorTheme}|${paletteColor}`,
+    label: `${formatChoiceLabel(theme)} / ${colorTheme} / ${paletteColor}`,
+    query: `${theme} ${colorTheme} ${paletteColor}`
+  };
+}
+
+function selectSimilarTheme(themes = []) {
+  const normalizedThemes = uniqueStrings(themes).filter((theme) => theme !== "vector");
+  return normalizedThemes[0] ?? null;
+}
+
+function selectSimilarColorTheme(colorThemes = []) {
+  const normalizedThemes = sortColorThemes(uniqueStrings(colorThemes));
+  return normalizedThemes.find((theme) => SIMILAR_GROUP_COLOR_THEMES.has(theme)) ?? normalizedThemes[0] ?? null;
+}
+
+function selectSimilarPaletteColor(palette = []) {
+  return uniqueStrings(palette).find((color) => /^#[0-9a-f]{6}$/i.test(color))?.toLowerCase() ?? null;
+}
+
+function formatChoiceLabel(value) {
+  return String(value ?? "Unknown")
+    .replaceAll("-", " ")
+    .replace(/\b\w/g, (letter) => letter.toUpperCase());
+}
+
+function uniqueStrings(values) {
+  return [...new Set((Array.isArray(values) ? values : []).filter((value) => typeof value === "string" && value.trim()))];
+}
+
+function summarize(assets, duplicates, similarGroups = []) {
   return {
     totalAssets: assets.length,
     totalBytes: assets.reduce((sum, asset) => sum + asset.sizeBytes, 0),
     duplicateGroups: duplicates.length,
     duplicateAssets: duplicates.reduce((sum, group) => sum + group.count, 0),
+    similarGroups: similarGroups.length,
+    similarAssets: similarGroups.reduce((sum, group) => sum + group.count, 0),
     reclaimableBytes: duplicates.reduce((sum, group) => sum + group.reclaimableBytes, 0),
     roots: new Set(assets.map((asset) => asset.rootName)).size,
     extensions: countBy(assets, "extension"),

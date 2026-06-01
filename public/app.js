@@ -13,6 +13,7 @@ import {
   createMarkBackup,
   createPathList,
   createSavedFilterView,
+  createSimilarGroupDetails,
   createWorkflowReport,
   formatBytes,
   formatDate,
@@ -85,6 +86,8 @@ const elements = {
   colorThemeBreakdownCount: document.querySelector("#color-theme-breakdown-count"),
   duplicateSummary: document.querySelector("#duplicate-summary"),
   duplicateList: document.querySelector("#duplicate-list"),
+  similarSummary: document.querySelector("#similar-summary"),
+  similarList: document.querySelector("#similar-list"),
   resultCount: document.querySelector("#result-count"),
   filteredSummary: document.querySelector("#filtered-summary"),
   gallery: document.querySelector("#gallery"),
@@ -268,6 +271,21 @@ function bindEvents() {
     }
     await copyDuplicateGroupPaths(button, Number.parseInt(button.dataset.copyDuplicateGroup, 10));
   });
+  elements.similarList.addEventListener("click", async (event) => {
+    const queryButton = event.target.closest("[data-set-similar-query]");
+    if (queryButton) {
+      state.query = queryButton.dataset.setSimilarQuery;
+      syncControlsFromState();
+      render();
+      return;
+    }
+
+    const copyButton = event.target.closest("[data-copy-similar-group]");
+    if (!copyButton) {
+      return;
+    }
+    await copySimilarGroupPaths(copyButton, Number.parseInt(copyButton.dataset.copySimilarGroup, 10));
+  });
   elements.gallery.addEventListener("click", async (event) => {
     const themeButton = event.target.closest("[data-asset-theme]");
     if (themeButton) {
@@ -443,6 +461,7 @@ function render() {
   renderSavedViews();
   renderBreakdowns(view);
   renderDuplicates(libraryIndex);
+  renderSimilarGroups(libraryIndex);
   renderGallery(view);
 }
 
@@ -677,6 +696,39 @@ function renderDuplicates(index) {
           <div class="duplicate-actions">
             <button type="button" data-copy-duplicate-group="${groupIndex}">Copy group paths</button>
             <button type="button" data-copy-duplicate-candidates="${groupIndex}">Copy cleanup candidates</button>
+          </div>
+          <ul>
+            ${details.assets.map((asset) => `<li>${escapeHtml(asset.relativePath)} <span>${escapeHtml(asset.rootName)}</span></li>`).join("")}
+          </ul>
+        </article>
+      `;
+    })
+    .join("");
+}
+
+function renderSimilarGroups(index) {
+  const groups = index.similarGroups ?? [];
+  elements.similarSummary.textContent = `${groups.length} groups`;
+
+  if (!groups.length) {
+    elements.similarList.innerHTML = `<div class="notice">No similar visual groups found.</div>`;
+    return;
+  }
+
+  elements.similarList.innerHTML = groups
+    .slice(0, 8)
+    .map((group, groupIndex) => {
+      const details = createSimilarGroupDetails(index, group);
+      return `
+        <article class="similar-group">
+          <div>
+            <strong>${escapeHtml(details.label)}</strong>
+            <span>${details.count} assets</span>
+          </div>
+          <p>${escapeHtml(details.query)}</p>
+          <div class="similar-actions">
+            <button type="button" data-set-similar-query="${escapeHtml(details.query)}">Show group</button>
+            <button type="button" data-copy-similar-group="${groupIndex}">Copy group paths</button>
           </div>
           <ul>
             ${details.assets.map((asset) => `<li>${escapeHtml(asset.relativePath)} <span>${escapeHtml(asset.rootName)}</span></li>`).join("")}
@@ -1110,6 +1162,15 @@ async function copyDuplicateCleanupCandidates(button, groupIndex) {
     return;
   }
   await copyFromButton(button, details.cleanupPathList);
+}
+
+async function copySimilarGroupPaths(button, groupIndex) {
+  const group = libraryIndex?.similarGroups?.[groupIndex];
+  if (!group) {
+    return;
+  }
+  const details = createSimilarGroupDetails(libraryIndex, group);
+  await copyFromButton(button, details.pathList);
 }
 
 async function copyWorkflowReport() {

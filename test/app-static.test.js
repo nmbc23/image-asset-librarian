@@ -188,6 +188,22 @@ test("selected assets can be bulk marked from the workflow panel", async () => {
   assert.match(appSource, /unmarkSelectedAssets/);
 });
 
+test("similar asset groups are exposed as a workflow panel", async () => {
+  const [appSource, htmlSource, cssSource] = await Promise.all([
+    readFile(new URL("../public/app.js", import.meta.url), "utf8"),
+    readFile(new URL("../public/index.html", import.meta.url), "utf8"),
+    readFile(new URL("../public/styles.css", import.meta.url), "utf8")
+  ]);
+
+  assert.match(htmlSource, /id="similar-summary"/);
+  assert.match(htmlSource, /id="similar-list"/);
+  assert.match(appSource, /createSimilarGroupDetails/);
+  assert.match(appSource, /renderSimilarGroups/);
+  assert.match(appSource, /data-set-similar-query/);
+  assert.match(cssSource, /\.similar-panel/);
+  assert.match(cssSource, /\.similar-group/);
+});
+
 test("visible and selected asset metadata can be copied as CSV", async () => {
   const [appSource, htmlSource] = await Promise.all([
     readFile(new URL("../public/app.js", import.meta.url), "utf8"),

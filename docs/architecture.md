@@ -4,7 +4,7 @@ Image Asset Librarian is split into three small layers: scanner, server, and bro
 
 ## Scanner
 
-`src/scanner.js` walks configured roots, filters supported image extensions, extracts basic metadata, infers lightweight local themes from filenames, folder names, vector status, image metadata, SVG color values, and PNG pixel samples, builds compact palettes, hashes file contents, and produces a versioned JSON index.
+`src/scanner.js` walks configured roots, filters supported image extensions, extracts basic metadata, infers lightweight local themes from filenames, folder names, vector status, image metadata, SVG color values, and PNG pixel samples, builds compact palettes, groups similar visual signatures, hashes file contents, and produces a versioned JSON index.
 
 Responsibilities:
 
@@ -12,6 +12,7 @@ Responsibilities:
 - Ignore unsupported files.
 - Record recoverable scan errors without aborting the whole library.
 - Group exact duplicates by SHA-256 content hash.
+- Group non-duplicate assets with similar local visual signatures from theme, orientation, color vibe, and dominant palette color.
 
 ## Config
 
@@ -39,6 +40,7 @@ UI responsibilities:
 - Show active filter chips so users can inspect or clear individual filters without resetting the whole gallery.
 - Store named filter views in browser local storage so common curation workflows can be reapplied quickly.
 - Use source, file-type, resolution, inferred theme, and color-vibe breakdowns as quick filter controls.
+- Review similar visual groups and jump into the matching search query.
 - Show compact palette swatches on asset cards and in the detail drawer.
 - Sort by date, file size, resolution, or name.
 - Highlight duplicate assets.

@@ -267,6 +267,7 @@ export function createLibraryView(index, state = {}) {
     resolutionBreakdown: createResolutionBreakdown(assets),
     themeBreakdown: createThemeBreakdown(assets),
     colorThemeBreakdown: createColorThemeBreakdown(assets),
+    similarGroups: Array.isArray(index.similarGroups) ? index.similarGroups : [],
     duplicateAssetIds
   };
 }
@@ -377,6 +378,20 @@ export function createDuplicateGroupDetails(index, group) {
     cleanupCandidateAssets,
     pathList: createPathList(assets),
     cleanupPathList: createPathList(cleanupCandidateAssets)
+  };
+}
+
+export function createSimilarGroupDetails(index, group) {
+  const assetsById = new Map((index?.assets ?? []).map((asset) => [asset.id, asset]));
+  const assets = (group?.assetIds ?? []).map((assetId) => assetsById.get(assetId)).filter(Boolean);
+
+  return {
+    signature: group?.signature ?? "",
+    label: group?.label ?? "Similar assets",
+    query: group?.query ?? "",
+    count: group?.count ?? assets.length,
+    assets,
+    pathList: createPathList(assets)
   };
 }
 

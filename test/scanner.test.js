@@ -140,6 +140,27 @@ test("scanLibrary groups duplicate files by content hash", async () => {
   });
 });
 
+test("scanLibrary groups visually similar non-duplicate assets by local signatures", async () => {
+  await withTempLibrary(async (dir) => {
+    await writeFile(path.join(dir, "portrait-warm-a.svg"), `<svg xmlns="http://www.w3.org/2000/svg" width="100" height="160"><rect width="100" height="160" fill="#d94f70"/></svg>`);
+    await writeFile(path.join(dir, "portrait-warm-b.svg"), `<svg xmlns="http://www.w3.org/2000/svg" width="120" height="180"><circle cx="60" cy="90" r="50" fill="#d94f70"/></svg>`);
+    await writeFile(path.join(dir, "logo-cool.svg"), `<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120"><rect width="120" height="120" fill="#1f8a70"/></svg>`);
+
+    const index = await scanLibrary({
+      roots: [{ name: "Similar Demo", path: dir }],
+      generatedAt: "2026-06-01T00:00:00.000Z"
+    });
+
+    assert.equal(index.summary.similarGroups, 1);
+    assert.equal(index.similarGroups.length, 1);
+    assert.equal(index.similarGroups[0].label, "Portrait / warm / #d94f70");
+    assert.deepEqual(
+      index.similarGroups[0].assetIds.map((id) => index.assets.find((asset) => asset.id === id).name).sort(),
+      ["portrait-warm-a.svg", "portrait-warm-b.svg"]
+    );
+  });
+});
+
 function createSolidPng(width, height, rgba) {
   const signature = Buffer.from("89504e470d0a1a0a", "hex");
   const ihdr = Buffer.alloc(13);
