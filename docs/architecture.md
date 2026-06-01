@@ -41,6 +41,7 @@ UI responsibilities:
 - Show active filter chips so users can inspect or clear individual filters without resetting the whole gallery.
 - Store named filter views in browser local storage so common curation workflows can be reapplied quickly.
 - Use source, file-type, resolution, asset issue, inferred theme, and color-vibe breakdowns as quick filter controls.
+- Copy or download a Markdown asset issue report that groups duplicate, missing-dimension, and tiny-resolution files for cleanup planning.
 - Review similar visual groups and jump into the matching search query.
 - Show compact palette swatches on asset cards and in the detail drawer.
 - Generate concise local image descriptions from indexed visual signals, then copy them one-by-one, export selected/visible description batches, or save them as local notes.

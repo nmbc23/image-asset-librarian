@@ -144,6 +144,20 @@ test("asset issue filter is exposed in the toolbar, breakdowns, and asset cards"
   assert.match(cssSource, /\.asset-issues/);
 });
 
+test("asset issue reports can be copied and downloaded", async () => {
+  const [appSource, htmlSource] = await Promise.all([
+    readFile(new URL("../public/app.js", import.meta.url), "utf8"),
+    readFile(new URL("../public/index.html", import.meta.url), "utf8")
+  ]);
+
+  assert.match(htmlSource, /id="copy-issue-report"/);
+  assert.match(htmlSource, /id="download-issue-report"/);
+  assert.match(appSource, /createAssetIssueReport/);
+  assert.match(appSource, /copyIssueReport/);
+  assert.match(appSource, /downloadIssueReport/);
+  assert.match(appSource, /asset-issue-report/);
+});
+
 test("theme grouping is exposed in filters, breakdowns, and asset cards", async () => {
   const [appSource, htmlSource, cssSource] = await Promise.all([
     readFile(new URL("../public/app.js", import.meta.url), "utf8"),

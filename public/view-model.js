@@ -513,6 +513,47 @@ export function createWorkflowReport(index, options = {}) {
   return lines.join("\n");
 }
 
+export function createAssetIssueReport(index, options = {}) {
+  const assets = Array.isArray(index?.assets) ? index.assets : [];
+  const duplicateAssetIds = new Set((index?.duplicates ?? []).flatMap((group) => group.assetIds ?? []));
+  const issueAssetsByValue = new Map(ISSUE_FILTERS.map((issue) => [issue.value, { ...issue, assets: [] }]));
+  const issueAssetIds = new Set();
+
+  for (const asset of assets) {
+    const issues = getAssetIssues(asset, duplicateAssetIds);
+    for (const issue of issues) {
+      issueAssetIds.add(asset.id);
+      issueAssetsByValue.get(issue.value)?.assets.push(asset);
+    }
+  }
+
+  const issueGroups = [...issueAssetsByValue.values()].filter((issue) => issue.assets.length > 0);
+  const lines = [
+    "# Image Asset Issue Report",
+    "",
+    `Generated: ${options.generatedAt ?? new Date().toISOString()}`,
+    "",
+    "## Summary",
+    "",
+    `- Total assets: ${assets.length}`,
+    `- Assets with issues: ${issueAssetIds.size}`,
+    ...ISSUE_FILTERS.map((issue) => `- ${issue.label}: ${issueAssetsByValue.get(issue.value)?.assets.length ?? 0}`)
+  ];
+
+  if (!issueGroups.length) {
+    lines.push("", "No issue groups found.");
+  }
+
+  for (const group of issueGroups) {
+    lines.push("", `## ${group.label}`, "");
+    for (const asset of group.assets) {
+      lines.push(formatIssueReportAsset(asset));
+    }
+  }
+
+  return `${lines.join("\n")}\n`;
+}
+
 export function createMarkBackup(options = {}) {
   return `${JSON.stringify({
     schema: "image-asset-librarian-marks-v1",
@@ -1285,6 +1326,18 @@ function renderReportSection(title, assetIds, assetsById, context = {}) {
   }
   lines.push("");
   return lines;
+}
+
+function formatIssueReportAsset(asset = {}) {
+  const name = asset.name ?? asset.relativePath ?? asset.id ?? "Asset";
+  const path = asset.relativePath ?? asset.path ?? asset.name ?? asset.id ?? "";
+  const source = asset.rootName ?? "Unknown source";
+  const dimensions = asset.width && asset.height ? `${asset.width} x ${asset.height}` : "Unknown dimensions";
+  const details = [source, formatBytes(asset.sizeBytes), dimensions]
+    .filter(Boolean)
+    .join(", ");
+
+  return `- \`${escapeMarkdownCodeText(name)}\` (${escapeMarkdownText(details)}): ${escapeMarkdownText(path)}`;
 }
 
 function formatReportNote(note) {

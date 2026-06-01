@@ -5,6 +5,7 @@ import {
   applyMarkBatch,
   applyTagBatch,
   createActiveFilterChips,
+  createAssetIssueReport,
   createAssetDetails,
   createAssetDescription,
   createAssetDescriptionList,
@@ -413,6 +414,72 @@ test("createLibraryView filters by asset issue and creates an issue breakdown", 
   assert.deepEqual(getAssetIssues(issueIndex.assets[0], new Set(["duplicate"])), [
     { value: "duplicate", label: "Duplicate" }
   ]);
+});
+
+test("createAssetIssueReport exports markdown issue groups", () => {
+  const issueIndex = {
+    assets: [
+      {
+        id: "duplicate",
+        name: "duplicate.png",
+        relativePath: "duplicate.png",
+        rootName: "Test",
+        extension: ".png",
+        width: 1200,
+        height: 1200,
+        sizeBytes: 1000,
+        modifiedAt: "2026-06-01T00:00:00.000Z"
+      },
+      {
+        id: "missing",
+        name: "missing.png",
+        relativePath: "missing.png",
+        rootName: "Test",
+        extension: ".png",
+        sizeBytes: 1000,
+        modifiedAt: "2026-06-01T00:00:00.000Z"
+      },
+      {
+        id: "tiny",
+        name: "tiny.png",
+        relativePath: "tiny.png",
+        rootName: "Test",
+        extension: ".png",
+        width: 320,
+        height: 320,
+        sizeBytes: 1000,
+        modifiedAt: "2026-06-01T00:00:00.000Z"
+      },
+      {
+        id: "clean",
+        name: "clean.png",
+        relativePath: "clean.png",
+        rootName: "Test",
+        extension: ".png",
+        width: 1600,
+        height: 1600,
+        sizeBytes: 1000,
+        modifiedAt: "2026-06-01T00:00:00.000Z"
+      }
+    ],
+    duplicates: [{ hash: "dupe", count: 1, assetIds: ["duplicate"], reclaimableBytes: 0 }]
+  };
+
+  const report = createAssetIssueReport(issueIndex, { generatedAt: "2026-06-01T16:00:00.000Z" });
+
+  assert.match(report, /# Image Asset Issue Report/);
+  assert.match(report, /Generated: 2026-06-01T16:00:00.000Z/);
+  assert.match(report, /Assets with issues: 3/);
+  assert.match(report, /Duplicate: 1/);
+  assert.match(report, /Missing dimensions: 1/);
+  assert.match(report, /Tiny resolution: 1/);
+  assert.match(report, /## Duplicate/);
+  assert.match(report, /`duplicate\.png` \(Test, 1000 B, 1200 x 1200\): duplicate\.png/);
+  assert.match(report, /## Missing dimensions/);
+  assert.match(report, /`missing\.png` \(Test, 1000 B, Unknown dimensions\): missing\.png/);
+  assert.match(report, /## Tiny resolution/);
+  assert.match(report, /`tiny\.png` \(Test, 1000 B, 320 x 320\): tiny\.png/);
+  assert.match(report, /\n$/);
 });
 
 test("createLibraryView creates a resolution breakdown", () => {
