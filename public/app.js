@@ -18,6 +18,7 @@ const elements = {
   duplicateSummary: document.querySelector("#duplicate-summary"),
   duplicateList: document.querySelector("#duplicate-list"),
   resultCount: document.querySelector("#result-count"),
+  filteredSummary: document.querySelector("#filtered-summary"),
   gallery: document.querySelector("#gallery"),
   emptyState: document.querySelector("#empty-state"),
   detailDrawer: document.querySelector("#detail-drawer"),
@@ -186,6 +187,12 @@ function renderDuplicates(index) {
 
 function renderGallery(view) {
   elements.resultCount.textContent = `${view.assets.length} assets`;
+  elements.filteredSummary.innerHTML = `
+    <div><strong>${formatBytes(view.filteredSummary.totalBytes)}</strong><span>shown size</span></div>
+    <div><strong>${view.filteredSummary.duplicateAssets}</strong><span>duplicates shown</span></div>
+    <div><strong>${view.filteredSummary.sources}</strong><span>sources shown</span></div>
+    <div><strong>${view.filteredSummary.extensions}</strong><span>types shown</span></div>
+  `;
   elements.emptyState.hidden = view.assets.length > 0;
   elements.gallery.innerHTML = view.assets.map((asset) => renderAssetCard(asset, view.duplicateAssetIds.has(asset.id))).join("");
 }

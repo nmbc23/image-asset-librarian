@@ -299,6 +299,32 @@ a:focus-visible {
   gap: 14px;
 }
 
+.filtered-summary {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.filtered-summary div {
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  padding: 10px;
+}
+
+.filtered-summary strong {
+  display: block;
+  overflow-wrap: anywhere;
+  font-size: 1rem;
+}
+
+.filtered-summary span {
+  color: var(--muted);
+  font-size: 0.75rem;
+}
+
 .asset-card {
   display: grid;
   grid-template-rows: 180px auto;
@@ -583,7 +609,8 @@ dd {
 
   .metrics,
   .toolbar,
-  .breakdown-panel {
+  .breakdown-panel,
+  .filtered-summary {
     grid-template-columns: 1fr;
   }
 

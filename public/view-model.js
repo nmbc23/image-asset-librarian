@@ -18,6 +18,7 @@ export function createLibraryView(index, state = {}) {
 
   return {
     assets: sortAssets(filteredAssets, normalizedState.sort),
+    filteredSummary: summarizeAssets(filteredAssets, duplicateAssetIds),
     roots: uniqueSorted(assets.map((asset) => asset.rootName)),
     extensions: uniqueSorted(assets.map((asset) => asset.extension)),
     sourceBreakdown: createBreakdown(assets, "rootName"),
@@ -145,4 +146,14 @@ function createBreakdown(assets, field) {
   return [...counts.entries()]
     .map(([label, count]) => ({ label, count }))
     .sort((a, b) => b.count - a.count || a.label.localeCompare(b.label));
+}
+
+function summarizeAssets(assets, duplicateAssetIds) {
+  return {
+    totalAssets: assets.length,
+    totalBytes: assets.reduce((sum, asset) => sum + asset.sizeBytes, 0),
+    duplicateAssets: assets.filter((asset) => duplicateAssetIds.has(asset.id)).length,
+    sources: new Set(assets.map((asset) => asset.rootName).filter(Boolean)).size,
+    extensions: new Set(assets.map((asset) => asset.extension).filter(Boolean)).size
+  };
 }

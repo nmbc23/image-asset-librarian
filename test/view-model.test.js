@@ -50,6 +50,13 @@ test("createLibraryView filters by search, root, extension, and duplicate state"
   });
 
   assert.deepEqual(view.assets.map((asset) => asset.id), ["a"]);
+  assert.deepEqual(view.filteredSummary, {
+    totalAssets: 1,
+    totalBytes: 1200,
+    duplicateAssets: 1,
+    sources: 1,
+    extensions: 1
+  });
   assert.deepEqual(view.roots, ["Archive", "Codex"]);
   assert.deepEqual(view.extensions, [".png", ".svg"]);
   assert.deepEqual(view.sourceBreakdown, [
