@@ -8,7 +8,6 @@ This roadmap focuses on practical improvements for local AI image workflows.
 - Add keyboard shortcuts for gallery navigation.
 - Add more tests around server path boundaries.
 - Add configurable duplicate cleanup policies beyond stable oldest-file suggestions.
-- Add optional file-based mark backup downloads in addition to clipboard backup.
 
 ## AI-Assisted Features
 

@@ -78,6 +78,7 @@ const elements = {
   copyWorkflowReport: document.querySelector("#copy-workflow-report"),
   downloadWorkflowReport: document.querySelector("#download-workflow-report"),
   copyMarksBackup: document.querySelector("#copy-marks-backup"),
+  downloadMarksBackup: document.querySelector("#download-marks-backup"),
   importMarksBackup: document.querySelector("#import-marks-backup"),
   copyCurationBackup: document.querySelector("#copy-curation-backup"),
   downloadCurationBackup: document.querySelector("#download-curation-backup"),
@@ -235,6 +236,7 @@ function bindEvents() {
   elements.copyWorkflowReport.addEventListener("click", copyWorkflowReport);
   elements.downloadWorkflowReport.addEventListener("click", downloadWorkflowReport);
   elements.copyMarksBackup.addEventListener("click", copyMarksBackup);
+  elements.downloadMarksBackup.addEventListener("click", downloadMarksBackup);
   elements.importMarksBackup.addEventListener("click", importMarksBackup);
   elements.copyCurationBackup.addEventListener("click", copyCurationBackup);
   elements.downloadCurationBackup.addEventListener("click", downloadCurationBackup);
@@ -529,6 +531,7 @@ function renderWorkflow() {
   elements.copyWorkflowReport.disabled = selectedAssetIds.size + marks.saved.size + marks.review.size === 0;
   elements.downloadWorkflowReport.disabled = selectedAssetIds.size + marks.saved.size + marks.review.size === 0;
   elements.copyMarksBackup.disabled = marks.saved.size + marks.review.size === 0;
+  elements.downloadMarksBackup.disabled = marks.saved.size + marks.review.size === 0;
   elements.copyCurationBackup.disabled = !hasCurationState();
   elements.downloadCurationBackup.disabled = !hasCurationState();
   elements.clearSelection.disabled = selectedAssetIds.size === 0;
@@ -1315,12 +1318,15 @@ function downloadWorkflowReport() {
 }
 
 async function copyMarksBackup() {
-  const backup = createMarkBackup({
-    generatedAt: new Date().toISOString(),
-    savedAssetIds: marks.saved,
-    reviewAssetIds: marks.review
-  });
+  const backup = createMarkBackup(createMarkBackupOptions());
   await copyFromButton(elements.copyMarksBackup, backup);
+}
+
+function downloadMarksBackup() {
+  const generatedAt = new Date().toISOString();
+  const backup = createMarkBackup(createMarkBackupOptions(generatedAt));
+  const fileName = createExportFileName("marks-backup", "json", { generatedAt });
+  downloadTextFile(elements.downloadMarksBackup, backup, fileName, "application/json");
 }
 
 async function copyCurationBackup() {
@@ -1384,6 +1390,14 @@ function createWorkflowReportOptions(generatedAt = new Date().toISOString()) {
     reviewAssetIds: marks.review,
     assetTags,
     assetNotes
+  };
+}
+
+function createMarkBackupOptions(generatedAt = new Date().toISOString()) {
+  return {
+    generatedAt,
+    savedAssetIds: marks.saved,
+    reviewAssetIds: marks.review
   };
 }
 

@@ -387,3 +387,15 @@ test("workflow reports and curation backups can be downloaded as files", async (
   assert.match(appSource, /downloadCurationBackup/);
   assert.match(appSource, /downloadTextFile/);
 });
+
+test("marks-only backups can be downloaded as files", async () => {
+  const [appSource, htmlSource] = await Promise.all([
+    readFile(new URL("../public/app.js", import.meta.url), "utf8"),
+    readFile(new URL("../public/index.html", import.meta.url), "utf8")
+  ]);
+
+  assert.match(htmlSource, /id="download-marks-backup"/);
+  assert.match(appSource, /downloadMarksBackup/);
+  assert.match(appSource, /downloadMarksBackup\.disabled/);
+  assert.match(appSource, /createExportFileName\("marks-backup", "json"/);
+});

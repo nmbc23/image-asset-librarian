@@ -52,7 +52,7 @@ UI responsibilities:
 - Suggest a stable file to keep in each duplicate group, copy all group paths, and copy only cleanup-candidate paths that exclude the suggested keep file.
 - Store saved/review marks in browser local storage so the generated index stays disposable.
 - Apply saved/review/unmarked states to selected assets in batches for faster curation.
-- Copy and import saved/review mark backups as JSON through the clipboard.
+- Copy, download, and import saved/review mark backups as JSON.
 - Copy and import full curation backups containing marks, asset tags, asset notes, and saved filter views, and download those backups as timestamped JSON files.
 - Select all currently visible filtered assets and copy selected or visible asset paths as a batch for downstream cleanup, curation, or prompt-tracking work.
 - Copy selected or visible asset metadata, including palettes, generated descriptions, and embedded prompt/title metadata, as CSV for spreadsheets, issue reports, and lightweight inventory work.
