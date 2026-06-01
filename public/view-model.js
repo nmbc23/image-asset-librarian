@@ -260,6 +260,29 @@ export function createPathList(assets) {
     .join("\n");
 }
 
+export function createAssetCsv(assets) {
+  const columns = [
+    ["id", (asset) => asset.id],
+    ["name", (asset) => asset.name],
+    ["source", (asset) => asset.rootName],
+    ["type", (asset) => asset.extension],
+    ["sizeBytes", (asset) => asset.sizeBytes],
+    ["width", (asset) => asset.width],
+    ["height", (asset) => asset.height],
+    ["modifiedAt", (asset) => asset.modifiedAt],
+    ["relativePath", (asset) => asset.relativePath],
+    ["path", (asset) => asset.path],
+    ["hash", (asset) => asset.hash]
+  ];
+  const rows = [columns.map(([header]) => header).join(",")];
+
+  for (const asset of Array.isArray(assets) ? assets : []) {
+    rows.push(columns.map(([, getValue]) => formatCsvCell(getValue(asset))).join(","));
+  }
+
+  return `${rows.join("\n")}\n`;
+}
+
 export function formatBytes(bytes) {
   if (!Number.isFinite(bytes) || bytes <= 0) {
     return "0 B";
@@ -379,6 +402,10 @@ function formatMarkLabel(value) {
     return "Review queue";
   }
   return formatChoiceLabel(value);
+}
+
+function formatCsvCell(value) {
+  return `"${String(value ?? "").replaceAll('"', '""')}"`;
 }
 
 function summarizeAssets(assets, duplicateAssetIds, savedAssetIds, reviewAssetIds) {

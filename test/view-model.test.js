@@ -5,6 +5,7 @@ import {
   applyMarkBatch,
   createActiveFilterChips,
   createAssetDetails,
+  createAssetCsv,
   createDefaultViewState,
   createDuplicateGroupDetails,
   createLibraryView,
@@ -219,6 +220,20 @@ test("createPathList exports asset paths in display order", () => {
   assert.equal(createPathList([index.assets[0], { id: "missing-path" }, index.assets[2]]), [
     "P:/AI/Codex/generated_images/rose.png",
     "mint.svg"
+  ].join("\n"));
+});
+
+test("createAssetCsv exports escaped asset metadata in display order", () => {
+  const csv = createAssetCsv([
+    { ...index.assets[0], name: 'rose, "study".png' },
+    { ...index.assets[2], width: undefined, height: undefined, path: undefined, hash: undefined }
+  ]);
+
+  assert.equal(csv, [
+    "id,name,source,type,sizeBytes,width,height,modifiedAt,relativePath,path,hash",
+    '"a","rose, ""study"".png","Codex",".png","1200","512","768","2026-06-01T01:00:00.000Z","flowers/rose.png","P:/AI/Codex/generated_images/rose.png","hash-a"',
+    '"c","mint.svg","Codex",".svg","90","","","2026-05-30T00:00:00.000Z","mint.svg","",""',
+    ""
   ].join("\n"));
 });
 

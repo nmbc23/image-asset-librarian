@@ -43,6 +43,7 @@ UI responsibilities:
 - Apply saved/review/unmarked states to selected assets in batches for faster curation.
 - Copy and import saved/review mark backups as JSON through the clipboard.
 - Select all currently visible filtered assets and copy selected or visible asset paths as a batch for downstream cleanup, curation, or prompt-tracking work.
+- Copy selected or visible asset metadata as CSV for spreadsheets, issue reports, and lightweight inventory work.
 - Copy a Markdown workflow report summarizing selected, saved, and review-queue assets.
 - Keep private local paths visible only to the local user.
 

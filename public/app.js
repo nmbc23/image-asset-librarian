@@ -1,6 +1,7 @@
 import {
   applyMarkBatch,
   createActiveFilterChips,
+  createAssetCsv,
   createAssetDetails,
   createDefaultViewState,
   createDuplicateGroupDetails,
@@ -35,6 +36,8 @@ const elements = {
   selectVisibleAssets: document.querySelector("#select-visible-assets"),
   copyVisiblePaths: document.querySelector("#copy-visible-paths"),
   copySelectedPaths: document.querySelector("#copy-selected-paths"),
+  copyVisibleCsv: document.querySelector("#copy-visible-csv"),
+  copySelectedCsv: document.querySelector("#copy-selected-csv"),
   saveSelectedAssets: document.querySelector("#save-selected-assets"),
   reviewSelectedAssets: document.querySelector("#review-selected-assets"),
   unmarkSelectedAssets: document.querySelector("#unmark-selected-assets"),
@@ -130,6 +133,8 @@ function bindEvents() {
   elements.selectVisibleAssets.addEventListener("click", selectVisibleAssets);
   elements.copyVisiblePaths.addEventListener("click", copyVisiblePaths);
   elements.copySelectedPaths.addEventListener("click", copySelectedPaths);
+  elements.copyVisibleCsv.addEventListener("click", copyVisibleCsv);
+  elements.copySelectedCsv.addEventListener("click", copySelectedCsv);
   elements.saveSelectedAssets.addEventListener("click", () => applySelectedMarkBatch("save", elements.saveSelectedAssets));
   elements.reviewSelectedAssets.addEventListener("click", () => applySelectedMarkBatch("review", elements.reviewSelectedAssets));
   elements.unmarkSelectedAssets.addEventListener("click", () => applySelectedMarkBatch("clear", elements.unmarkSelectedAssets));
@@ -269,6 +274,8 @@ function renderWorkflow() {
   elements.selectVisibleAssets.disabled = !currentView?.assets.length;
   elements.copyVisiblePaths.disabled = !currentView?.assets.length;
   elements.copySelectedPaths.disabled = selectedAssetIds.size === 0;
+  elements.copyVisibleCsv.disabled = !currentView?.assets.length;
+  elements.copySelectedCsv.disabled = selectedAssetIds.size === 0;
   elements.saveSelectedAssets.disabled = selectedAssetIds.size === 0;
   elements.reviewSelectedAssets.disabled = selectedAssetIds.size === 0;
   elements.unmarkSelectedAssets.disabled = selectedAssetIds.size === 0;
@@ -494,6 +501,22 @@ async function copySelectedPaths() {
     return;
   }
   await copyFromButton(elements.copySelectedPaths, createPathList(selectedAssets));
+}
+
+async function copySelectedCsv() {
+  const selectedAssets = getSelectedAssets();
+  if (!selectedAssets.length) {
+    return;
+  }
+  await copyFromButton(elements.copySelectedCsv, createAssetCsv(selectedAssets));
+}
+
+async function copyVisibleCsv() {
+  const visibleAssets = currentView?.assets ?? [];
+  if (!visibleAssets.length) {
+    return;
+  }
+  await copyFromButton(elements.copyVisibleCsv, createAssetCsv(visibleAssets));
 }
 
 function applySelectedMarkBatch(action, button) {

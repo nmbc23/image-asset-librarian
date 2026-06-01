@@ -78,3 +78,16 @@ test("selected assets can be bulk marked from the workflow panel", async () => {
   assert.match(appSource, /reviewSelectedAssets/);
   assert.match(appSource, /unmarkSelectedAssets/);
 });
+
+test("visible and selected asset metadata can be copied as CSV", async () => {
+  const [appSource, htmlSource] = await Promise.all([
+    readFile(new URL("../public/app.js", import.meta.url), "utf8"),
+    readFile(new URL("../public/index.html", import.meta.url), "utf8")
+  ]);
+
+  assert.match(htmlSource, /id="copy-visible-csv"/);
+  assert.match(htmlSource, /id="copy-selected-csv"/);
+  assert.match(appSource, /createAssetCsv/);
+  assert.match(appSource, /copyVisibleCsv/);
+  assert.match(appSource, /copySelectedCsv/);
+});
