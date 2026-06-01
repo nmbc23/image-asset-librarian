@@ -39,7 +39,7 @@ UI responsibilities:
 - Show active filter chips so users can inspect or clear individual filters without resetting the whole gallery.
 - Store named filter views in browser local storage so common curation workflows can be reapplied quickly.
 - Use source and file-type breakdowns as quick filter controls.
-- Sort by date, size, or name.
+- Sort by date, file size, resolution, or name.
 - Highlight duplicate assets.
 - Inspect a filtered result set in a detail drawer with previous/next buttons, keyboard navigation, and saved/review mark controls.
 - Suggest a stable file to keep in each duplicate group, copy all group paths, and copy only cleanup-candidate paths that exclude the suggested keep file.

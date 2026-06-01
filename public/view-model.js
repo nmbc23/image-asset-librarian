@@ -624,11 +624,26 @@ function sortAssets(assets, sort) {
   if (sort === "smallest") {
     return sorted.sort((a, b) => a.sizeBytes - b.sizeBytes);
   }
+  if (sort === "highest-resolution") {
+    return sorted.sort((a, b) => getPixelCount(b) - getPixelCount(a) || byName(a, b));
+  }
+  if (sort === "lowest-resolution") {
+    return sorted.sort((a, b) => getPixelCount(a) - getPixelCount(b) || byName(a, b));
+  }
   if (sort === "name") {
     return sorted.sort(byName);
   }
 
   return sorted.sort((a, b) => Date.parse(b.modifiedAt) - Date.parse(a.modifiedAt) || byName(a, b));
+}
+
+function getPixelCount(asset) {
+  const width = Number(asset.width);
+  const height = Number(asset.height);
+  if (!Number.isFinite(width) || !Number.isFinite(height) || width <= 0 || height <= 0) {
+    return 0;
+  }
+  return width * height;
 }
 
 function uniqueSorted(values) {

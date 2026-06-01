@@ -104,6 +104,13 @@ test("resolution filter is exposed in the toolbar and wired into app state", asy
   assert.match(appSource, /elements\.resolution\.value = state\.resolution/);
 });
 
+test("sort menu exposes resolution sort modes", async () => {
+  const htmlSource = await readFile(new URL("../public/index.html", import.meta.url), "utf8");
+
+  assert.match(htmlSource, /value="highest-resolution"/);
+  assert.match(htmlSource, /value="lowest-resolution"/);
+});
+
 test("selected assets can be bulk marked from the workflow panel", async () => {
   const [appSource, htmlSource] = await Promise.all([
     readFile(new URL("../public/app.js", import.meta.url), "utf8"),

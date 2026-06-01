@@ -286,6 +286,65 @@ test("createLibraryView sorts newest and largest assets", () => {
   );
 });
 
+test("createLibraryView sorts by resolution", () => {
+  const resolutionIndex = {
+    assets: [
+      {
+        id: "missing",
+        name: "missing.png",
+        relativePath: "missing.png",
+        rootName: "Test",
+        extension: ".png",
+        sizeBytes: 100,
+        modifiedAt: "2026-06-01T00:00:00.000Z"
+      },
+      {
+        id: "tiny",
+        name: "tiny.png",
+        relativePath: "tiny.png",
+        rootName: "Test",
+        extension: ".png",
+        width: 100,
+        height: 100,
+        sizeBytes: 100,
+        modifiedAt: "2026-06-01T00:00:00.000Z"
+      },
+      {
+        id: "standard",
+        name: "standard.png",
+        relativePath: "standard.png",
+        rootName: "Test",
+        extension: ".png",
+        width: 1000,
+        height: 1000,
+        sizeBytes: 100,
+        modifiedAt: "2026-06-01T00:00:00.000Z"
+      },
+      {
+        id: "large",
+        name: "large.png",
+        relativePath: "large.png",
+        rootName: "Test",
+        extension: ".png",
+        width: 3000,
+        height: 2000,
+        sizeBytes: 100,
+        modifiedAt: "2026-06-01T00:00:00.000Z"
+      }
+    ],
+    duplicates: []
+  };
+
+  assert.deepEqual(
+    createLibraryView(resolutionIndex, { sort: "highest-resolution" }).assets.map((asset) => asset.id),
+    ["large", "standard", "tiny", "missing"]
+  );
+  assert.deepEqual(
+    createLibraryView(resolutionIndex, { sort: "lowest-resolution" }).assets.map((asset) => asset.id),
+    ["missing", "tiny", "standard", "large"]
+  );
+});
+
 test("formatBytes uses compact readable units", () => {
   assert.equal(formatBytes(0), "0 B");
   assert.equal(formatBytes(999), "999 B");
