@@ -1,4 +1,5 @@
 import {
+  createActiveFilterChips,
   createAssetDetails,
   createDefaultViewState,
   createDuplicateGroupDetails,
@@ -26,6 +27,7 @@ const elements = {
   mark: document.querySelector("#mark-filter"),
   duplicateToggle: document.querySelector("#duplicate-toggle"),
   resetFilters: document.querySelector("#reset-filters"),
+  activeFilters: document.querySelector("#active-filters"),
   savedCount: document.querySelector("#saved-count"),
   reviewCount: document.querySelector("#review-count"),
   selectedCount: document.querySelector("#selected-count"),
@@ -109,10 +111,17 @@ function bindEvents() {
     state.duplicateOnly = elements.duplicateToggle.checked;
     render();
   });
-  elements.resetFilters.addEventListener("click", () => {
-    Object.assign(state, createDefaultViewState());
-    syncControlsFromState();
-    render();
+  elements.resetFilters.addEventListener("click", clearAllFilters);
+  elements.activeFilters.addEventListener("click", (event) => {
+    if (event.target.closest("[data-clear-all-filters]")) {
+      clearAllFilters();
+      return;
+    }
+
+    const button = event.target.closest("[data-clear-filter]");
+    if (button) {
+      clearFilterChip(button.dataset.clearFilter);
+    }
   });
   elements.selectVisibleAssets.addEventListener("click", selectVisibleAssets);
   elements.copyVisiblePaths.addEventListener("click", copyVisiblePaths);
@@ -232,6 +241,7 @@ function render() {
   renderSummary(libraryIndex);
   renderWorkflow();
   renderFilters(view);
+  renderActiveFilters();
   renderBreakdowns(view);
   renderDuplicates(libraryIndex);
   renderGallery(view);
@@ -266,6 +276,26 @@ function renderFilters(view) {
   );
 }
 
+function renderActiveFilters() {
+  const chips = createActiveFilterChips(state);
+  elements.activeFilters.hidden = chips.length === 0;
+  elements.activeFilters.innerHTML = chips.length
+    ? `
+      ${chips.map(renderActiveFilterChip).join("")}
+      <button type="button" class="active-filter-clear" data-clear-all-filters>Clear all</button>
+    `
+    : "";
+}
+
+function renderActiveFilterChip(chip) {
+  return `
+    <button type="button" class="active-filter-chip" data-clear-filter="${escapeHtml(chip.key)}" aria-label="Clear ${escapeHtml(chip.label)} filter">
+      <span>${escapeHtml(chip.label)}</span>
+      <strong>${escapeHtml(chip.value)}</strong>
+    </button>
+  `;
+}
+
 function renderBreakdowns(view) {
   elements.sourceBreakdownCount.textContent = `${view.sourceBreakdown.length} sources`;
   elements.typeBreakdownCount.textContent = `${view.extensionBreakdown.length} types`;
@@ -298,6 +328,22 @@ function applyBreakdownFilter(filterType, filterValue) {
   } else {
     state.extension = filterValue;
   }
+  syncControlsFromState();
+  render();
+}
+
+function clearFilterChip(key) {
+  const defaults = createDefaultViewState();
+  if (!(key in defaults)) {
+    return;
+  }
+  state[key] = defaults[key];
+  syncControlsFromState();
+  render();
+}
+
+function clearAllFilters() {
+  Object.assign(state, createDefaultViewState());
   syncControlsFromState();
   render();
 }

@@ -11,6 +11,52 @@ export function createDefaultViewState() {
   };
 }
 
+export function createActiveFilterChips(state = {}) {
+  const defaults = createDefaultViewState();
+  const normalizedState = { ...defaults, ...state };
+  const chips = [];
+  const query = String(normalizedState.query ?? "").trim();
+
+  if (query) {
+    chips.push({ key: "query", label: "Search", value: query });
+  }
+  if (normalizedState.root !== defaults.root) {
+    chips.push({ key: "root", label: "Source", value: normalizedState.root });
+  }
+  if (normalizedState.extension !== defaults.extension) {
+    chips.push({ key: "extension", label: "Type", value: formatExtensionLabel(normalizedState.extension) });
+  }
+  if (normalizedState.orientation !== defaults.orientation) {
+    chips.push({
+      key: "orientation",
+      label: "Orientation",
+      value: formatChoiceLabel(normalizedState.orientation)
+    });
+  }
+  if (normalizedState.maxAgeDays !== defaults.maxAgeDays) {
+    chips.push({
+      key: "maxAgeDays",
+      label: "Age",
+      value: `Last ${normalizedState.maxAgeDays} days`
+    });
+  }
+  if (normalizedState.mark !== defaults.mark) {
+    chips.push({
+      key: "mark",
+      label: "Mark",
+      value: formatMarkLabel(normalizedState.mark)
+    });
+  }
+  if (normalizedState.duplicateOnly !== defaults.duplicateOnly) {
+    chips.push({ key: "duplicateOnly", label: "Duplicates", value: "Only duplicates" });
+  }
+  if (normalizedState.sort !== defaults.sort) {
+    chips.push({ key: "sort", label: "Sort", value: formatChoiceLabel(normalizedState.sort) });
+  }
+
+  return chips;
+}
+
 export function createLibraryView(index, state = {}) {
   const assets = Array.isArray(index.assets) ? index.assets : [];
   const duplicateAssetIds = new Set((index.duplicates ?? []).flatMap((group) => group.assetIds ?? []));
@@ -288,6 +334,23 @@ function createBreakdown(assets, field) {
   return [...counts.entries()]
     .map(([label, count]) => ({ label, count }))
     .sort((a, b) => b.count - a.count || a.label.localeCompare(b.label));
+}
+
+function formatExtensionLabel(extension) {
+  return String(extension ?? "Unknown").replace(".", "").toUpperCase();
+}
+
+function formatChoiceLabel(value) {
+  return String(value ?? "Unknown")
+    .replaceAll("-", " ")
+    .replace(/\b\w/g, (letter) => letter.toUpperCase());
+}
+
+function formatMarkLabel(value) {
+  if (value === "review") {
+    return "Review queue";
+  }
+  return formatChoiceLabel(value);
 }
 
 function summarizeAssets(assets, duplicateAssetIds, savedAssetIds, reviewAssetIds) {

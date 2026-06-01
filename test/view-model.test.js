@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
+  createActiveFilterChips,
   createAssetDetails,
   createDefaultViewState,
   createDuplicateGroupDetails,
@@ -252,4 +253,28 @@ test("createDefaultViewState returns resettable filter defaults", () => {
     duplicateOnly: false,
     sort: "newest"
   });
+});
+
+test("createActiveFilterChips describes only non-default filters", () => {
+  assert.deepEqual(createActiveFilterChips(createDefaultViewState()), []);
+
+  assert.deepEqual(createActiveFilterChips({
+    query: "rose study",
+    root: "Codex",
+    extension: ".png",
+    orientation: "portrait",
+    maxAgeDays: "30",
+    mark: "review",
+    duplicateOnly: true,
+    sort: "largest"
+  }), [
+    { key: "query", label: "Search", value: "rose study" },
+    { key: "root", label: "Source", value: "Codex" },
+    { key: "extension", label: "Type", value: "PNG" },
+    { key: "orientation", label: "Orientation", value: "Portrait" },
+    { key: "maxAgeDays", label: "Age", value: "Last 30 days" },
+    { key: "mark", label: "Mark", value: "Review queue" },
+    { key: "duplicateOnly", label: "Duplicates", value: "Only duplicates" },
+    { key: "sort", label: "Sort", value: "Largest" }
+  ]);
 });

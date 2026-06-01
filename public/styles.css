@@ -118,6 +118,49 @@ h1 {
   border-radius: 8px;
 }
 
+.active-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: -4px 0 16px;
+}
+
+.active-filter-chip,
+.active-filter-clear {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 34px;
+  border: 1px solid rgba(31, 138, 112, 0.28);
+  border-radius: 999px;
+  background: rgba(31, 138, 112, 0.08);
+  color: var(--ink);
+  cursor: pointer;
+  padding: 0 12px;
+}
+
+.active-filter-chip span {
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-weight: 800;
+}
+
+.active-filter-chip strong {
+  max-width: min(24rem, 68vw);
+  overflow: hidden;
+  color: var(--accent);
+  font-size: 0.8rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.active-filter-clear {
+  background: var(--surface);
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-weight: 800;
+}
+
 .workflow-panel {
   display: flex;
   align-items: center;

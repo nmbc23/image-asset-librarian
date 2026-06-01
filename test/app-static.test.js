@@ -46,3 +46,19 @@ test("review workflow exposes saved, review, and selected asset controls", async
   assert.match(appSource, /applyBreakdownFilter/);
   assert.match(appSource, /navigator\.clipboard\.readText/);
 });
+
+test("active filter chips can clear individual filters from the toolbar state", async () => {
+  const [appSource, htmlSource, cssSource] = await Promise.all([
+    readFile(new URL("../public/app.js", import.meta.url), "utf8"),
+    readFile(new URL("../public/index.html", import.meta.url), "utf8"),
+    readFile(new URL("../public/styles.css", import.meta.url), "utf8")
+  ]);
+
+  assert.match(htmlSource, /id="active-filters"/);
+  assert.match(appSource, /createActiveFilterChips/);
+  assert.match(appSource, /renderActiveFilters/);
+  assert.match(appSource, /data-clear-filter/);
+  assert.match(appSource, /data-clear-all-filters/);
+  assert.match(appSource, /clearFilterChip/);
+  assert.match(cssSource, /\.active-filters/);
+});

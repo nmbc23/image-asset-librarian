@@ -34,6 +34,7 @@ UI responsibilities:
 
 - Search by name, relative path, source, or extension.
 - Filter by source, file type, orientation, age, duplicate state, and local review marks.
+- Show active filter chips so users can inspect or clear individual filters without resetting the whole gallery.
 - Use source and file-type breakdowns as quick filter controls.
 - Sort by date, size, or name.
 - Highlight duplicate assets.
