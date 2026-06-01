@@ -3,6 +3,7 @@ import {
   createDefaultViewState,
   createLibraryView,
   createMarkBackup,
+  createPathList,
   createWorkflowReport,
   formatBytes,
   formatDate,
@@ -27,6 +28,8 @@ const elements = {
   savedCount: document.querySelector("#saved-count"),
   reviewCount: document.querySelector("#review-count"),
   selectedCount: document.querySelector("#selected-count"),
+  selectVisibleAssets: document.querySelector("#select-visible-assets"),
+  copyVisiblePaths: document.querySelector("#copy-visible-paths"),
   copySelectedPaths: document.querySelector("#copy-selected-paths"),
   copyWorkflowReport: document.querySelector("#copy-workflow-report"),
   copyMarksBackup: document.querySelector("#copy-marks-backup"),
@@ -53,6 +56,7 @@ const marks = loadMarks();
 const selectedAssetIds = new Set();
 
 let libraryIndex = null;
+let currentView = null;
 
 init();
 
@@ -109,6 +113,8 @@ function bindEvents() {
     syncControlsFromState();
     render();
   });
+  elements.selectVisibleAssets.addEventListener("click", selectVisibleAssets);
+  elements.copyVisiblePaths.addEventListener("click", copyVisiblePaths);
   elements.copySelectedPaths.addEventListener("click", copySelectedPaths);
   elements.copyWorkflowReport.addEventListener("click", copyWorkflowReport);
   elements.copyMarksBackup.addEventListener("click", copyMarksBackup);
@@ -196,6 +202,7 @@ function render() {
     savedAssetIds: marks.saved,
     reviewAssetIds: marks.review
   });
+  currentView = view;
   renderSummary(libraryIndex);
   renderWorkflow();
   renderFilters(view);
@@ -216,6 +223,8 @@ function renderWorkflow() {
   elements.savedCount.textContent = `${marks.saved.size} saved`;
   elements.reviewCount.textContent = `${marks.review.size} review`;
   elements.selectedCount.textContent = `${selectedAssetIds.size} selected`;
+  elements.selectVisibleAssets.disabled = !currentView?.assets.length;
+  elements.copyVisiblePaths.disabled = !currentView?.assets.length;
   elements.copySelectedPaths.disabled = selectedAssetIds.size === 0;
   elements.copyWorkflowReport.disabled = selectedAssetIds.size + marks.saved.size + marks.review.size === 0;
   elements.copyMarksBackup.disabled = marks.saved.size + marks.review.size === 0;
@@ -383,7 +392,22 @@ async function copySelectedPaths() {
   if (!selectedAssets.length) {
     return;
   }
-  await copyFromButton(elements.copySelectedPaths, selectedAssets.map((asset) => asset.path).join("\n"));
+  await copyFromButton(elements.copySelectedPaths, createPathList(selectedAssets));
+}
+
+function selectVisibleAssets() {
+  for (const asset of currentView?.assets ?? []) {
+    selectedAssetIds.add(asset.id);
+  }
+  render();
+}
+
+async function copyVisiblePaths() {
+  const visibleAssets = currentView?.assets ?? [];
+  if (!visibleAssets.length) {
+    return;
+  }
+  await copyFromButton(elements.copyVisiblePaths, createPathList(visibleAssets));
 }
 
 async function copyWorkflowReport() {

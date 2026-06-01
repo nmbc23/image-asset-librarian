@@ -17,6 +17,8 @@ test("review workflow exposes saved, review, and selected asset controls", async
 
   assert.match(htmlSource, /id="mark-filter"/);
   assert.match(htmlSource, /id="copy-selected-paths"/);
+  assert.match(htmlSource, /id="select-visible-assets"/);
+  assert.match(htmlSource, /id="copy-visible-paths"/);
   assert.match(htmlSource, /id="copy-workflow-report"/);
   assert.match(htmlSource, /id="copy-marks-backup"/);
   assert.match(htmlSource, /id="import-marks-backup"/);
@@ -28,6 +30,9 @@ test("review workflow exposes saved, review, and selected asset controls", async
   assert.match(appSource, /data-toggle-review/);
   assert.match(appSource, /data-select-asset/);
   assert.match(appSource, /copySelectedPaths/);
+  assert.match(appSource, /selectVisibleAssets/);
+  assert.match(appSource, /copyVisiblePaths/);
+  assert.match(appSource, /currentView/);
   assert.match(appSource, /copyWorkflowReport/);
   assert.match(appSource, /copyMarksBackup/);
   assert.match(appSource, /importMarksBackup/);

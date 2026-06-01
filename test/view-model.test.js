@@ -6,6 +6,7 @@ import {
   createDefaultViewState,
   createLibraryView,
   createMarkBackup,
+  createPathList,
   createWorkflowReport,
   formatBytes,
   parseMarkBackup
@@ -194,6 +195,13 @@ test("createWorkflowReport exports selected, saved, and review queues as markdow
   assert.match(report, /## Saved Assets/);
   assert.match(report, /## Review Queue/);
   assert.match(report, /`copies\/rose-copy\.png` \(Archive, 1\.2 KB, duplicate\)/);
+});
+
+test("createPathList exports asset paths in display order", () => {
+  assert.equal(createPathList([index.assets[0], { id: "missing-path" }, index.assets[2]]), [
+    "P:/AI/Codex/generated_images/rose.png",
+    "mint.svg"
+  ].join("\n"));
 });
 
 test("createMarkBackup and parseMarkBackup round-trip saved and review ids", () => {

@@ -159,6 +159,13 @@ export function parseMarkBackup(value) {
   };
 }
 
+export function createPathList(assets) {
+  return assets
+    .map((asset) => asset.path ?? asset.relativePath)
+    .filter(Boolean)
+    .join("\n");
+}
+
 export function formatBytes(bytes) {
   if (!Number.isFinite(bytes) || bytes <= 0) {
     return "0 B";
