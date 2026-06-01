@@ -34,6 +34,7 @@ UI responsibilities:
 
 - Search by name, relative path, source, or extension.
 - Filter by source, file type, orientation, age, duplicate state, and local review marks.
+- Use source and file-type breakdowns as quick filter controls.
 - Sort by date, size, or name.
 - Highlight duplicate assets.
 - Suggest a stable file to keep in each duplicate group and copy that group's paths for cleanup.

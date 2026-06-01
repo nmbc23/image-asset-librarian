@@ -124,6 +124,18 @@ function bindEvents() {
     selectedAssetIds.clear();
     render();
   });
+  elements.sourceBreakdown.addEventListener("click", (event) => {
+    const button = event.target.closest("[data-set-root-filter]");
+    if (button) {
+      applyBreakdownFilter("root", button.dataset.setRootFilter);
+    }
+  });
+  elements.typeBreakdown.addEventListener("click", (event) => {
+    const button = event.target.closest("[data-set-extension-filter]");
+    if (button) {
+      applyBreakdownFilter("extension", button.dataset.setExtensionFilter);
+    }
+  });
   elements.duplicateList.addEventListener("click", async (event) => {
     const button = event.target.closest("[data-copy-duplicate-group]");
     if (!button) {
@@ -251,22 +263,37 @@ function renderFilters(view) {
 function renderBreakdowns(view) {
   elements.sourceBreakdownCount.textContent = `${view.sourceBreakdown.length} sources`;
   elements.typeBreakdownCount.textContent = `${view.extensionBreakdown.length} types`;
-  elements.sourceBreakdown.innerHTML = view.sourceBreakdown.map(renderBreakdownItem).join("");
+  elements.sourceBreakdown.innerHTML = view.sourceBreakdown
+    .map((item) => renderBreakdownItem(item, "root", item.label))
+    .join("");
   elements.typeBreakdown.innerHTML = view.extensionBreakdown.map((item) =>
     renderBreakdownItem({
       label: item.label.replace(".", "").toUpperCase(),
       count: item.count
-    })
+    }, "extension", item.label)
   ).join("");
 }
 
-function renderBreakdownItem(item) {
+function renderBreakdownItem(item, filterType, filterValue) {
+  const filterAttribute = filterType === "root"
+    ? `data-set-root-filter="${escapeHtml(filterValue)}"`
+    : `data-set-extension-filter="${escapeHtml(filterValue)}"`;
   return `
-    <div class="breakdown-item">
+    <button type="button" class="breakdown-item" ${filterAttribute}>
       <span title="${escapeHtml(item.label)}">${escapeHtml(item.label)}</span>
       <strong>${item.count}</strong>
-    </div>
+    </button>
   `;
+}
+
+function applyBreakdownFilter(filterType, filterValue) {
+  if (filterType === "root") {
+    state.root = filterValue;
+  } else {
+    state.extension = filterValue;
+  }
+  syncControlsFromState();
+  render();
 }
 
 function renderDuplicates(index) {

@@ -39,5 +39,8 @@ test("review workflow exposes saved, review, and selected asset controls", async
   assert.match(appSource, /copyDuplicateGroupPaths/);
   assert.match(appSource, /copyMarksBackup/);
   assert.match(appSource, /importMarksBackup/);
+  assert.match(appSource, /data-set-root-filter/);
+  assert.match(appSource, /data-set-extension-filter/);
+  assert.match(appSource, /applyBreakdownFilter/);
   assert.match(appSource, /navigator\.clipboard\.readText/);
 });
