@@ -92,6 +92,19 @@ test("visible and selected asset metadata can be copied as CSV", async () => {
   assert.match(appSource, /copySelectedCsv/);
 });
 
+test("visible and selected asset metadata can be copied as JSON manifests", async () => {
+  const [appSource, htmlSource] = await Promise.all([
+    readFile(new URL("../public/app.js", import.meta.url), "utf8"),
+    readFile(new URL("../public/index.html", import.meta.url), "utf8")
+  ]);
+
+  assert.match(htmlSource, /id="copy-visible-manifest"/);
+  assert.match(htmlSource, /id="copy-selected-manifest"/);
+  assert.match(appSource, /createAssetManifest/);
+  assert.match(appSource, /copyVisibleManifest/);
+  assert.match(appSource, /copySelectedManifest/);
+});
+
 test("saved filter views can be created, applied, and deleted", async () => {
   const [appSource, htmlSource, cssSource] = await Promise.all([
     readFile(new URL("../public/app.js", import.meta.url), "utf8"),

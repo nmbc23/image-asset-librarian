@@ -7,6 +7,7 @@ import {
   createActiveFilterChips,
   createAssetDetails,
   createAssetCsv,
+  createAssetManifest,
   createCurationBackup,
   createDefaultViewState,
   createDuplicateGroupDetails,
@@ -302,6 +303,52 @@ test("createAssetCsv exports escaped asset metadata in display order", () => {
     '"c","mint.svg","Codex",".svg","90","","","2026-05-30T00:00:00.000Z","mint.svg","",""',
     ""
   ].join("\n"));
+});
+
+test("createAssetManifest exports selected asset metadata as stable JSON", () => {
+  const manifest = createAssetManifest([
+    index.assets[0],
+    { ...index.assets[2], width: undefined, height: undefined, path: undefined, hash: undefined }
+  ], {
+    generatedAt: "2026-06-01T15:00:00.000Z",
+    label: "selected"
+  });
+
+  assert.deepEqual(JSON.parse(manifest), {
+    schema: "image-asset-librarian-manifest-v1",
+    generatedAt: "2026-06-01T15:00:00.000Z",
+    label: "selected",
+    count: 2,
+    assets: [
+      {
+        id: "a",
+        name: "rose.png",
+        source: "Codex",
+        type: ".png",
+        sizeBytes: 1200,
+        width: 512,
+        height: 768,
+        modifiedAt: "2026-06-01T01:00:00.000Z",
+        relativePath: "flowers/rose.png",
+        path: "P:/AI/Codex/generated_images/rose.png",
+        hash: "hash-a"
+      },
+      {
+        id: "c",
+        name: "mint.svg",
+        source: "Codex",
+        type: ".svg",
+        sizeBytes: 90,
+        width: null,
+        height: null,
+        modifiedAt: "2026-05-30T00:00:00.000Z",
+        relativePath: "mint.svg",
+        path: null,
+        hash: null
+      }
+    ]
+  });
+  assert.match(manifest, /\n$/);
 });
 
 test("createMarkBackup and parseMarkBackup round-trip saved and review ids", () => {

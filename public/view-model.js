@@ -425,6 +425,30 @@ export function createAssetCsv(assets) {
   return `${rows.join("\n")}\n`;
 }
 
+export function createAssetManifest(assets, options = {}) {
+  const manifestAssets = (Array.isArray(assets) ? assets : []).map((asset) => ({
+    id: asset.id ?? null,
+    name: asset.name ?? null,
+    source: asset.rootName ?? null,
+    type: asset.extension ?? null,
+    sizeBytes: Number.isFinite(asset.sizeBytes) ? asset.sizeBytes : null,
+    width: Number.isFinite(asset.width) ? asset.width : null,
+    height: Number.isFinite(asset.height) ? asset.height : null,
+    modifiedAt: asset.modifiedAt ?? null,
+    relativePath: asset.relativePath ?? null,
+    path: asset.path ?? null,
+    hash: asset.hash ?? null
+  }));
+
+  return `${JSON.stringify({
+    schema: "image-asset-librarian-manifest-v1",
+    generatedAt: options.generatedAt ?? new Date().toISOString(),
+    label: String(options.label ?? "assets"),
+    count: manifestAssets.length,
+    assets: manifestAssets
+  }, null, 2)}\n`;
+}
+
 export function formatBytes(bytes) {
   if (!Number.isFinite(bytes) || bytes <= 0) {
     return "0 B";
