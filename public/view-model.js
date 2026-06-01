@@ -11,6 +11,7 @@ export function createDefaultViewState() {
     mark: "all",
     tag: "all",
     note: "all",
+    issue: "all",
     duplicateOnly: false,
     sort: "newest"
   };
@@ -49,6 +50,12 @@ const RESOLUTION_BUCKETS = [
   { value: "standard", label: "Standard 0.5-2 MP" },
   { value: "tiny", label: "Tiny < 0.5 MP" },
   { value: "missing", label: "Missing dimensions" }
+];
+
+const ISSUE_FILTERS = [
+  { value: "duplicate", label: "Duplicate" },
+  { value: "missing-dimensions", label: "Missing dimensions" },
+  { value: "tiny-resolution", label: "Tiny resolution" }
 ];
 
 export function applyMarkBatch(options = {}, assetIds = [], action) {
@@ -159,6 +166,23 @@ export function getAssetMetadataEntries(asset = {}) {
   return entries;
 }
 
+export function getAssetIssues(asset = {}, duplicateAssetIds = new Set()) {
+  const duplicateIds = toAssetIdSet(duplicateAssetIds);
+  const resolutionBucket = getResolutionBucket(asset);
+  const issues = [];
+
+  if (duplicateIds.has(asset.id)) {
+    issues.push(getIssueFilter("duplicate"));
+  }
+  if (resolutionBucket === "missing") {
+    issues.push(getIssueFilter("missing-dimensions"));
+  } else if (resolutionBucket === "tiny") {
+    issues.push(getIssueFilter("tiny-resolution"));
+  }
+
+  return issues.filter(Boolean);
+}
+
 export function createAssetDescription(asset = {}) {
   const themes = getAssetThemes(asset);
   const orientation = getOrientation(asset);
@@ -265,6 +289,9 @@ export function createActiveFilterChips(state = {}) {
   if (normalizedState.note !== defaults.note) {
     chips.push({ key: "note", label: "Notes", value: formatNoteFilterLabel(normalizedState.note) });
   }
+  if (normalizedState.issue !== defaults.issue) {
+    chips.push({ key: "issue", label: "Issue", value: formatIssueLabel(normalizedState.issue) });
+  }
   if (normalizedState.duplicateOnly !== defaults.duplicateOnly) {
     chips.push({ key: "duplicateOnly", label: "Duplicates", value: "Only duplicates" });
   }
@@ -300,6 +327,7 @@ export function createLibraryView(index, state = {}) {
     .filter((asset) => matchesMark(asset, normalizedState.mark, savedAssetIds, reviewAssetIds))
     .filter((asset) => matchesTag(asset, normalizedState.tag, assetTags))
     .filter((asset) => matchesNote(asset, normalizedState.note, assetNotes))
+    .filter((asset) => matchesIssue(asset, normalizedState.issue, duplicateAssetIds))
     .filter((asset) => !normalizedState.duplicateOnly || duplicateAssetIds.has(asset.id));
 
   return {
@@ -313,6 +341,7 @@ export function createLibraryView(index, state = {}) {
     sourceBreakdown: createBreakdown(assets, "rootName"),
     extensionBreakdown: createBreakdown(assets, "extension"),
     resolutionBreakdown: createResolutionBreakdown(assets),
+    issueBreakdown: createIssueBreakdown(assets, duplicateAssetIds),
     themeBreakdown: createThemeBreakdown(assets),
     colorThemeBreakdown: createColorThemeBreakdown(assets),
     similarGroups: Array.isArray(index.similarGroups) ? index.similarGroups : [],
@@ -792,6 +821,17 @@ function matchesResolution(asset, resolution) {
   return getResolutionBucket(asset) === resolution;
 }
 
+function matchesIssue(asset, issue, duplicateAssetIds) {
+  if (issue === "all") {
+    return true;
+  }
+  const issues = getAssetIssues(asset, duplicateAssetIds).map((assetIssue) => assetIssue.value);
+  if (issue === "any") {
+    return issues.length > 0;
+  }
+  return issues.includes(issue);
+}
+
 function getResolutionBucket(asset) {
   const width = Number(asset.width);
   const height = Number(asset.height);
@@ -887,6 +927,22 @@ function createResolutionBreakdown(assets) {
       count: counts.get(bucket.value) ?? 0
     }))
     .filter((bucket) => bucket.count > 0);
+}
+
+function createIssueBreakdown(assets, duplicateAssetIds) {
+  const counts = new Map();
+  for (const asset of assets) {
+    for (const issue of getAssetIssues(asset, duplicateAssetIds)) {
+      counts.set(issue.value, (counts.get(issue.value) ?? 0) + 1);
+    }
+  }
+
+  return ISSUE_FILTERS
+    .map((issue) => ({
+      ...issue,
+      count: counts.get(issue.value) ?? 0
+    }))
+    .filter((issue) => issue.count > 0);
 }
 
 function createThemeBreakdown(assets) {
@@ -1144,6 +1200,17 @@ function formatResolutionLabel(value) {
     return "Missing dimensions";
   }
   return formatChoiceLabel(value);
+}
+
+function formatIssueLabel(value) {
+  if (value === "any") {
+    return "Any issue";
+  }
+  return getIssueFilter(value)?.label ?? formatChoiceLabel(value);
+}
+
+function getIssueFilter(value) {
+  return ISSUE_FILTERS.find((issue) => issue.value === value) ?? null;
 }
 
 function formatCsvCell(value) {

@@ -25,6 +25,7 @@ import {
   formatBytes,
   getAllAssetTags,
   getAssetNote,
+  getAssetIssues,
   normalizeSavedFilterViews,
   parseCurationBackup,
   parseMarkBackup,
@@ -347,6 +348,71 @@ test("createLibraryView filters by resolution bucket", () => {
       [resolution]
     );
   }
+});
+
+test("createLibraryView filters by asset issue and creates an issue breakdown", () => {
+  const issueIndex = {
+    assets: [
+      {
+        id: "duplicate",
+        name: "duplicate.png",
+        relativePath: "duplicate.png",
+        rootName: "Test",
+        extension: ".png",
+        width: 1200,
+        height: 1200,
+        sizeBytes: 1000,
+        modifiedAt: "2026-06-01T00:00:00.000Z"
+      },
+      {
+        id: "missing",
+        name: "missing.png",
+        relativePath: "missing.png",
+        rootName: "Test",
+        extension: ".png",
+        sizeBytes: 1000,
+        modifiedAt: "2026-06-01T00:00:00.000Z"
+      },
+      {
+        id: "tiny",
+        name: "tiny.png",
+        relativePath: "tiny.png",
+        rootName: "Test",
+        extension: ".png",
+        width: 320,
+        height: 320,
+        sizeBytes: 1000,
+        modifiedAt: "2026-06-01T00:00:00.000Z"
+      },
+      {
+        id: "clean",
+        name: "clean.png",
+        relativePath: "clean.png",
+        rootName: "Test",
+        extension: ".png",
+        width: 1600,
+        height: 1600,
+        sizeBytes: 1000,
+        modifiedAt: "2026-06-01T00:00:00.000Z"
+      }
+    ],
+    duplicates: [{ hash: "dupe", count: 1, assetIds: ["duplicate"], reclaimableBytes: 0 }]
+  };
+
+  const anyIssue = createLibraryView(issueIndex, { issue: "any", sort: "name" });
+  assert.deepEqual(anyIssue.assets.map((asset) => asset.id), ["duplicate", "missing", "tiny"]);
+  assert.deepEqual(anyIssue.issueBreakdown, [
+    { value: "duplicate", label: "Duplicate", count: 1 },
+    { value: "missing-dimensions", label: "Missing dimensions", count: 1 },
+    { value: "tiny-resolution", label: "Tiny resolution", count: 1 }
+  ]);
+  assert.deepEqual(
+    createLibraryView(issueIndex, { issue: "tiny-resolution", sort: "name" }).assets.map((asset) => asset.id),
+    ["tiny"]
+  );
+  assert.deepEqual(getAssetIssues(issueIndex.assets[0], new Set(["duplicate"])), [
+    { value: "duplicate", label: "Duplicate" }
+  ]);
 });
 
 test("createLibraryView creates a resolution breakdown", () => {
@@ -890,6 +956,7 @@ test("createDefaultViewState returns resettable filter defaults", () => {
     mark: "all",
     tag: "all",
     note: "all",
+    issue: "all",
     duplicateOnly: false,
     sort: "newest"
   });
@@ -910,6 +977,7 @@ test("createActiveFilterChips describes only non-default filters", () => {
     mark: "review",
     tag: "keeper",
     note: "with-notes",
+    issue: "tiny-resolution",
     duplicateOnly: true,
     sort: "largest"
   }), [
@@ -924,6 +992,7 @@ test("createActiveFilterChips describes only non-default filters", () => {
     { key: "mark", label: "Mark", value: "Review queue" },
     { key: "tag", label: "Tag", value: "keeper" },
     { key: "note", label: "Notes", value: "With notes" },
+    { key: "issue", label: "Issue", value: "Tiny resolution" },
     { key: "duplicateOnly", label: "Duplicates", value: "Only duplicates" },
     { key: "sort", label: "Sort", value: "Largest" }
   ]);
@@ -958,6 +1027,7 @@ test("createSavedFilterView stores a normalized filter state snapshot", () => {
       mark: "all",
       tag: "all",
       note: "all",
+      issue: "all",
       duplicateOnly: true,
       sort: "largest"
     }
@@ -995,6 +1065,7 @@ test("normalizeSavedFilterViews drops invalid entries and restores missing defau
         mark: "all",
         tag: "all",
         note: "all",
+        issue: "all",
         duplicateOnly: true,
         sort: "oldest"
       }

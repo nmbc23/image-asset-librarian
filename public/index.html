@@ -70,6 +70,16 @@
           </select>
         </label>
         <label>
+          <span>Issue</span>
+          <select id="issue-filter">
+            <option value="all">All assets</option>
+            <option value="any">Any issue</option>
+            <option value="duplicate">Duplicate</option>
+            <option value="missing-dimensions">Missing dimensions</option>
+            <option value="tiny-resolution">Tiny resolution</option>
+          </select>
+        </label>
+        <label>
           <span>Theme</span>
           <select id="theme-filter"></select>
         </label>
@@ -195,6 +205,13 @@
             <span id="resolution-breakdown-count">0 buckets</span>
           </div>
           <div id="resolution-breakdown" class="breakdown-list"></div>
+        </div>
+        <div>
+          <div class="section-heading">
+            <h2>Issues</h2>
+            <span id="issue-breakdown-count">0 issues</span>
+          </div>
+          <div id="issue-breakdown" class="breakdown-list"></div>
         </div>
         <div>
           <div class="section-heading">

@@ -35,12 +35,12 @@ The server is intentionally small and uses Node.js built-ins only.
 UI responsibilities:
 
 - Search by name, relative path, source, extension, inferred theme, inferred color vibe, palette hex color, generated description, or embedded metadata.
-- Filter by source, file type, orientation, resolution bucket, inferred theme, inferred color vibe, age, duplicate state, and local review marks.
+- Filter by source, file type, orientation, resolution bucket, inferred theme, inferred color vibe, local asset issue, age, duplicate state, and local review marks.
 - Apply browser-local tags to selected assets and use those tags as gallery filters.
 - Store browser-local notes per asset, search note text, and filter assets by whether notes exist.
 - Show active filter chips so users can inspect or clear individual filters without resetting the whole gallery.
 - Store named filter views in browser local storage so common curation workflows can be reapplied quickly.
-- Use source, file-type, resolution, inferred theme, and color-vibe breakdowns as quick filter controls.
+- Use source, file-type, resolution, asset issue, inferred theme, and color-vibe breakdowns as quick filter controls.
 - Review similar visual groups and jump into the matching search query.
 - Show compact palette swatches on asset cards and in the detail drawer.
 - Generate concise local image descriptions from indexed visual signals, then copy them one-by-one, export selected/visible description batches, or save them as local notes.

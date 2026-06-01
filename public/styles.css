@@ -688,6 +688,7 @@ a:focus-visible {
 
 .asset-tags,
 .asset-themes,
+.asset-issues,
 .asset-color-themes {
   display: flex;
   flex-wrap: wrap;
@@ -696,6 +697,7 @@ a:focus-visible {
 
 .asset-tags button,
 .asset-themes button,
+.asset-issues button,
 .asset-color-themes button {
   min-height: 26px;
   border: 1px solid rgba(31, 138, 112, 0.32);
@@ -717,6 +719,12 @@ a:focus-visible {
 .asset-color-themes button {
   border-color: rgba(184, 86, 66, 0.28);
   background: #fff2ef;
+  color: var(--warn);
+}
+
+.asset-issues button {
+  border-color: rgba(184, 86, 66, 0.32);
+  background: #f8e1db;
   color: var(--warn);
 }
 

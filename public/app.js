@@ -21,6 +21,7 @@ import {
   formatBytes,
   formatDate,
   getAllAssetTags,
+  getAssetIssues,
   getAssetColorThemes,
   getAssetNote,
   getAssetPalette,
@@ -43,6 +44,7 @@ const elements = {
   extension: document.querySelector("#extension-filter"),
   orientation: document.querySelector("#orientation-filter"),
   resolution: document.querySelector("#resolution-filter"),
+  issue: document.querySelector("#issue-filter"),
   theme: document.querySelector("#theme-filter"),
   colorTheme: document.querySelector("#color-theme-filter"),
   age: document.querySelector("#age-filter"),
@@ -90,6 +92,8 @@ const elements = {
   typeBreakdownCount: document.querySelector("#type-breakdown-count"),
   resolutionBreakdown: document.querySelector("#resolution-breakdown"),
   resolutionBreakdownCount: document.querySelector("#resolution-breakdown-count"),
+  issueBreakdown: document.querySelector("#issue-breakdown"),
+  issueBreakdownCount: document.querySelector("#issue-breakdown-count"),
   themeBreakdown: document.querySelector("#theme-breakdown"),
   themeBreakdownCount: document.querySelector("#theme-breakdown-count"),
   colorThemeBreakdown: document.querySelector("#color-theme-breakdown"),
@@ -158,6 +162,10 @@ function bindEvents() {
   });
   elements.resolution.addEventListener("change", () => {
     state.resolution = elements.resolution.value;
+    render();
+  });
+  elements.issue.addEventListener("change", () => {
+    state.issue = elements.issue.value;
     render();
   });
   elements.theme.addEventListener("change", () => {
@@ -263,6 +271,12 @@ function bindEvents() {
       applyBreakdownFilter("resolution", button.dataset.setResolutionFilter);
     }
   });
+  elements.issueBreakdown.addEventListener("click", (event) => {
+    const button = event.target.closest("[data-set-issue-filter]");
+    if (button) {
+      applyBreakdownFilter("issue", button.dataset.setIssueFilter);
+    }
+  });
   elements.themeBreakdown.addEventListener("click", (event) => {
     const button = event.target.closest("[data-set-theme-filter]");
     if (button) {
@@ -329,6 +343,14 @@ function bindEvents() {
     const tagButton = event.target.closest("[data-asset-tag]");
     if (tagButton) {
       state.tag = tagButton.dataset.assetTag;
+      syncControlsFromState();
+      render();
+      return;
+    }
+
+    const issueButton = event.target.closest("[data-asset-issue]");
+    if (issueButton) {
+      state.issue = issueButton.dataset.assetIssue;
       syncControlsFromState();
       render();
       return;
@@ -466,6 +488,7 @@ function syncControlsFromState() {
   elements.extension.value = state.extension;
   elements.orientation.value = state.orientation;
   elements.resolution.value = state.resolution;
+  elements.issue.value = state.issue;
   elements.theme.value = state.theme;
   elements.colorTheme.value = state.colorTheme;
   elements.age.value = state.maxAgeDays;
@@ -604,6 +627,7 @@ function renderBreakdowns(view) {
   elements.sourceBreakdownCount.textContent = `${view.sourceBreakdown.length} sources`;
   elements.typeBreakdownCount.textContent = `${view.extensionBreakdown.length} types`;
   elements.resolutionBreakdownCount.textContent = `${view.resolutionBreakdown.length} buckets`;
+  elements.issueBreakdownCount.textContent = `${view.issueBreakdown.length} issues`;
   elements.themeBreakdownCount.textContent = `${view.themeBreakdown.length} themes`;
   elements.colorThemeBreakdownCount.textContent = `${view.colorThemeBreakdown.length} vibes`;
   elements.sourceBreakdown.innerHTML = view.sourceBreakdown
@@ -618,6 +642,9 @@ function renderBreakdowns(view) {
   elements.resolutionBreakdown.innerHTML = view.resolutionBreakdown
     .map((item) => renderBreakdownItem(item, "resolution", item.value))
     .join("");
+  elements.issueBreakdown.innerHTML = view.issueBreakdown
+    .map((item) => renderBreakdownItem(item, "issue", item.value))
+    .join("");
   elements.themeBreakdown.innerHTML = view.themeBreakdown
     .map((item) => renderBreakdownItem(item, "theme", item.label))
     .join("");
@@ -631,6 +658,7 @@ function renderBreakdownItem(item, filterType, filterValue) {
     root: "data-set-root-filter",
     extension: "data-set-extension-filter",
     resolution: "data-set-resolution-filter",
+    issue: "data-set-issue-filter",
     theme: "data-set-theme-filter",
     colorTheme: "data-set-color-theme-filter"
   };
@@ -648,6 +676,8 @@ function applyBreakdownFilter(filterType, filterValue) {
     state.root = filterValue;
   } else if (filterType === "resolution") {
     state.resolution = filterValue;
+  } else if (filterType === "issue") {
+    state.issue = filterValue;
   } else if (filterType === "theme") {
     state.theme = filterValue;
   } else if (filterType === "colorTheme") {
@@ -794,11 +824,12 @@ function renderGallery(view) {
     <div><strong>${view.filteredSummary.extensions}</strong><span>types shown</span></div>
   `;
   elements.emptyState.hidden = view.assets.length > 0;
-  elements.gallery.innerHTML = view.assets.map((asset) => renderAssetCard(asset, view.duplicateAssetIds.has(asset.id))).join("");
+  elements.gallery.innerHTML = view.assets.map((asset) => renderAssetCard(asset, view.duplicateAssetIds)).join("");
 }
 
-function renderAssetCard(asset, isDuplicate) {
+function renderAssetCard(asset, duplicateAssetIds) {
   const dimensions = asset.width && asset.height ? `${asset.width} x ${asset.height}` : "Unknown size";
+  const isDuplicate = duplicateAssetIds.has(asset.id);
   const duplicateBadge = isDuplicate ? `<span class="badge duplicate">Duplicate</span>` : "";
   const isSaved = marks.saved.has(asset.id);
   const isReview = marks.review.has(asset.id);
@@ -827,6 +858,7 @@ function renderAssetCard(asset, isDuplicate) {
         ${renderAssetPalette(asset)}
         ${renderAssetThemes(asset)}
         ${renderAssetColorThemes(asset)}
+        ${renderAssetIssues(asset, duplicateAssetIds)}
         ${renderAssetTags(asset.id)}
         ${renderAssetNotePreview(asset.id)}
         <dl>
@@ -842,6 +874,19 @@ function renderAssetCard(asset, isDuplicate) {
         </div>
       </div>
     </article>
+  `;
+}
+
+function renderAssetIssues(asset, duplicateAssetIds) {
+  const issues = getAssetIssues(asset, duplicateAssetIds);
+  if (!issues.length) {
+    return "";
+  }
+
+  return `
+    <div class="asset-issues">
+      ${issues.map((issue) => `<button type="button" data-asset-issue="${escapeHtml(issue.value)}">${escapeHtml(issue.label)}</button>`).join("")}
+    </div>
   `;
 }
 

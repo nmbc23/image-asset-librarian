@@ -124,6 +124,26 @@ test("resolution breakdown is exposed and wired into filter state", async () => 
   assert.match(appSource, /applyBreakdownFilter\("resolution"/);
 });
 
+test("asset issue filter is exposed in the toolbar, breakdowns, and asset cards", async () => {
+  const [appSource, htmlSource, cssSource] = await Promise.all([
+    readFile(new URL("../public/app.js", import.meta.url), "utf8"),
+    readFile(new URL("../public/index.html", import.meta.url), "utf8"),
+    readFile(new URL("../public/styles.css", import.meta.url), "utf8")
+  ]);
+
+  assert.match(htmlSource, /id="issue-filter"/);
+  assert.match(htmlSource, /id="issue-breakdown"/);
+  assert.match(htmlSource, /id="issue-breakdown-count"/);
+  assert.match(appSource, /issue: document\.querySelector\("#issue-filter"\)/);
+  assert.match(appSource, /state\.issue = elements\.issue\.value/);
+  assert.match(appSource, /issueBreakdown: document\.querySelector\("#issue-breakdown"\)/);
+  assert.match(appSource, /data-set-issue-filter/);
+  assert.match(appSource, /applyBreakdownFilter\("issue"/);
+  assert.match(appSource, /renderAssetIssues/);
+  assert.match(appSource, /data-asset-issue/);
+  assert.match(cssSource, /\.asset-issues/);
+});
+
 test("theme grouping is exposed in filters, breakdowns, and asset cards", async () => {
   const [appSource, htmlSource, cssSource] = await Promise.all([
     readFile(new URL("../public/app.js", import.meta.url), "utf8"),
