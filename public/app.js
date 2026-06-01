@@ -392,6 +392,18 @@ function bindEvents() {
       return;
     }
 
+    const descriptionCopyButton = event.target.closest("[data-copy-description]");
+    if (descriptionCopyButton) {
+      await copyFromButton(descriptionCopyButton, descriptionCopyButton.dataset.copyDescription);
+      return;
+    }
+
+    const descriptionNoteButton = event.target.closest("[data-save-description-note]");
+    if (descriptionNoteButton) {
+      saveSuggestedDescriptionAsNote(descriptionNoteButton.dataset.saveDescriptionNote);
+      return;
+    }
+
     const copyButton = event.target.closest("[data-copy-value]");
     if (copyButton) {
       await copyFromButton(copyButton, copyButton.dataset.copyValue);
@@ -920,6 +932,7 @@ function renderDetails(details) {
     ${details.isDuplicate ? `<div class="drawer-alert">${details.duplicateGroup.count} duplicate files, ${details.duplicateGroup.reclaimable} reclaimable</div>` : ""}
     ${renderDetailPalette(details)}
     ${renderDetailMetadata(details)}
+    ${renderSuggestedDescription(details)}
     <section class="note-editor" aria-label="Local asset note">
       <label>
         <span>Local note</span>
@@ -930,6 +943,23 @@ function renderDetails(details) {
     <dl class="detail-list">
       ${details.fields.map(renderDetailField).join("")}
     </dl>
+  `;
+}
+
+function renderSuggestedDescription(details) {
+  if (!details.description) {
+    return "";
+  }
+
+  return `
+    <section class="suggested-description" aria-label="Suggested image description">
+      <h3>Suggested Description</h3>
+      <p>${escapeHtml(details.description)}</p>
+      <div>
+        <button type="button" data-copy-description="${escapeHtml(details.description)}">Copy description</button>
+        <button type="button" data-save-description-note="${escapeHtml(details.id)}">Save as note</button>
+      </div>
+    </section>
   `;
 }
 
@@ -1154,6 +1184,18 @@ function saveAssetNote(assetId) {
   if (button) {
     showButtonFeedback(button, "Saved");
   }
+}
+
+function saveSuggestedDescriptionAsNote(assetId) {
+  const details = createAssetDetails(libraryIndex, assetId);
+  if (!details?.description) {
+    return;
+  }
+
+  assetNotes = setAssetNote(assetNotes, assetId, details.description);
+  saveAssetNotes();
+  render();
+  showDetails(assetId);
 }
 
 function selectVisibleAssets() {

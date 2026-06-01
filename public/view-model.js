@@ -159,6 +159,33 @@ export function getAssetMetadataEntries(asset = {}) {
   return entries;
 }
 
+export function createAssetDescription(asset = {}) {
+  const themes = getAssetThemes(asset);
+  const orientation = getOrientation(asset);
+  const semanticThemes = themes.filter((theme) => !["portrait", "landscape", "square", "vector"].includes(theme));
+  const subjectParts = [];
+
+  if (orientation !== "unknown") {
+    subjectParts.push(orientation);
+  }
+  if (semanticThemes[0]) {
+    subjectParts.push(semanticThemes[0]);
+  }
+  if (themes.includes("vector")) {
+    subjectParts.push("vector");
+  }
+
+  const subject = uniqueStrings(subjectParts).join(" ") || "visual asset";
+  const colorThemes = getDescriptionColorThemes(asset);
+  const colorPhrase = colorThemes.length ? `${colorThemes.join(", ")} colors` : "an uncategorized color style";
+  const paletteNames = uniqueStrings(getAssetPalette(asset).slice(0, 2).map(getPaletteColorName));
+  const palettePhrase = paletteNames.length ? ` and a ${paletteNames.join(", ")} palette` : "";
+  const metadataHint = getDescriptionMetadataHint(asset);
+  const metadataPhrase = metadataHint ? ` Metadata suggests: ${metadataHint}.` : "";
+
+  return `A ${subject} image with ${colorPhrase}${palettePhrase}.${metadataPhrase}`;
+}
+
 export function setAssetNote(assetNotes = {}, assetId, note) {
   const updatedNotes = normalizeAssetNotes(assetNotes);
   const normalizedId = String(assetId ?? "").trim();
@@ -334,6 +361,7 @@ export function createAssetDetails(index, assetId) {
   const paletteLabel = palette.length ? palette.join(", ") : "Unavailable";
   const metadataEntries = getAssetMetadataEntries(asset);
   const metadataSummary = formatAssetMetadata(asset);
+  const description = createAssetDescription(asset);
 
   return {
     id: asset.id,
@@ -344,6 +372,7 @@ export function createAssetDetails(index, assetId) {
     size: formatBytes(asset.sizeBytes),
     dimensions,
     palette,
+    description,
     metadataEntries,
     metadataSummary,
     modified: formatDate(asset.modifiedAt),
@@ -540,6 +569,7 @@ export function createAssetCsv(assets) {
     ["themes", (asset) => getAssetThemes(asset).join("; ")],
     ["colorThemes", (asset) => getAssetColorThemes(asset).join("; ")],
     ["palette", (asset) => getAssetPalette(asset).join("; ")],
+    ["description", (asset) => createAssetDescription(asset)],
     ["metadata", (asset) => formatAssetMetadata(asset)],
     ["modifiedAt", (asset) => asset.modifiedAt],
     ["relativePath", (asset) => asset.relativePath],
@@ -574,6 +604,7 @@ export function createAssetManifest(assets, options = {}) {
       themes: getAssetThemes(asset),
       colorThemes: getAssetColorThemes(asset),
       palette: getAssetPalette(asset),
+      description: createAssetDescription(asset),
       metadata: normalizeEmbeddedMetadata(asset.metadata),
       modifiedAt: asset.modifiedAt ?? null,
       relativePath: asset.relativePath ?? null,
@@ -645,6 +676,7 @@ function matchesSearch(asset, query, assetNotes = {}) {
     getAssetThemes(asset).join(" "),
     getAssetColorThemes(asset).join(" "),
     getAssetPalette(asset).join(" "),
+    createAssetDescription(asset),
     formatAssetMetadata(asset),
     assetNotes[asset.id]
   ].join(" ").toLowerCase();
@@ -905,6 +937,95 @@ function formatAssetMetadata(asset) {
   return getAssetMetadataEntries(asset)
     .map((entry) => `${entry.label}: ${entry.value}`)
     .join("; ");
+}
+
+function getDescriptionMetadataHint(asset) {
+  const metadata = normalizeEmbeddedMetadata(asset.metadata);
+  return metadata.description || metadata.title || metadata.text[0]?.value || "";
+}
+
+function getDescriptionColorThemes(asset) {
+  const themes = getAssetColorThemes(asset);
+  const hueThemes = themes.filter((theme) => !["vivid", "muted", "dark", "light", "monochrome"].includes(theme));
+  const styleThemes = ["vivid", "muted", "dark", "light", "monochrome"].filter((theme) => themes.includes(theme));
+  return uniqueStrings([...hueThemes.slice(0, 2), ...styleThemes.slice(0, 1)]).slice(0, 3);
+}
+
+function getPaletteColorName(color) {
+  const match = String(color ?? "").match(/^#([0-9a-f]{6})$/i);
+  if (!match) {
+    return "";
+  }
+
+  const rgb = {
+    r: Number.parseInt(match[1].slice(0, 2), 16),
+    g: Number.parseInt(match[1].slice(2, 4), 16),
+    b: Number.parseInt(match[1].slice(4, 6), 16)
+  };
+  const { hue, saturation, lightness } = rgbToHsl(rgb);
+
+  if (lightness < 0.16) {
+    return "black";
+  }
+  if (lightness > 0.88) {
+    return "white";
+  }
+  if (saturation < 0.1) {
+    return lightness < 0.45 ? "gray" : "light gray";
+  }
+  if (hue < 18) {
+    return "red";
+  }
+  if (hue < 45) {
+    return "orange";
+  }
+  if (hue < 70) {
+    return "yellow";
+  }
+  if (hue < 155) {
+    return "green";
+  }
+  if (hue < 195) {
+    return "teal";
+  }
+  if (hue < 255) {
+    return "blue";
+  }
+  if (hue < 300) {
+    return "purple";
+  }
+  return "rose";
+}
+
+function rgbToHsl(color) {
+  const r = color.r / 255;
+  const g = color.g / 255;
+  const b = color.b / 255;
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  const lightness = (max + min) / 2;
+
+  if (max === min) {
+    return { hue: 0, saturation: 0, lightness };
+  }
+
+  const delta = max - min;
+  const saturation = delta / (1 - Math.abs(2 * lightness - 1));
+  let hue;
+
+  if (max === r) {
+    hue = 60 * (((g - b) / delta) % 6);
+  } else if (max === g) {
+    hue = 60 * ((b - r) / delta + 2);
+  } else {
+    hue = 60 * ((r - g) / delta + 4);
+  }
+
+  return {
+    hue: hue < 0 ? hue + 360 : hue,
+    saturation,
+    lightness
+  };
 }
 
 function normalizeMetadataText(value) {

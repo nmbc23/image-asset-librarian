@@ -186,6 +186,21 @@ test("embedded asset metadata is exposed in details and exports", async () => {
   assert.match(cssSource, /\.detail-metadata/);
 });
 
+test("suggested image descriptions can be copied or saved as local notes", async () => {
+  const [appSource, cssSource, viewModelSource] = await Promise.all([
+    readFile(new URL("../public/app.js", import.meta.url), "utf8"),
+    readFile(new URL("../public/styles.css", import.meta.url), "utf8"),
+    readFile(new URL("../public/view-model.js", import.meta.url), "utf8")
+  ]);
+
+  assert.match(viewModelSource, /createAssetDescription/);
+  assert.match(appSource, /renderSuggestedDescription/);
+  assert.match(appSource, /data-copy-description/);
+  assert.match(appSource, /data-save-description-note/);
+  assert.match(appSource, /saveSuggestedDescriptionAsNote/);
+  assert.match(cssSource, /\.suggested-description/);
+});
+
 test("selected assets can be bulk marked from the workflow panel", async () => {
   const [appSource, htmlSource] = await Promise.all([
     readFile(new URL("../public/app.js", import.meta.url), "utf8"),

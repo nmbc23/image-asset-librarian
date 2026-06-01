@@ -6,6 +6,7 @@ import {
   applyTagBatch,
   createActiveFilterChips,
   createAssetDetails,
+  createAssetDescription,
   createAssetNavigation,
   createAssetCsv,
   createAssetManifest,
@@ -221,6 +222,15 @@ test("createLibraryView filters by inferred color vibe", () => {
 test("createLibraryView searches embedded asset metadata", () => {
   const view = createLibraryView(index, {
     query: "macro lens",
+    sort: "name"
+  });
+
+  assert.deepEqual(view.assets.map((asset) => asset.id), ["a"]);
+});
+
+test("createLibraryView searches generated image descriptions", () => {
+  const view = createLibraryView(index, {
+    query: "rose teal palette",
     sort: "name"
   });
 
@@ -493,6 +503,17 @@ test("formatBytes uses compact readable units", () => {
   assert.equal(formatBytes(1024 * 1024 * 2), "2 MB");
 });
 
+test("createAssetDescription writes a concise local image description", () => {
+  assert.equal(
+    createAssetDescription(index.assets[0]),
+    "A portrait character image with warm, vivid colors and a rose, teal palette. Metadata suggests: Soft light portrait."
+  );
+  assert.equal(
+    createAssetDescription(index.assets[2]),
+    "A logo vector image with cool, green colors and a teal palette."
+  );
+});
+
 test("createAssetDetails formats metadata and duplicate context", () => {
   const details = createAssetDetails(index, "a");
 
@@ -500,6 +521,7 @@ test("createAssetDetails formats metadata and duplicate context", () => {
   assert.equal(details.name, "rose.png");
   assert.equal(details.size, "1.2 KB");
   assert.equal(details.dimensions, "512 x 768");
+  assert.equal(details.description, "A portrait character image with warm, vivid colors and a rose, teal palette. Metadata suggests: Soft light portrait.");
   assert.equal(details.isDuplicate, true);
   assert.equal(details.duplicateGroup.count, 2);
   assert.equal(details.duplicateGroup.reclaimable, "1.2 KB");
@@ -630,9 +652,9 @@ test("createAssetCsv exports escaped asset metadata in display order", () => {
   ]);
 
   assert.equal(csv, [
-    "id,name,source,type,sizeBytes,width,height,themes,colorThemes,palette,metadata,modifiedAt,relativePath,path,hash",
-    '"a","rose, ""study"".png","Codex",".png","1200","512","768","portrait; character","warm; vivid","#d94f70; #1f8a70","Title: Rose prompt; Description: Soft light portrait; parameters: pink rose, macro lens","2026-06-01T01:00:00.000Z","flowers/rose.png","P:/AI/Codex/generated_images/rose.png","hash-a"',
-    '"c","mint.svg","Codex",".svg","90","","","logo; vector","cool; green","#1f8a70","","2026-05-30T00:00:00.000Z","mint.svg","",""',
+    "id,name,source,type,sizeBytes,width,height,themes,colorThemes,palette,description,metadata,modifiedAt,relativePath,path,hash",
+    '"a","rose, ""study"".png","Codex",".png","1200","512","768","portrait; character","warm; vivid","#d94f70; #1f8a70","A portrait character image with warm, vivid colors and a rose, teal palette. Metadata suggests: Soft light portrait.","Title: Rose prompt; Description: Soft light portrait; parameters: pink rose, macro lens","2026-06-01T01:00:00.000Z","flowers/rose.png","P:/AI/Codex/generated_images/rose.png","hash-a"',
+    '"c","mint.svg","Codex",".svg","90","","","logo; vector","cool; green","#1f8a70","A logo vector image with cool, green colors and a teal palette.","","2026-05-30T00:00:00.000Z","mint.svg","",""',
     ""
   ].join("\n"));
 });
@@ -663,6 +685,7 @@ test("createAssetManifest exports selected asset metadata as stable JSON", () =>
         themes: ["portrait", "character"],
         colorThemes: ["warm", "vivid"],
         palette: ["#d94f70", "#1f8a70"],
+        description: "A portrait character image with warm, vivid colors and a rose, teal palette. Metadata suggests: Soft light portrait.",
         metadata: {
           title: "Rose prompt",
           description: "Soft light portrait",
@@ -684,6 +707,7 @@ test("createAssetManifest exports selected asset metadata as stable JSON", () =>
         themes: ["logo", "vector"],
         colorThemes: ["cool", "green"],
         palette: ["#1f8a70"],
+        description: "A logo vector image with cool, green colors and a teal palette.",
         metadata: {
           title: "",
           description: "",
