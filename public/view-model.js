@@ -134,6 +134,10 @@ export function getAssetColorThemes(asset = {}) {
   return uniqueStrings((Array.isArray(asset.colorThemes) ? asset.colorThemes : []).map(normalizeColorTheme));
 }
 
+export function getAssetPalette(asset = {}) {
+  return uniqueStrings((Array.isArray(asset.palette) ? asset.palette : []).map(normalizePaletteColor));
+}
+
 export function setAssetNote(assetNotes = {}, assetId, note) {
   const updatedNotes = normalizeAssetNotes(assetNotes);
   const normalizedId = String(assetId ?? "").trim();
@@ -304,6 +308,8 @@ export function createAssetDetails(index, assetId) {
   const themeLabel = themes.length ? themes.join(", ") : "Uncategorized";
   const colorThemes = getAssetColorThemes(asset);
   const colorThemeLabel = colorThemes.length ? colorThemes.join(", ") : "Uncategorized";
+  const palette = getAssetPalette(asset);
+  const paletteLabel = palette.length ? palette.join(", ") : "Unavailable";
 
   return {
     id: asset.id,
@@ -313,6 +319,7 @@ export function createAssetDetails(index, assetId) {
     hash: asset.hash,
     size: formatBytes(asset.sizeBytes),
     dimensions,
+    palette,
     modified: formatDate(asset.modifiedAt),
     isDuplicate: Boolean(duplicateGroup),
     duplicateGroup: duplicateGroup
@@ -329,6 +336,7 @@ export function createAssetDetails(index, assetId) {
       { label: "Dimensions", value: dimensions },
       { label: "Themes", value: themeLabel },
       { label: "Color vibes", value: colorThemeLabel },
+      { label: "Palette", value: paletteLabel },
       { label: "Modified", value: formatDate(asset.modifiedAt) },
       { label: "Hash", value: asset.hash ?? "Unknown", copyValue: asset.hash },
       { label: "Path", value: asset.path ?? "Unknown", copyValue: asset.path }
@@ -490,6 +498,7 @@ export function createAssetCsv(assets) {
     ["height", (asset) => asset.height],
     ["themes", (asset) => getAssetThemes(asset).join("; ")],
     ["colorThemes", (asset) => getAssetColorThemes(asset).join("; ")],
+    ["palette", (asset) => getAssetPalette(asset).join("; ")],
     ["modifiedAt", (asset) => asset.modifiedAt],
     ["relativePath", (asset) => asset.relativePath],
     ["path", (asset) => asset.path],
@@ -522,6 +531,7 @@ export function createAssetManifest(assets, options = {}) {
       height: Number.isFinite(asset.height) ? asset.height : null,
       themes: getAssetThemes(asset),
       colorThemes: getAssetColorThemes(asset),
+      palette: getAssetPalette(asset),
       modifiedAt: asset.modifiedAt ?? null,
       relativePath: asset.relativePath ?? null,
       path: asset.path ?? null,
@@ -591,6 +601,7 @@ function matchesSearch(asset, query, assetNotes = {}) {
     asset.extension,
     getAssetThemes(asset).join(" "),
     getAssetColorThemes(asset).join(" "),
+    getAssetPalette(asset).join(" "),
     assetNotes[asset.id]
   ].join(" ").toLowerCase();
 
@@ -825,6 +836,11 @@ function normalizeTheme(value) {
 
 function normalizeColorTheme(value) {
   return normalizeTheme(value);
+}
+
+function normalizePaletteColor(value) {
+  const normalized = String(value ?? "").trim().toLowerCase();
+  return /^#[0-9a-f]{6}$/.test(normalized) ? normalized : "";
 }
 
 function createSavedFilterViewId(createdAt, name) {

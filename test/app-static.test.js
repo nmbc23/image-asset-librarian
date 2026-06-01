@@ -158,6 +158,20 @@ test("color vibe grouping is exposed in filters, breakdowns, and asset cards", a
   assert.match(cssSource, /\.asset-color-themes/);
 });
 
+test("asset palettes are exposed as swatches on cards and details", async () => {
+  const [appSource, cssSource] = await Promise.all([
+    readFile(new URL("../public/app.js", import.meta.url), "utf8"),
+    readFile(new URL("../public/styles.css", import.meta.url), "utf8")
+  ]);
+
+  assert.match(appSource, /renderAssetPalette/);
+  assert.match(appSource, /renderDetailPalette/);
+  assert.match(appSource, /data-palette-color/);
+  assert.match(cssSource, /\.asset-palette/);
+  assert.match(cssSource, /\.palette-swatch/);
+  assert.match(cssSource, /\.detail-palette/);
+});
+
 test("selected assets can be bulk marked from the workflow panel", async () => {
   const [appSource, htmlSource] = await Promise.all([
     readFile(new URL("../public/app.js", import.meta.url), "utf8"),

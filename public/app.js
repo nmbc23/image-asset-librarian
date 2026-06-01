@@ -19,6 +19,7 @@ import {
   getAllAssetTags,
   getAssetColorThemes,
   getAssetNote,
+  getAssetPalette,
   getAssetTags,
   getAssetThemes,
   normalizeSavedFilterViews,
@@ -284,6 +285,12 @@ function bindEvents() {
       return;
     }
 
+    const paletteButton = event.target.closest("[data-palette-color]");
+    if (paletteButton) {
+      searchPaletteColor(paletteButton.dataset.paletteColor);
+      return;
+    }
+
     const tagButton = event.target.closest("[data-asset-tag]");
     if (tagButton) {
       state.tag = tagButton.dataset.assetTag;
@@ -352,6 +359,12 @@ function bindEvents() {
     const detailReviewButton = event.target.closest("[data-toggle-detail-review]");
     if (detailReviewButton) {
       toggleDetailMark("review", detailReviewButton.dataset.toggleDetailReview);
+      return;
+    }
+
+    const paletteButton = event.target.closest("[data-palette-color]");
+    if (paletteButton) {
+      searchPaletteColor(paletteButton.dataset.paletteColor);
       return;
     }
 
@@ -717,6 +730,7 @@ function renderAssetCard(asset, isDuplicate) {
           ${duplicateBadge}
         </div>
         <p title="${escapeHtml(asset.relativePath)}">${escapeHtml(asset.relativePath)}</p>
+        ${renderAssetPalette(asset)}
         ${renderAssetThemes(asset)}
         ${renderAssetColorThemes(asset)}
         ${renderAssetTags(asset.id)}
@@ -757,6 +771,38 @@ function renderAssetThemes(asset) {
       ${themes.map((theme) => `<button type="button" data-asset-theme="${escapeHtml(theme)}">${escapeHtml(theme)}</button>`).join("")}
     </div>
   `;
+}
+
+function renderAssetPalette(asset) {
+  const palette = getAssetPalette(asset);
+  if (!palette.length) {
+    return "";
+  }
+
+  return `
+    <div class="asset-palette" aria-label="Asset palette">
+      ${palette.map(renderPaletteSwatch).join("")}
+    </div>
+  `;
+}
+
+function renderPaletteSwatch(color) {
+  return `
+    <button
+      type="button"
+      class="palette-swatch"
+      data-palette-color="${escapeHtml(color)}"
+      style="--swatch-color: ${escapeHtml(color)}"
+      title="${escapeHtml(color)}"
+      aria-label="Search ${escapeHtml(color)}"
+    ></button>
+  `;
+}
+
+function searchPaletteColor(color) {
+  state.query = color;
+  syncControlsFromState();
+  render();
 }
 
 function renderAssetColorThemes(asset) {
@@ -814,6 +860,7 @@ function renderDetails(details) {
       <img src="${details.imageUrl}" alt="${escapeHtml(details.name)}">
     </a>
     ${details.isDuplicate ? `<div class="drawer-alert">${details.duplicateGroup.count} duplicate files, ${details.duplicateGroup.reclaimable} reclaimable</div>` : ""}
+    ${renderDetailPalette(details)}
     <section class="note-editor" aria-label="Local asset note">
       <label>
         <span>Local note</span>
@@ -824,6 +871,18 @@ function renderDetails(details) {
     <dl class="detail-list">
       ${details.fields.map(renderDetailField).join("")}
     </dl>
+  `;
+}
+
+function renderDetailPalette(details) {
+  if (!details.palette?.length) {
+    return "";
+  }
+
+  return `
+    <section class="detail-palette" aria-label="Asset palette">
+      ${details.palette.map(renderPaletteSwatch).join("")}
+    </section>
   `;
 }
 

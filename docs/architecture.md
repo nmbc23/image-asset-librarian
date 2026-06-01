@@ -4,7 +4,7 @@ Image Asset Librarian is split into three small layers: scanner, server, and bro
 
 ## Scanner
 
-`src/scanner.js` walks configured roots, filters supported image extensions, extracts basic metadata, infers lightweight local themes from filenames, folder names, vector status, image metadata, SVG color values, and PNG pixel samples, hashes file contents, and produces a versioned JSON index.
+`src/scanner.js` walks configured roots, filters supported image extensions, extracts basic metadata, infers lightweight local themes from filenames, folder names, vector status, image metadata, SVG color values, and PNG pixel samples, builds compact palettes, hashes file contents, and produces a versioned JSON index.
 
 Responsibilities:
 
@@ -32,13 +32,14 @@ The server is intentionally small and uses Node.js built-ins only.
 
 UI responsibilities:
 
-- Search by name, relative path, source, extension, inferred theme, or inferred color vibe.
+- Search by name, relative path, source, extension, inferred theme, inferred color vibe, or palette hex color.
 - Filter by source, file type, orientation, resolution bucket, inferred theme, inferred color vibe, age, duplicate state, and local review marks.
 - Apply browser-local tags to selected assets and use those tags as gallery filters.
 - Store browser-local notes per asset, search note text, and filter assets by whether notes exist.
 - Show active filter chips so users can inspect or clear individual filters without resetting the whole gallery.
 - Store named filter views in browser local storage so common curation workflows can be reapplied quickly.
 - Use source, file-type, resolution, inferred theme, and color-vibe breakdowns as quick filter controls.
+- Show compact palette swatches on asset cards and in the detail drawer.
 - Sort by date, file size, resolution, or name.
 - Highlight duplicate assets.
 - Inspect a filtered result set in a detail drawer with previous/next buttons, keyboard navigation, and saved/review mark controls.
@@ -48,8 +49,8 @@ UI responsibilities:
 - Copy and import saved/review mark backups as JSON through the clipboard.
 - Copy and import full curation backups containing marks, asset tags, asset notes, and saved filter views.
 - Select all currently visible filtered assets and copy selected or visible asset paths as a batch for downstream cleanup, curation, or prompt-tracking work.
-- Copy selected or visible asset metadata as CSV for spreadsheets, issue reports, and lightweight inventory work.
-- Copy selected or visible asset metadata as a structured JSON manifest that can include local curation annotations for automation and reproducible downstream workflows.
+- Copy selected or visible asset metadata, including palettes, as CSV for spreadsheets, issue reports, and lightweight inventory work.
+- Copy selected or visible asset metadata, including palettes, as a structured JSON manifest that can include local curation annotations for automation and reproducible downstream workflows.
 - Copy a Markdown workflow report summarizing selected, saved, and review-queue assets, including local tags and notes when present.
 - Keep private local paths visible only to the local user.
 

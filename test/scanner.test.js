@@ -102,6 +102,23 @@ test("scanLibrary infers color vibe themes from PNG pixel data", async () => {
   });
 });
 
+test("scanLibrary extracts a compact color palette from SVG and PNG data", async () => {
+  await withTempLibrary(async (dir) => {
+    await writeFile(path.join(dir, "two-tone.svg"), `<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80"><rect width="40" height="80" fill="#d94f70"/><rect x="40" width="40" height="80" fill="#1f8a70"/></svg>`);
+    await writeFile(path.join(dir, "blue-pixel.png"), createSolidPng(2, 2, [40, 115, 200, 255]));
+
+    const index = await scanLibrary({
+      roots: [{ name: "Palette Demo", path: dir }],
+      generatedAt: "2026-06-01T00:00:00.000Z"
+    });
+
+    const byName = new Map(index.assets.map((asset) => [asset.name, asset]));
+
+    assert.deepEqual(byName.get("two-tone.svg").palette, ["#d94f70", "#1f8a70"]);
+    assert.deepEqual(byName.get("blue-pixel.png").palette, ["#2873c8"]);
+  });
+});
+
 test("scanLibrary groups duplicate files by content hash", async () => {
   await withTempLibrary(async (dir) => {
     await writeFile(path.join(dir, "first.svg"), svgA);

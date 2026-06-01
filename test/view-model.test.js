@@ -39,6 +39,7 @@ const index = {
       height: 768,
       themes: ["portrait", "character"],
       colorThemes: ["warm", "vivid"],
+      palette: ["#d94f70", "#1f8a70"],
       hash: "hash-a",
       path: "P:/AI/Codex/generated_images/rose.png",
       modifiedAt: "2026-06-01T01:00:00.000Z"
@@ -52,6 +53,7 @@ const index = {
       sizeBytes: 1200,
       themes: ["portrait"],
       colorThemes: ["warm"],
+      palette: ["#d94f70"],
       modifiedAt: "2026-06-01T02:00:00.000Z"
     },
     {
@@ -63,6 +65,7 @@ const index = {
       sizeBytes: 90,
       themes: ["logo", "vector"],
       colorThemes: ["cool", "green"],
+      palette: ["#1f8a70"],
       modifiedAt: "2026-05-30T00:00:00.000Z"
     }
   ],
@@ -482,6 +485,7 @@ test("createAssetDetails formats metadata and duplicate context", () => {
     "Dimensions",
     "Themes",
     "Color vibes",
+    "Palette",
     "Modified",
     "Hash",
     "Path"
@@ -582,9 +586,9 @@ test("createAssetCsv exports escaped asset metadata in display order", () => {
   ]);
 
   assert.equal(csv, [
-    "id,name,source,type,sizeBytes,width,height,themes,colorThemes,modifiedAt,relativePath,path,hash",
-    '"a","rose, ""study"".png","Codex",".png","1200","512","768","portrait; character","warm; vivid","2026-06-01T01:00:00.000Z","flowers/rose.png","P:/AI/Codex/generated_images/rose.png","hash-a"',
-    '"c","mint.svg","Codex",".svg","90","","","logo; vector","cool; green","2026-05-30T00:00:00.000Z","mint.svg","",""',
+    "id,name,source,type,sizeBytes,width,height,themes,colorThemes,palette,modifiedAt,relativePath,path,hash",
+    '"a","rose, ""study"".png","Codex",".png","1200","512","768","portrait; character","warm; vivid","#d94f70; #1f8a70","2026-06-01T01:00:00.000Z","flowers/rose.png","P:/AI/Codex/generated_images/rose.png","hash-a"',
+    '"c","mint.svg","Codex",".svg","90","","","logo; vector","cool; green","#1f8a70","2026-05-30T00:00:00.000Z","mint.svg","",""',
     ""
   ].join("\n"));
 });
@@ -614,6 +618,7 @@ test("createAssetManifest exports selected asset metadata as stable JSON", () =>
         height: 768,
         themes: ["portrait", "character"],
         colorThemes: ["warm", "vivid"],
+        palette: ["#d94f70", "#1f8a70"],
         modifiedAt: "2026-06-01T01:00:00.000Z",
         relativePath: "flowers/rose.png",
         path: "P:/AI/Codex/generated_images/rose.png",
@@ -629,6 +634,7 @@ test("createAssetManifest exports selected asset metadata as stable JSON", () =>
         height: null,
         themes: ["logo", "vector"],
         colorThemes: ["cool", "green"],
+        palette: ["#1f8a70"],
         modifiedAt: "2026-05-30T00:00:00.000Z",
         relativePath: "mint.svg",
         path: null,

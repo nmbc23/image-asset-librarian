@@ -44,6 +44,7 @@ const COLOR_THEME_RULES = [
 const COLOR_THEME_ORDER = COLOR_THEME_RULES.map(([theme]) => theme);
 const PNG_COLOR_SAMPLE_LIMIT = 256;
 const PNG_COLOR_MAX_PIXELS = 4_000_000;
+const PALETTE_COLOR_LIMIT = 5;
 
 const NAMED_COLORS = new Map([
   ["black", "#000000"],
@@ -185,6 +186,12 @@ async function createAssetRecord(root, filePath, extension) {
       width: dimensions.width,
       height: dimensions.height,
       bytes
+    }),
+    palette: inferAssetPalette({
+      extension,
+      width: dimensions.width,
+      height: dimensions.height,
+      bytes
     })
   };
 }
@@ -306,6 +313,33 @@ function inferAssetColorThemes(asset) {
   return sortColorThemes([...new Set(themes)]).slice(0, 6);
 }
 
+function inferAssetPalette(asset) {
+  if (asset.extension === ".svg") {
+    return createColorPalette(extractSvgColors(asset.bytes.toString("utf8")));
+  }
+  if (asset.extension === ".png") {
+    return createColorPalette(extractPngSampleColors(asset.bytes, asset.width, asset.height));
+  }
+  return [];
+}
+
+function createColorPalette(colors) {
+  const colorCounts = new Map();
+
+  for (const color of colors) {
+    const hex = formatHexColor(color);
+    if (!colorCounts.has(hex)) {
+      colorCounts.set(hex, { color: hex, count: 0, order: colorCounts.size });
+    }
+    colorCounts.get(hex).count += 1;
+  }
+
+  return [...colorCounts.values()]
+    .sort((a, b) => b.count - a.count || a.order - b.order)
+    .map((entry) => entry.color)
+    .slice(0, PALETTE_COLOR_LIMIT);
+}
+
 function sortColorThemes(themes) {
   return [...themes].sort((a, b) => {
     const aIndex = COLOR_THEME_ORDER.indexOf(a);
@@ -379,7 +413,7 @@ function extractPngSampleColors(bytes, width, height) {
     }
 
     const inflated = inflateSync(Buffer.concat(png.idat));
-    const colors = new Map();
+    const colors = [];
     const sampleEvery = Math.max(1, Math.floor((png.width * png.height) / PNG_COLOR_SAMPLE_LIMIT));
     let offset = 0;
     let previousRow = Buffer.alloc(rowBytes);
@@ -399,7 +433,7 @@ function extractPngSampleColors(bytes, width, height) {
         if (pixelIndex % sampleEvery === 0) {
           const color = readPngPixelColor(row, x, colorType, png.palette);
           if (color) {
-            colors.set(`${color.r},${color.g},${color.b}`, color);
+            colors.push(color);
           }
         }
         pixelIndex += 1;
@@ -408,7 +442,7 @@ function extractPngSampleColors(bytes, width, height) {
       previousRow = row;
     }
 
-    return [...colors.values()];
+    return colors;
   } catch {
     return [];
   }
@@ -595,6 +629,10 @@ function parseHexColor(value) {
     g: Number.parseInt(expanded.slice(2, 4), 16),
     b: Number.parseInt(expanded.slice(4, 6), 16)
   };
+}
+
+function formatHexColor(color) {
+  return `#${[color.r, color.g, color.b].map((component) => clampColor(component).toString(16).padStart(2, "0")).join("")}`;
 }
 
 function classifyRgbColor(color) {
