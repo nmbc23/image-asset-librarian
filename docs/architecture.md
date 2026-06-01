@@ -63,6 +63,7 @@ UI responsibilities:
 - Copy or download selected or visible Markdown/HTML image embed snippets with generated alt text and local preview URLs.
 - Copy or download selected or visible publishing checklists combining suggested filenames, alt text, dimensions, issue status, and Markdown embeds.
 - Copy or download selected or visible readiness reports summarizing ready assets, review-needed assets, issue counts, suggested filenames, and alt text.
+- Copy or download selected or visible provenance reports summarizing embedded prompt, title, description, and text metadata by source.
 - Copy selected or visible asset metadata, including palettes, generated descriptions, and embedded prompt/title metadata, as CSV for spreadsheets, issue reports, and lightweight inventory work.
 - Copy selected or visible asset metadata, including palettes, generated descriptions, and embedded prompt/title metadata, as a structured JSON manifest that can include local curation annotations for automation and reproducible downstream workflows.
 - Copy or download selected or visible rename plans as Markdown so downstream cleanup can review proposed filenames before any file operation happens.

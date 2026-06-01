@@ -18,6 +18,7 @@ import {
   createAssetManifest,
   createAssetRenamePlan,
   createAssetPublishingChecklist,
+  createAssetProvenanceReport,
   createAssetReadinessReport,
   createCurationBackup,
   createDefaultViewState,
@@ -1019,6 +1020,39 @@ test("createAssetReadinessReport summarizes publish readiness for selected asset
     "| --- | --- | --- | --- | --- |",
     "| Needs review | `flowers/rose.png` | Duplicate; Tiny resolution | `portrait-character-warm-vivid-512x768.png` | Portrait character visual with warm, vivid colors and a rose, teal palette. Metadata suggests: Soft light portrait. |",
     "| Ready | `ready.png` | None | `background-landscape-cool-1600x1600.png` | Square background visual with cool colors. |",
+    ""
+  ].join("\n"));
+});
+
+test("createAssetProvenanceReport summarizes embedded prompt metadata", () => {
+  assert.equal(createAssetProvenanceReport([index.assets[0], index.assets[2]], {
+    generatedAt: "2026-06-01T23:00:00.000Z",
+    label: "selected"
+  }), [
+    "# Image Asset Provenance Report",
+    "",
+    "Generated: 2026-06-01T23:00:00.000Z",
+    "Scope: selected",
+    "Count: 2",
+    "",
+    "## Summary",
+    "",
+    "- Assets with embedded metadata: 1",
+    "- Assets missing embedded metadata: 1",
+    "",
+    "## Assets",
+    "",
+    "### flowers/rose.png",
+    "",
+    "- Source: Codex",
+    "- Title: Rose prompt",
+    "- Description: Soft light portrait",
+    "- parameters: pink rose, macro lens",
+    "",
+    "### mint.svg",
+    "",
+    "- Source: Codex",
+    "- Metadata: None found",
     ""
   ].join("\n"));
 });

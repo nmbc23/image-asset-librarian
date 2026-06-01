@@ -13,6 +13,7 @@ import {
   createAssetManifest,
   createAssetNavigation,
   createAssetPublishingChecklist,
+  createAssetProvenanceReport,
   createAssetReadinessReport,
   createAssetRenamePlan,
   createCurationBackup,
@@ -92,6 +93,10 @@ const elements = {
   copySelectedReadinessReport: document.querySelector("#copy-selected-readiness-report"),
   downloadVisibleReadinessReport: document.querySelector("#download-visible-readiness-report"),
   downloadSelectedReadinessReport: document.querySelector("#download-selected-readiness-report"),
+  copyVisibleProvenanceReport: document.querySelector("#copy-visible-provenance-report"),
+  copySelectedProvenanceReport: document.querySelector("#copy-selected-provenance-report"),
+  downloadVisibleProvenanceReport: document.querySelector("#download-visible-provenance-report"),
+  downloadSelectedProvenanceReport: document.querySelector("#download-selected-provenance-report"),
   copyVisibleCsv: document.querySelector("#copy-visible-csv"),
   copySelectedCsv: document.querySelector("#copy-selected-csv"),
   copyVisibleManifest: document.querySelector("#copy-visible-manifest"),
@@ -280,6 +285,10 @@ function bindEvents() {
   elements.copySelectedReadinessReport.addEventListener("click", copySelectedReadinessReport);
   elements.downloadVisibleReadinessReport.addEventListener("click", downloadVisibleReadinessReport);
   elements.downloadSelectedReadinessReport.addEventListener("click", downloadSelectedReadinessReport);
+  elements.copyVisibleProvenanceReport.addEventListener("click", copyVisibleProvenanceReport);
+  elements.copySelectedProvenanceReport.addEventListener("click", copySelectedProvenanceReport);
+  elements.downloadVisibleProvenanceReport.addEventListener("click", downloadVisibleProvenanceReport);
+  elements.downloadSelectedProvenanceReport.addEventListener("click", downloadSelectedProvenanceReport);
   elements.copyVisibleCsv.addEventListener("click", copyVisibleCsv);
   elements.copySelectedCsv.addEventListener("click", copySelectedCsv);
   elements.copyVisibleManifest.addEventListener("click", copyVisibleManifest);
@@ -629,6 +638,10 @@ function renderWorkflow() {
   elements.copySelectedReadinessReport.disabled = selectedAssetIds.size === 0;
   elements.downloadVisibleReadinessReport.disabled = !currentView?.assets.length;
   elements.downloadSelectedReadinessReport.disabled = selectedAssetIds.size === 0;
+  elements.copyVisibleProvenanceReport.disabled = !currentView?.assets.length;
+  elements.copySelectedProvenanceReport.disabled = selectedAssetIds.size === 0;
+  elements.downloadVisibleProvenanceReport.disabled = !currentView?.assets.length;
+  elements.downloadSelectedProvenanceReport.disabled = selectedAssetIds.size === 0;
   elements.copyVisibleCsv.disabled = !currentView?.assets.length;
   elements.copySelectedCsv.disabled = selectedAssetIds.size === 0;
   elements.copyVisibleManifest.disabled = !currentView?.assets.length;
@@ -1445,6 +1458,44 @@ function downloadVisibleReadinessReport() {
   downloadReadinessReport(visibleAssets, "visible", elements.downloadVisibleReadinessReport);
 }
 
+async function copySelectedProvenanceReport() {
+  const selectedAssets = getSelectedAssets();
+  if (!selectedAssets.length) {
+    return;
+  }
+  await copyFromButton(
+    elements.copySelectedProvenanceReport,
+    createAssetProvenanceReport(selectedAssets, createProvenanceReportOptions("selected"))
+  );
+}
+
+async function copyVisibleProvenanceReport() {
+  const visibleAssets = currentView?.assets ?? [];
+  if (!visibleAssets.length) {
+    return;
+  }
+  await copyFromButton(
+    elements.copyVisibleProvenanceReport,
+    createAssetProvenanceReport(visibleAssets, createProvenanceReportOptions("visible"))
+  );
+}
+
+function downloadSelectedProvenanceReport() {
+  const selectedAssets = getSelectedAssets();
+  if (!selectedAssets.length) {
+    return;
+  }
+  downloadProvenanceReport(selectedAssets, "selected", elements.downloadSelectedProvenanceReport);
+}
+
+function downloadVisibleProvenanceReport() {
+  const visibleAssets = currentView?.assets ?? [];
+  if (!visibleAssets.length) {
+    return;
+  }
+  downloadProvenanceReport(visibleAssets, "visible", elements.downloadVisibleProvenanceReport);
+}
+
 async function copySelectedCsv() {
   const selectedAssets = getSelectedAssets();
   if (!selectedAssets.length) {
@@ -1559,6 +1610,13 @@ function createReadinessReportOptions(label, generatedAt = new Date().toISOStrin
   };
 }
 
+function createProvenanceReportOptions(label, generatedAt = new Date().toISOString()) {
+  return {
+    generatedAt,
+    label
+  };
+}
+
 function downloadAltTextList(assets, label, button) {
   const generatedAt = new Date().toISOString();
   const list = createAssetAltTextList(assets, createAltTextOptions(label, generatedAt));
@@ -1584,6 +1642,13 @@ function downloadReadinessReport(assets, label, button) {
   const generatedAt = new Date().toISOString();
   const report = createAssetReadinessReport(assets, createReadinessReportOptions(label, generatedAt));
   const fileName = createExportFileName(`asset-readiness-report-${label}`, "md", { generatedAt });
+  downloadTextFile(button, report, fileName, "text/markdown");
+}
+
+function downloadProvenanceReport(assets, label, button) {
+  const generatedAt = new Date().toISOString();
+  const report = createAssetProvenanceReport(assets, createProvenanceReportOptions(label, generatedAt));
+  const fileName = createExportFileName(`asset-provenance-report-${label}`, "md", { generatedAt });
   downloadTextFile(button, report, fileName, "text/markdown");
 }
 

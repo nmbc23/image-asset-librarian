@@ -840,6 +840,52 @@ export function createAssetReadinessReport(assets, options = {}) {
   return lines.join("\n");
 }
 
+export function createAssetProvenanceReport(assets, options = {}) {
+  const provenanceAssets = Array.isArray(assets) ? assets : [];
+  const rows = provenanceAssets.map((asset) => ({
+    asset,
+    metadataEntries: getAssetMetadataEntries(asset)
+  }));
+  const metadataCount = rows.filter((row) => row.metadataEntries.length > 0).length;
+  const lines = [
+    "# Image Asset Provenance Report",
+    "",
+    `Generated: ${options.generatedAt ?? new Date().toISOString()}`,
+    `Scope: ${String(options.label ?? "assets")}`,
+    `Count: ${provenanceAssets.length}`,
+    "",
+    "## Summary",
+    "",
+    `- Assets with embedded metadata: ${metadataCount}`,
+    `- Assets missing embedded metadata: ${provenanceAssets.length - metadataCount}`,
+    "",
+    "## Assets"
+  ];
+
+  for (const row of rows) {
+    const path = row.asset.relativePath ?? row.asset.path ?? row.asset.name ?? row.asset.id ?? "Asset";
+    const source = row.asset.rootName ?? row.asset.source ?? "Unknown source";
+    lines.push(
+      "",
+      `### ${escapeMarkdownText(path)}`,
+      "",
+      `- Source: ${escapeMarkdownText(source)}`
+    );
+
+    if (!row.metadataEntries.length) {
+      lines.push("- Metadata: None found");
+      continue;
+    }
+
+    for (const entry of row.metadataEntries) {
+      lines.push(`- ${escapeMarkdownText(entry.label)}: ${escapeMarkdownText(entry.value)}`);
+    }
+  }
+
+  lines.push("");
+  return lines.join("\n");
+}
+
 export function createSuggestedFileName(asset = {}) {
   const themes = getAssetThemes(asset);
   const colorThemes = getAssetColorThemes(asset);
