@@ -17,6 +17,7 @@ import {
   formatBytes,
   formatDate,
   getAllAssetTags,
+  getAssetColorThemes,
   getAssetNote,
   getAssetTags,
   getAssetThemes,
@@ -38,6 +39,7 @@ const elements = {
   orientation: document.querySelector("#orientation-filter"),
   resolution: document.querySelector("#resolution-filter"),
   theme: document.querySelector("#theme-filter"),
+  colorTheme: document.querySelector("#color-theme-filter"),
   age: document.querySelector("#age-filter"),
   sort: document.querySelector("#sort-select"),
   mark: document.querySelector("#mark-filter"),
@@ -78,6 +80,8 @@ const elements = {
   resolutionBreakdownCount: document.querySelector("#resolution-breakdown-count"),
   themeBreakdown: document.querySelector("#theme-breakdown"),
   themeBreakdownCount: document.querySelector("#theme-breakdown-count"),
+  colorThemeBreakdown: document.querySelector("#color-theme-breakdown"),
+  colorThemeBreakdownCount: document.querySelector("#color-theme-breakdown-count"),
   duplicateSummary: document.querySelector("#duplicate-summary"),
   duplicateList: document.querySelector("#duplicate-list"),
   resultCount: document.querySelector("#result-count"),
@@ -144,6 +148,10 @@ function bindEvents() {
   });
   elements.theme.addEventListener("change", () => {
     state.theme = elements.theme.value;
+    render();
+  });
+  elements.colorTheme.addEventListener("change", () => {
+    state.colorTheme = elements.colorTheme.value;
     render();
   });
   elements.age.addEventListener("change", () => {
@@ -240,6 +248,12 @@ function bindEvents() {
       applyBreakdownFilter("theme", button.dataset.setThemeFilter);
     }
   });
+  elements.colorThemeBreakdown.addEventListener("click", (event) => {
+    const button = event.target.closest("[data-set-color-theme-filter]");
+    if (button) {
+      applyBreakdownFilter("colorTheme", button.dataset.setColorThemeFilter);
+    }
+  });
   elements.duplicateList.addEventListener("click", async (event) => {
     const cleanupButton = event.target.closest("[data-copy-duplicate-candidates]");
     if (cleanupButton) {
@@ -257,6 +271,14 @@ function bindEvents() {
     const themeButton = event.target.closest("[data-asset-theme]");
     if (themeButton) {
       state.theme = themeButton.dataset.assetTheme;
+      syncControlsFromState();
+      render();
+      return;
+    }
+
+    const colorThemeButton = event.target.closest("[data-asset-color-theme]");
+    if (colorThemeButton) {
+      state.colorTheme = colorThemeButton.dataset.assetColorTheme;
       syncControlsFromState();
       render();
       return;
@@ -379,6 +401,7 @@ function syncControlsFromState() {
   elements.orientation.value = state.orientation;
   elements.resolution.value = state.resolution;
   elements.theme.value = state.theme;
+  elements.colorTheme.value = state.colorTheme;
   elements.age.value = state.maxAgeDays;
   elements.sort.value = state.sort;
   elements.mark.value = state.mark;
@@ -448,6 +471,11 @@ function renderFilters(view) {
     state.extension
   );
   syncSelect(elements.theme, [["all", "All themes"], ...view.themes.map((theme) => [theme, theme])], state.theme);
+  syncSelect(
+    elements.colorTheme,
+    [["all", "All color vibes"], ...view.colorThemes.map((theme) => [theme, theme])],
+    state.colorTheme
+  );
   syncSelect(elements.tag, [["all", "All tags"], ...view.tags.map((tag) => [tag, tag])], state.tag);
 }
 
@@ -503,6 +531,7 @@ function renderBreakdowns(view) {
   elements.typeBreakdownCount.textContent = `${view.extensionBreakdown.length} types`;
   elements.resolutionBreakdownCount.textContent = `${view.resolutionBreakdown.length} buckets`;
   elements.themeBreakdownCount.textContent = `${view.themeBreakdown.length} themes`;
+  elements.colorThemeBreakdownCount.textContent = `${view.colorThemeBreakdown.length} vibes`;
   elements.sourceBreakdown.innerHTML = view.sourceBreakdown
     .map((item) => renderBreakdownItem(item, "root", item.label))
     .join("");
@@ -518,6 +547,9 @@ function renderBreakdowns(view) {
   elements.themeBreakdown.innerHTML = view.themeBreakdown
     .map((item) => renderBreakdownItem(item, "theme", item.label))
     .join("");
+  elements.colorThemeBreakdown.innerHTML = view.colorThemeBreakdown
+    .map((item) => renderBreakdownItem(item, "colorTheme", item.label))
+    .join("");
 }
 
 function renderBreakdownItem(item, filterType, filterValue) {
@@ -525,7 +557,8 @@ function renderBreakdownItem(item, filterType, filterValue) {
     root: "data-set-root-filter",
     extension: "data-set-extension-filter",
     resolution: "data-set-resolution-filter",
-    theme: "data-set-theme-filter"
+    theme: "data-set-theme-filter",
+    colorTheme: "data-set-color-theme-filter"
   };
   const filterAttribute = `${filterAttributes[filterType]}="${escapeHtml(filterValue)}"`;
   return `
@@ -543,6 +576,8 @@ function applyBreakdownFilter(filterType, filterValue) {
     state.resolution = filterValue;
   } else if (filterType === "theme") {
     state.theme = filterValue;
+  } else if (filterType === "colorTheme") {
+    state.colorTheme = filterValue;
   } else {
     state.extension = filterValue;
   }
@@ -683,6 +718,7 @@ function renderAssetCard(asset, isDuplicate) {
         </div>
         <p title="${escapeHtml(asset.relativePath)}">${escapeHtml(asset.relativePath)}</p>
         ${renderAssetThemes(asset)}
+        ${renderAssetColorThemes(asset)}
         ${renderAssetTags(asset.id)}
         ${renderAssetNotePreview(asset.id)}
         <dl>
@@ -719,6 +755,19 @@ function renderAssetThemes(asset) {
   return `
     <div class="asset-themes">
       ${themes.map((theme) => `<button type="button" data-asset-theme="${escapeHtml(theme)}">${escapeHtml(theme)}</button>`).join("")}
+    </div>
+  `;
+}
+
+function renderAssetColorThemes(asset) {
+  const colorThemes = getAssetColorThemes(asset);
+  if (!colorThemes.length) {
+    return "";
+  }
+
+  return `
+    <div class="asset-color-themes">
+      ${colorThemes.map((theme) => `<button type="button" data-asset-color-theme="${escapeHtml(theme)}">${escapeHtml(theme)}</button>`).join("")}
     </div>
   `;
 }

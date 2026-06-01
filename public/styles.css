@@ -648,14 +648,16 @@ a:focus-visible {
 }
 
 .asset-tags,
-.asset-themes {
+.asset-themes,
+.asset-color-themes {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
 }
 
 .asset-tags button,
-.asset-themes button {
+.asset-themes button,
+.asset-color-themes button {
   min-height: 26px;
   border: 1px solid rgba(31, 138, 112, 0.32);
   border-radius: 999px;
@@ -671,6 +673,12 @@ a:focus-visible {
   border-color: rgba(104, 115, 122, 0.28);
   background: var(--surface-strong);
   color: var(--muted);
+}
+
+.asset-color-themes button {
+  border-color: rgba(184, 86, 66, 0.28);
+  background: #fff2ef;
+  color: var(--warn);
 }
 
 .asset-note-preview {

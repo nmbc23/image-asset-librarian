@@ -141,6 +141,23 @@ test("theme grouping is exposed in filters, breakdowns, and asset cards", async 
   assert.match(cssSource, /\.asset-themes/);
 });
 
+test("color vibe grouping is exposed in filters, breakdowns, and asset cards", async () => {
+  const [appSource, htmlSource, cssSource] = await Promise.all([
+    readFile(new URL("../public/app.js", import.meta.url), "utf8"),
+    readFile(new URL("../public/index.html", import.meta.url), "utf8"),
+    readFile(new URL("../public/styles.css", import.meta.url), "utf8")
+  ]);
+
+  assert.match(htmlSource, /id="color-theme-filter"/);
+  assert.match(htmlSource, /id="color-theme-breakdown"/);
+  assert.match(htmlSource, /id="color-theme-breakdown-count"/);
+  assert.match(appSource, /colorTheme: document\.querySelector\("#color-theme-filter"\)/);
+  assert.match(appSource, /state\.colorTheme = elements\.colorTheme\.value/);
+  assert.match(appSource, /data-set-color-theme-filter/);
+  assert.match(appSource, /renderAssetColorThemes/);
+  assert.match(cssSource, /\.asset-color-themes/);
+});
+
 test("selected assets can be bulk marked from the workflow panel", async () => {
   const [appSource, htmlSource] = await Promise.all([
     readFile(new URL("../public/app.js", import.meta.url), "utf8"),

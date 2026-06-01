@@ -6,6 +6,7 @@ export function createDefaultViewState() {
     orientation: "all",
     resolution: "all",
     theme: "all",
+    colorTheme: "all",
     maxAgeDays: "all",
     mark: "all",
     tag: "all",
@@ -125,6 +126,14 @@ export function getAssetThemes(asset = {}) {
   return uniqueStrings((Array.isArray(asset.themes) ? asset.themes : []).map(normalizeTheme));
 }
 
+export function getAllAssetColorThemes(assets = []) {
+  return uniqueSorted((Array.isArray(assets) ? assets : []).flatMap(getAssetColorThemes));
+}
+
+export function getAssetColorThemes(asset = {}) {
+  return uniqueStrings((Array.isArray(asset.colorThemes) ? asset.colorThemes : []).map(normalizeColorTheme));
+}
+
 export function setAssetNote(assetNotes = {}, assetId, note) {
   const updatedNotes = normalizeAssetNotes(assetNotes);
   const normalizedId = String(assetId ?? "").trim();
@@ -181,6 +190,9 @@ export function createActiveFilterChips(state = {}) {
   if (normalizedState.theme !== defaults.theme) {
     chips.push({ key: "theme", label: "Theme", value: normalizedState.theme });
   }
+  if (normalizedState.colorTheme !== defaults.colorTheme) {
+    chips.push({ key: "colorTheme", label: "Color vibe", value: normalizedState.colorTheme });
+  }
   if (normalizedState.maxAgeDays !== defaults.maxAgeDays) {
     chips.push({
       key: "maxAgeDays",
@@ -231,6 +243,7 @@ export function createLibraryView(index, state = {}) {
     .filter((asset) => normalizedState.orientation === "all" || getOrientation(asset) === normalizedState.orientation)
     .filter((asset) => matchesResolution(asset, normalizedState.resolution))
     .filter((asset) => matchesTheme(asset, normalizedState.theme))
+    .filter((asset) => matchesColorTheme(asset, normalizedState.colorTheme))
     .filter((asset) => isWithinAge(asset, normalizedState.maxAgeDays, normalizedState.now))
     .filter((asset) => matchesMark(asset, normalizedState.mark, savedAssetIds, reviewAssetIds))
     .filter((asset) => matchesTag(asset, normalizedState.tag, assetTags))
@@ -243,11 +256,13 @@ export function createLibraryView(index, state = {}) {
     roots: uniqueSorted(assets.map((asset) => asset.rootName)),
     extensions: uniqueSorted(assets.map((asset) => asset.extension)),
     themes: getAllAssetThemes(assets),
+    colorThemes: getAllAssetColorThemes(assets),
     tags: getAllAssetTags(assetTags),
     sourceBreakdown: createBreakdown(assets, "rootName"),
     extensionBreakdown: createBreakdown(assets, "extension"),
     resolutionBreakdown: createResolutionBreakdown(assets),
     themeBreakdown: createThemeBreakdown(assets),
+    colorThemeBreakdown: createColorThemeBreakdown(assets),
     duplicateAssetIds
   };
 }
@@ -287,6 +302,8 @@ export function createAssetDetails(index, assetId) {
   const dimensions = asset.width && asset.height ? `${asset.width} x ${asset.height}` : "Unknown";
   const themes = getAssetThemes(asset);
   const themeLabel = themes.length ? themes.join(", ") : "Uncategorized";
+  const colorThemes = getAssetColorThemes(asset);
+  const colorThemeLabel = colorThemes.length ? colorThemes.join(", ") : "Uncategorized";
 
   return {
     id: asset.id,
@@ -311,6 +328,7 @@ export function createAssetDetails(index, assetId) {
       { label: "Size", value: formatBytes(asset.sizeBytes) },
       { label: "Dimensions", value: dimensions },
       { label: "Themes", value: themeLabel },
+      { label: "Color vibes", value: colorThemeLabel },
       { label: "Modified", value: formatDate(asset.modifiedAt) },
       { label: "Hash", value: asset.hash ?? "Unknown", copyValue: asset.hash },
       { label: "Path", value: asset.path ?? "Unknown", copyValue: asset.path }
@@ -471,6 +489,7 @@ export function createAssetCsv(assets) {
     ["width", (asset) => asset.width],
     ["height", (asset) => asset.height],
     ["themes", (asset) => getAssetThemes(asset).join("; ")],
+    ["colorThemes", (asset) => getAssetColorThemes(asset).join("; ")],
     ["modifiedAt", (asset) => asset.modifiedAt],
     ["relativePath", (asset) => asset.relativePath],
     ["path", (asset) => asset.path],
@@ -502,6 +521,7 @@ export function createAssetManifest(assets, options = {}) {
       width: Number.isFinite(asset.width) ? asset.width : null,
       height: Number.isFinite(asset.height) ? asset.height : null,
       themes: getAssetThemes(asset),
+      colorThemes: getAssetColorThemes(asset),
       modifiedAt: asset.modifiedAt ?? null,
       relativePath: asset.relativePath ?? null,
       path: asset.path ?? null,
@@ -570,6 +590,7 @@ function matchesSearch(asset, query, assetNotes = {}) {
     asset.rootName,
     asset.extension,
     getAssetThemes(asset).join(" "),
+    getAssetColorThemes(asset).join(" "),
     assetNotes[asset.id]
   ].join(" ").toLowerCase();
 
@@ -601,6 +622,13 @@ function matchesTheme(asset, theme) {
     return true;
   }
   return getAssetThemes(asset).includes(theme);
+}
+
+function matchesColorTheme(asset, colorTheme) {
+  if (colorTheme === "all") {
+    return true;
+  }
+  return getAssetColorThemes(asset).includes(colorTheme);
 }
 
 function matchesNote(asset, note, assetNotes) {
@@ -730,6 +758,19 @@ function createThemeBreakdown(assets) {
     .sort((a, b) => b.count - a.count || a.label.localeCompare(b.label));
 }
 
+function createColorThemeBreakdown(assets) {
+  const counts = new Map();
+  for (const asset of assets) {
+    for (const theme of getAssetColorThemes(asset)) {
+      counts.set(theme, (counts.get(theme) ?? 0) + 1);
+    }
+  }
+
+  return [...counts.entries()]
+    .map(([label, count]) => ({ label, count }))
+    .sort((a, b) => b.count - a.count || a.label.localeCompare(b.label));
+}
+
 function createFilterStateSnapshot(state = {}) {
   const defaults = createDefaultViewState();
   const normalizedState = { ...defaults, ...(state ?? {}) };
@@ -780,6 +821,10 @@ function normalizeTag(value) {
 
 function normalizeTheme(value) {
   return String(value ?? "").trim().replace(/\s+/g, " ").toLowerCase();
+}
+
+function normalizeColorTheme(value) {
+  return normalizeTheme(value);
 }
 
 function createSavedFilterViewId(createdAt, name) {

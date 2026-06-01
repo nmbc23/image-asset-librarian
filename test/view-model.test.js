@@ -38,6 +38,7 @@ const index = {
       width: 512,
       height: 768,
       themes: ["portrait", "character"],
+      colorThemes: ["warm", "vivid"],
       hash: "hash-a",
       path: "P:/AI/Codex/generated_images/rose.png",
       modifiedAt: "2026-06-01T01:00:00.000Z"
@@ -50,6 +51,7 @@ const index = {
       extension: ".png",
       sizeBytes: 1200,
       themes: ["portrait"],
+      colorThemes: ["warm"],
       modifiedAt: "2026-06-01T02:00:00.000Z"
     },
     {
@@ -60,6 +62,7 @@ const index = {
       extension: ".svg",
       sizeBytes: 90,
       themes: ["logo", "vector"],
+      colorThemes: ["cool", "green"],
       modifiedAt: "2026-05-30T00:00:00.000Z"
     }
   ],
@@ -90,6 +93,7 @@ test("createLibraryView filters by search, root, extension, and duplicate state"
   assert.deepEqual(view.roots, ["Archive", "Codex"]);
   assert.deepEqual(view.extensions, [".png", ".svg"]);
   assert.deepEqual(view.themes, ["character", "logo", "portrait", "vector"]);
+  assert.deepEqual(view.colorThemes, ["cool", "green", "vivid", "warm"]);
   assert.deepEqual(view.sourceBreakdown, [
     { label: "Codex", count: 2 },
     { label: "Archive", count: 1 }
@@ -103,6 +107,12 @@ test("createLibraryView filters by search, root, extension, and duplicate state"
     { label: "character", count: 1 },
     { label: "logo", count: 1 },
     { label: "vector", count: 1 }
+  ]);
+  assert.deepEqual(view.colorThemeBreakdown, [
+    { label: "warm", count: 2 },
+    { label: "cool", count: 1 },
+    { label: "green", count: 1 },
+    { label: "vivid", count: 1 }
   ]);
   assert.equal(view.duplicateAssetIds.has("a"), true);
   assert.equal(view.duplicateAssetIds.has("c"), false);
@@ -174,6 +184,18 @@ test("createLibraryView filters by inferred theme", () => {
   assert.deepEqual(view.assets.map((asset) => asset.id), ["c"]);
 
   const searchView = createLibraryView(index, { query: "character", sort: "name" });
+  assert.deepEqual(searchView.assets.map((asset) => asset.id), ["a"]);
+});
+
+test("createLibraryView filters by inferred color vibe", () => {
+  const view = createLibraryView(index, {
+    colorTheme: "green",
+    sort: "name"
+  });
+
+  assert.deepEqual(view.assets.map((asset) => asset.id), ["c"]);
+
+  const searchView = createLibraryView(index, { query: "vivid", sort: "name" });
   assert.deepEqual(searchView.assets.map((asset) => asset.id), ["a"]);
 });
 
@@ -459,6 +481,7 @@ test("createAssetDetails formats metadata and duplicate context", () => {
     "Size",
     "Dimensions",
     "Themes",
+    "Color vibes",
     "Modified",
     "Hash",
     "Path"
@@ -559,9 +582,9 @@ test("createAssetCsv exports escaped asset metadata in display order", () => {
   ]);
 
   assert.equal(csv, [
-    "id,name,source,type,sizeBytes,width,height,themes,modifiedAt,relativePath,path,hash",
-    '"a","rose, ""study"".png","Codex",".png","1200","512","768","portrait; character","2026-06-01T01:00:00.000Z","flowers/rose.png","P:/AI/Codex/generated_images/rose.png","hash-a"',
-    '"c","mint.svg","Codex",".svg","90","","","logo; vector","2026-05-30T00:00:00.000Z","mint.svg","",""',
+    "id,name,source,type,sizeBytes,width,height,themes,colorThemes,modifiedAt,relativePath,path,hash",
+    '"a","rose, ""study"".png","Codex",".png","1200","512","768","portrait; character","warm; vivid","2026-06-01T01:00:00.000Z","flowers/rose.png","P:/AI/Codex/generated_images/rose.png","hash-a"',
+    '"c","mint.svg","Codex",".svg","90","","","logo; vector","cool; green","2026-05-30T00:00:00.000Z","mint.svg","",""',
     ""
   ].join("\n"));
 });
@@ -590,6 +613,7 @@ test("createAssetManifest exports selected asset metadata as stable JSON", () =>
         width: 512,
         height: 768,
         themes: ["portrait", "character"],
+        colorThemes: ["warm", "vivid"],
         modifiedAt: "2026-06-01T01:00:00.000Z",
         relativePath: "flowers/rose.png",
         path: "P:/AI/Codex/generated_images/rose.png",
@@ -604,6 +628,7 @@ test("createAssetManifest exports selected asset metadata as stable JSON", () =>
         width: null,
         height: null,
         themes: ["logo", "vector"],
+        colorThemes: ["cool", "green"],
         modifiedAt: "2026-05-30T00:00:00.000Z",
         relativePath: "mint.svg",
         path: null,
@@ -736,6 +761,7 @@ test("createDefaultViewState returns resettable filter defaults", () => {
     orientation: "all",
     resolution: "all",
     theme: "all",
+    colorTheme: "all",
     maxAgeDays: "all",
     mark: "all",
     tag: "all",
@@ -755,6 +781,7 @@ test("createActiveFilterChips describes only non-default filters", () => {
     orientation: "portrait",
     resolution: "large",
     theme: "logo",
+    colorTheme: "green",
     maxAgeDays: "30",
     mark: "review",
     tag: "keeper",
@@ -768,6 +795,7 @@ test("createActiveFilterChips describes only non-default filters", () => {
     { key: "orientation", label: "Orientation", value: "Portrait" },
     { key: "resolution", label: "Resolution", value: "Large" },
     { key: "theme", label: "Theme", value: "logo" },
+    { key: "colorTheme", label: "Color vibe", value: "green" },
     { key: "maxAgeDays", label: "Age", value: "Last 30 days" },
     { key: "mark", label: "Mark", value: "Review queue" },
     { key: "tag", label: "Tag", value: "keeper" },
@@ -783,6 +811,7 @@ test("createSavedFilterView stores a normalized filter state snapshot", () => {
     root: "Codex",
     extension: ".png",
     orientation: "portrait",
+    colorTheme: "warm",
     duplicateOnly: true,
     sort: "largest",
     unrelated: "ignored"
@@ -800,6 +829,7 @@ test("createSavedFilterView stores a normalized filter state snapshot", () => {
       orientation: "portrait",
       resolution: "all",
       theme: "all",
+      colorTheme: "warm",
       maxAgeDays: "all",
       mark: "all",
       tag: "all",
@@ -836,6 +866,7 @@ test("normalizeSavedFilterViews drops invalid entries and restores missing defau
         orientation: "all",
         resolution: "all",
         theme: "all",
+        colorTheme: "all",
         maxAgeDays: "all",
         mark: "all",
         tag: "all",

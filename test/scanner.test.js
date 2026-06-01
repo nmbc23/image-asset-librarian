@@ -3,6 +3,7 @@ import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
+import { deflateSync } from "node:zlib";
 
 import { scanLibrary } from "../src/scanner.js";
 
@@ -63,6 +64,44 @@ test("scanLibrary infers local visual themes from image metadata and paths", asy
   });
 });
 
+test("scanLibrary infers color vibe themes from SVG colors and filenames", async () => {
+  await withTempLibrary(async (dir) => {
+    await writeFile(path.join(dir, "warm-poster.svg"), `<svg xmlns="http://www.w3.org/2000/svg" width="80" height="120"><rect width="80" height="120" fill="#d94f70"/></svg>`);
+    await writeFile(path.join(dir, "cool-mint.svg"), `<svg xmlns="http://www.w3.org/2000/svg" width="90" height="60"><circle cx="45" cy="30" r="24" fill="#1f8a70"/></svg>`);
+    await writeFile(path.join(dir, "dark-icon.svg"), `<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80"><path fill="#111111" d="M0 0h80v80H0z"/></svg>`);
+    await writeFile(path.join(dir, "gold-logo.svg"), `<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80"><path fill="currentColor" d="M0 0h80v80H0z"/></svg>`);
+
+    const index = await scanLibrary({
+      roots: [{ name: "Color Demo", path: dir }],
+      generatedAt: "2026-06-01T00:00:00.000Z"
+    });
+
+    const byName = new Map(index.assets.map((asset) => [asset.name, asset]));
+
+    assert.deepEqual(byName.get("warm-poster.svg").colorThemes, ["warm", "vivid"]);
+    assert.deepEqual(byName.get("cool-mint.svg").colorThemes, ["cool", "green", "vivid"]);
+    assert.deepEqual(byName.get("dark-icon.svg").colorThemes, ["dark", "monochrome"]);
+    assert.deepEqual(byName.get("gold-logo.svg").colorThemes, ["warm"]);
+  });
+});
+
+test("scanLibrary infers color vibe themes from PNG pixel data", async () => {
+  await withTempLibrary(async (dir) => {
+    await writeFile(path.join(dir, "sample-a.png"), createSolidPng(2, 2, [217, 79, 112, 255]));
+    await writeFile(path.join(dir, "sample-b.png"), createSolidPng(2, 2, [40, 115, 200, 255]));
+
+    const index = await scanLibrary({
+      roots: [{ name: "Pixel Demo", path: dir }],
+      generatedAt: "2026-06-01T00:00:00.000Z"
+    });
+
+    const byName = new Map(index.assets.map((asset) => [asset.name, asset]));
+
+    assert.deepEqual(byName.get("sample-a.png").colorThemes, ["warm", "vivid"]);
+    assert.deepEqual(byName.get("sample-b.png").colorThemes, ["cool", "vivid"]);
+  });
+});
+
 test("scanLibrary groups duplicate files by content hash", async () => {
   await withTempLibrary(async (dir) => {
     await writeFile(path.join(dir, "first.svg"), svgA);
@@ -83,6 +122,59 @@ test("scanLibrary groups duplicate files by content hash", async () => {
     );
   });
 });
+
+function createSolidPng(width, height, rgba) {
+  const signature = Buffer.from("89504e470d0a1a0a", "hex");
+  const ihdr = Buffer.alloc(13);
+  ihdr.writeUInt32BE(width, 0);
+  ihdr.writeUInt32BE(height, 4);
+  ihdr[8] = 8;
+  ihdr[9] = 6;
+  ihdr[10] = 0;
+  ihdr[11] = 0;
+  ihdr[12] = 0;
+
+  const rowLength = 1 + width * 4;
+  const raw = Buffer.alloc(rowLength * height);
+  for (let y = 0; y < height; y += 1) {
+    const rowStart = y * rowLength;
+    raw[rowStart] = 0;
+    for (let x = 0; x < width; x += 1) {
+      const pixelStart = rowStart + 1 + x * 4;
+      raw[pixelStart] = rgba[0];
+      raw[pixelStart + 1] = rgba[1];
+      raw[pixelStart + 2] = rgba[2];
+      raw[pixelStart + 3] = rgba[3];
+    }
+  }
+
+  return Buffer.concat([
+    signature,
+    createPngChunk("IHDR", ihdr),
+    createPngChunk("IDAT", deflateSync(raw)),
+    createPngChunk("IEND", Buffer.alloc(0))
+  ]);
+}
+
+function createPngChunk(type, data) {
+  const typeBytes = Buffer.from(type, "ascii");
+  const length = Buffer.alloc(4);
+  length.writeUInt32BE(data.length, 0);
+  const crc = Buffer.alloc(4);
+  crc.writeUInt32BE(crc32(Buffer.concat([typeBytes, data])), 0);
+  return Buffer.concat([length, typeBytes, data, crc]);
+}
+
+function crc32(buffer) {
+  let crc = 0xffffffff;
+  for (const byte of buffer) {
+    crc ^= byte;
+    for (let index = 0; index < 8; index += 1) {
+      crc = (crc >>> 1) ^ (crc & 1 ? 0xedb88320 : 0);
+    }
+  }
+  return (crc ^ 0xffffffff) >>> 0;
+}
 
 test("scanLibrary records missing roots without aborting the whole scan", async () => {
   await withTempLibrary(async (dir) => {

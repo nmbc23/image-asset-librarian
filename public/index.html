@@ -38,7 +38,7 @@
       <section class="toolbar" aria-label="Gallery filters">
         <label class="search-field">
           <span>Search</span>
-          <input id="search-input" type="search" placeholder="Name, folder, source, type, theme, note">
+          <input id="search-input" type="search" placeholder="Name, folder, source, type, theme, color vibe, note">
         </label>
         <label>
           <span>Source</span>
@@ -72,6 +72,10 @@
         <label>
           <span>Theme</span>
           <select id="theme-filter"></select>
+        </label>
+        <label>
+          <span>Color vibe</span>
+          <select id="color-theme-filter"></select>
         </label>
         <label>
           <span>Age</span>
@@ -191,6 +195,13 @@
             <span id="theme-breakdown-count">0 themes</span>
           </div>
           <div id="theme-breakdown" class="breakdown-list"></div>
+        </div>
+        <div>
+          <div class="section-heading">
+            <h2>Color Vibes</h2>
+            <span id="color-theme-breakdown-count">0 vibes</span>
+          </div>
+          <div id="color-theme-breakdown" class="breakdown-list"></div>
         </div>
       </section>
 

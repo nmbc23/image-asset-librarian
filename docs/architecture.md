@@ -4,7 +4,7 @@ Image Asset Librarian is split into three small layers: scanner, server, and bro
 
 ## Scanner
 
-`src/scanner.js` walks configured roots, filters supported image extensions, extracts basic metadata, infers lightweight local themes from filenames, folder names, vector status, and image metadata, hashes file contents, and produces a versioned JSON index.
+`src/scanner.js` walks configured roots, filters supported image extensions, extracts basic metadata, infers lightweight local themes from filenames, folder names, vector status, image metadata, SVG color values, and PNG pixel samples, hashes file contents, and produces a versioned JSON index.
 
 Responsibilities:
 
@@ -32,13 +32,13 @@ The server is intentionally small and uses Node.js built-ins only.
 
 UI responsibilities:
 
-- Search by name, relative path, source, extension, or inferred theme.
-- Filter by source, file type, orientation, resolution bucket, inferred theme, age, duplicate state, and local review marks.
+- Search by name, relative path, source, extension, inferred theme, or inferred color vibe.
+- Filter by source, file type, orientation, resolution bucket, inferred theme, inferred color vibe, age, duplicate state, and local review marks.
 - Apply browser-local tags to selected assets and use those tags as gallery filters.
 - Store browser-local notes per asset, search note text, and filter assets by whether notes exist.
 - Show active filter chips so users can inspect or clear individual filters without resetting the whole gallery.
 - Store named filter views in browser local storage so common curation workflows can be reapplied quickly.
-- Use source, file-type, resolution, and inferred theme breakdowns as quick filter controls.
+- Use source, file-type, resolution, inferred theme, and color-vibe breakdowns as quick filter controls.
 - Sort by date, file size, resolution, or name.
 - Highlight duplicate assets.
 - Inspect a filtered result set in a detail drawer with previous/next buttons, keyboard navigation, and saved/review mark controls.
