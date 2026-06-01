@@ -7,7 +7,7 @@ A zero-dependency local gallery for AI-generated image folders. It scans one or 
 ## Features
 
 - Local-first scanner for PNG, JPG, GIF, SVG, WebP, AVIF, BMP, and TIFF files
-- Browser gallery with search, saved filter views, clickable source/type breakdowns, local asset tags and notes, active filter chips, age/orientation/mark filters, duplicate-only mode, and size/date/name sorting
+- Browser gallery with search, saved filter views, clickable source/type breakdowns, local asset tags and notes, active filter chips, age/orientation/resolution/mark filters, duplicate-only mode, and size/date/name sorting
 - Saved and review marks stored in your browser, with batch marking, marks-only backup/restore, full curation backup/restore, selected/visible path, CSV, and curation-aware JSON manifest exports, plus Markdown workflow reports
 - Duplicate groups with reclaimable storage estimates, suggested keep files, and copy actions for full groups or cleanup candidates
 - No database and no external services

@@ -63,6 +63,19 @@ test("active filter chips can clear individual filters from the toolbar state", 
   assert.match(cssSource, /\.active-filters/);
 });
 
+test("resolution filter is exposed in the toolbar and wired into app state", async () => {
+  const [appSource, htmlSource] = await Promise.all([
+    readFile(new URL("../public/app.js", import.meta.url), "utf8"),
+    readFile(new URL("../public/index.html", import.meta.url), "utf8")
+  ]);
+
+  assert.match(htmlSource, /id="resolution-filter"/);
+  assert.match(htmlSource, /value="huge"/);
+  assert.match(appSource, /resolution: document\.querySelector\("#resolution-filter"\)/);
+  assert.match(appSource, /state\.resolution = elements\.resolution\.value/);
+  assert.match(appSource, /elements\.resolution\.value = state\.resolution/);
+});
+
 test("selected assets can be bulk marked from the workflow panel", async () => {
   const [appSource, htmlSource] = await Promise.all([
     readFile(new URL("../public/app.js", import.meta.url), "utf8"),

@@ -195,6 +195,74 @@ test("createLibraryView filters by orientation", () => {
   );
 });
 
+test("createLibraryView filters by resolution bucket", () => {
+  const resolutionIndex = {
+    assets: [
+      {
+        id: "missing",
+        name: "missing.png",
+        relativePath: "missing.png",
+        rootName: "Test",
+        extension: ".png",
+        sizeBytes: 100,
+        modifiedAt: "2026-06-01T00:00:00.000Z"
+      },
+      {
+        id: "tiny",
+        name: "tiny.png",
+        relativePath: "tiny.png",
+        rootName: "Test",
+        extension: ".png",
+        width: 500,
+        height: 500,
+        sizeBytes: 100,
+        modifiedAt: "2026-06-01T00:00:00.000Z"
+      },
+      {
+        id: "standard",
+        name: "standard.png",
+        relativePath: "standard.png",
+        rootName: "Test",
+        extension: ".png",
+        width: 1200,
+        height: 1000,
+        sizeBytes: 100,
+        modifiedAt: "2026-06-01T00:00:00.000Z"
+      },
+      {
+        id: "large",
+        name: "large.png",
+        relativePath: "large.png",
+        rootName: "Test",
+        extension: ".png",
+        width: 3000,
+        height: 2000,
+        sizeBytes: 100,
+        modifiedAt: "2026-06-01T00:00:00.000Z"
+      },
+      {
+        id: "huge",
+        name: "huge.png",
+        relativePath: "huge.png",
+        rootName: "Test",
+        extension: ".png",
+        width: 5000,
+        height: 3000,
+        sizeBytes: 100,
+        modifiedAt: "2026-06-01T00:00:00.000Z"
+      }
+    ],
+    duplicates: []
+  };
+
+  for (const resolution of ["missing", "tiny", "standard", "large", "huge"]) {
+    assert.deepEqual(
+      createLibraryView(resolutionIndex, { resolution, sort: "name" }).assets.map((asset) => asset.id),
+      [resolution]
+    );
+  }
+});
+
 test("createLibraryView filters by maximum age in days", () => {
   assert.deepEqual(
     createLibraryView(index, {
@@ -471,6 +539,7 @@ test("createDefaultViewState returns resettable filter defaults", () => {
     root: "all",
     extension: "all",
     orientation: "all",
+    resolution: "all",
     maxAgeDays: "all",
     mark: "all",
     tag: "all",
@@ -488,6 +557,7 @@ test("createActiveFilterChips describes only non-default filters", () => {
     root: "Codex",
     extension: ".png",
     orientation: "portrait",
+    resolution: "large",
     maxAgeDays: "30",
     mark: "review",
     tag: "keeper",
@@ -499,6 +569,7 @@ test("createActiveFilterChips describes only non-default filters", () => {
     { key: "root", label: "Source", value: "Codex" },
     { key: "extension", label: "Type", value: "PNG" },
     { key: "orientation", label: "Orientation", value: "Portrait" },
+    { key: "resolution", label: "Resolution", value: "Large" },
     { key: "maxAgeDays", label: "Age", value: "Last 30 days" },
     { key: "mark", label: "Mark", value: "Review queue" },
     { key: "tag", label: "Tag", value: "keeper" },
@@ -529,6 +600,7 @@ test("createSavedFilterView stores a normalized filter state snapshot", () => {
       root: "Codex",
       extension: ".png",
       orientation: "portrait",
+      resolution: "all",
       maxAgeDays: "all",
       mark: "all",
       tag: "all",
@@ -563,6 +635,7 @@ test("normalizeSavedFilterViews drops invalid entries and restores missing defau
         root: "all",
         extension: "all",
         orientation: "all",
+        resolution: "all",
         maxAgeDays: "all",
         mark: "all",
         tag: "all",

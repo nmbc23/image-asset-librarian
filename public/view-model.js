@@ -4,6 +4,7 @@ export function createDefaultViewState() {
     root: "all",
     extension: "all",
     orientation: "all",
+    resolution: "all",
     maxAgeDays: "all",
     mark: "all",
     tag: "all",
@@ -153,6 +154,13 @@ export function createActiveFilterChips(state = {}) {
       value: formatChoiceLabel(normalizedState.orientation)
     });
   }
+  if (normalizedState.resolution !== defaults.resolution) {
+    chips.push({
+      key: "resolution",
+      label: "Resolution",
+      value: formatResolutionLabel(normalizedState.resolution)
+    });
+  }
   if (normalizedState.maxAgeDays !== defaults.maxAgeDays) {
     chips.push({
       key: "maxAgeDays",
@@ -201,6 +209,7 @@ export function createLibraryView(index, state = {}) {
     .filter((asset) => normalizedState.root === "all" || asset.rootName === normalizedState.root)
     .filter((asset) => normalizedState.extension === "all" || asset.extension === normalizedState.extension)
     .filter((asset) => normalizedState.orientation === "all" || getOrientation(asset) === normalizedState.orientation)
+    .filter((asset) => matchesResolution(asset, normalizedState.resolution))
     .filter((asset) => isWithinAge(asset, normalizedState.maxAgeDays, normalizedState.now))
     .filter((asset) => matchesMark(asset, normalizedState.mark, savedAssetIds, reviewAssetIds))
     .filter((asset) => matchesTag(asset, normalizedState.tag, assetTags))
@@ -544,6 +553,33 @@ function matchesNote(asset, note, assetNotes) {
   return true;
 }
 
+function matchesResolution(asset, resolution) {
+  if (resolution === "all") {
+    return true;
+  }
+  return getResolutionBucket(asset) === resolution;
+}
+
+function getResolutionBucket(asset) {
+  const width = Number(asset.width);
+  const height = Number(asset.height);
+  if (!Number.isFinite(width) || !Number.isFinite(height) || width <= 0 || height <= 0) {
+    return "missing";
+  }
+
+  const pixels = width * height;
+  if (pixels < 500_000) {
+    return "tiny";
+  }
+  if (pixels < 2_000_000) {
+    return "standard";
+  }
+  if (pixels < 8_000_000) {
+    return "large";
+  }
+  return "huge";
+}
+
 function compareDuplicateKeepCandidate(a, b) {
   const byDate = Date.parse(a.modifiedAt) - Date.parse(b.modifiedAt);
   if (Number.isFinite(byDate) && byDate !== 0) {
@@ -671,6 +707,13 @@ function formatNoteFilterLabel(value) {
   }
   if (value === "without-notes") {
     return "Without notes";
+  }
+  return formatChoiceLabel(value);
+}
+
+function formatResolutionLabel(value) {
+  if (value === "missing") {
+    return "Missing dimensions";
   }
   return formatChoiceLabel(value);
 }

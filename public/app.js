@@ -34,6 +34,7 @@ const elements = {
   root: document.querySelector("#root-filter"),
   extension: document.querySelector("#extension-filter"),
   orientation: document.querySelector("#orientation-filter"),
+  resolution: document.querySelector("#resolution-filter"),
   age: document.querySelector("#age-filter"),
   sort: document.querySelector("#sort-select"),
   mark: document.querySelector("#mark-filter"),
@@ -127,6 +128,10 @@ function bindEvents() {
   });
   elements.orientation.addEventListener("change", () => {
     state.orientation = elements.orientation.value;
+    render();
+  });
+  elements.resolution.addEventListener("change", () => {
+    state.resolution = elements.resolution.value;
     render();
   });
   elements.age.addEventListener("change", () => {
@@ -301,6 +306,7 @@ function syncControlsFromState() {
   elements.root.value = state.root;
   elements.extension.value = state.extension;
   elements.orientation.value = state.orientation;
+  elements.resolution.value = state.resolution;
   elements.age.value = state.maxAgeDays;
   elements.sort.value = state.sort;
   elements.mark.value = state.mark;

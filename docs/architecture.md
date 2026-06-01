@@ -33,7 +33,7 @@ The server is intentionally small and uses Node.js built-ins only.
 UI responsibilities:
 
 - Search by name, relative path, source, or extension.
-- Filter by source, file type, orientation, age, duplicate state, and local review marks.
+- Filter by source, file type, orientation, resolution bucket, age, duplicate state, and local review marks.
 - Apply browser-local tags to selected assets and use those tags as gallery filters.
 - Store browser-local notes per asset, search note text, and filter assets by whether notes exist.
 - Show active filter chips so users can inspect or clear individual filters without resetting the whole gallery.
