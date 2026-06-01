@@ -63,6 +63,8 @@ node src/server.js --config asset-librarian.config.local.json
 
 The scanner walks each configured root, records file metadata, extracts basic dimensions when possible, hashes file contents with SHA-256, and writes a static JSON index. The server exposes that index at `/api/index` and serves image files by indexed asset id at `/assets/:id`.
 
+For a deeper overview, see [docs/architecture.md](docs/architecture.md). Planned improvements live in [ROADMAP.md](ROADMAP.md).
+
 ## Security and Privacy
 
 Image Asset Librarian is local-first. It does not upload files or metadata in the current version, and `data/index.json` is ignored because it can contain absolute local paths. See [SECURITY.md](SECURITY.md) and [docs/privacy.md](docs/privacy.md) for details.
