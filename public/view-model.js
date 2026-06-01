@@ -426,19 +426,39 @@ export function createAssetCsv(assets) {
 }
 
 export function createAssetManifest(assets, options = {}) {
-  const manifestAssets = (Array.isArray(assets) ? assets : []).map((asset) => ({
-    id: asset.id ?? null,
-    name: asset.name ?? null,
-    source: asset.rootName ?? null,
-    type: asset.extension ?? null,
-    sizeBytes: Number.isFinite(asset.sizeBytes) ? asset.sizeBytes : null,
-    width: Number.isFinite(asset.width) ? asset.width : null,
-    height: Number.isFinite(asset.height) ? asset.height : null,
-    modifiedAt: asset.modifiedAt ?? null,
-    relativePath: asset.relativePath ?? null,
-    path: asset.path ?? null,
-    hash: asset.hash ?? null
-  }));
+  const savedAssetIds = toAssetIdSet(options.savedAssetIds);
+  const reviewAssetIds = toAssetIdSet(options.reviewAssetIds);
+  const duplicateAssetIds = toAssetIdSet(options.duplicateAssetIds);
+  const assetTags = normalizeAssetTags(options.assetTags);
+  const assetNotes = normalizeAssetNotes(options.assetNotes);
+  const includeCuration = hasManifestCurationOptions(options);
+  const manifestAssets = (Array.isArray(assets) ? assets : []).map((asset) => {
+    const manifestAsset = {
+      id: asset.id ?? null,
+      name: asset.name ?? null,
+      source: asset.rootName ?? null,
+      type: asset.extension ?? null,
+      sizeBytes: Number.isFinite(asset.sizeBytes) ? asset.sizeBytes : null,
+      width: Number.isFinite(asset.width) ? asset.width : null,
+      height: Number.isFinite(asset.height) ? asset.height : null,
+      modifiedAt: asset.modifiedAt ?? null,
+      relativePath: asset.relativePath ?? null,
+      path: asset.path ?? null,
+      hash: asset.hash ?? null
+    };
+
+    if (includeCuration) {
+      manifestAsset.curation = {
+        saved: savedAssetIds.has(asset.id),
+        review: reviewAssetIds.has(asset.id),
+        tags: assetTags[asset.id] ?? [],
+        note: assetNotes[asset.id] ?? "",
+        duplicate: duplicateAssetIds.has(asset.id)
+      };
+    }
+
+    return manifestAsset;
+  });
 
   return `${JSON.stringify({
     schema: "image-asset-librarian-manifest-v1",
@@ -605,6 +625,14 @@ function normalizeAssetNotes(value) {
       .map(([assetId, note]) => [String(assetId ?? "").trim(), typeof note === "string" ? note.trim() : ""])
       .filter(([assetId, note]) => assetId && note)
   );
+}
+
+function hasManifestCurationOptions(options) {
+  return options.savedAssetIds !== undefined
+    || options.reviewAssetIds !== undefined
+    || options.assetTags !== undefined
+    || options.assetNotes !== undefined
+    || options.duplicateAssetIds !== undefined;
 }
 
 function normalizeTag(value) {

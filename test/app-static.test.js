@@ -103,6 +103,9 @@ test("visible and selected asset metadata can be copied as JSON manifests", asyn
   assert.match(appSource, /createAssetManifest/);
   assert.match(appSource, /copyVisibleManifest/);
   assert.match(appSource, /copySelectedManifest/);
+  assert.match(appSource, /createManifestOptions/);
+  assert.match(appSource, /duplicateAssetIds/);
+  assert.match(appSource, /assetNotes/);
 });
 
 test("saved filter views can be created, applied, and deleted", async () => {

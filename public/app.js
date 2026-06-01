@@ -704,7 +704,7 @@ async function copySelectedManifest() {
   if (!selectedAssets.length) {
     return;
   }
-  await copyFromButton(elements.copySelectedManifest, createAssetManifest(selectedAssets, { label: "selected" }));
+  await copyFromButton(elements.copySelectedManifest, createAssetManifest(selectedAssets, createManifestOptions("selected")));
 }
 
 async function copyVisibleManifest() {
@@ -712,7 +712,18 @@ async function copyVisibleManifest() {
   if (!visibleAssets.length) {
     return;
   }
-  await copyFromButton(elements.copyVisibleManifest, createAssetManifest(visibleAssets, { label: "visible" }));
+  await copyFromButton(elements.copyVisibleManifest, createAssetManifest(visibleAssets, createManifestOptions("visible")));
+}
+
+function createManifestOptions(label) {
+  return {
+    label,
+    savedAssetIds: marks.saved,
+    reviewAssetIds: marks.review,
+    assetTags,
+    assetNotes,
+    duplicateAssetIds: currentView?.duplicateAssetIds
+  };
 }
 
 function applySelectedMarkBatch(action, button) {

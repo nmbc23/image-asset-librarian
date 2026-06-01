@@ -48,7 +48,7 @@ UI responsibilities:
 - Copy and import full curation backups containing marks, asset tags, asset notes, and saved filter views.
 - Select all currently visible filtered assets and copy selected or visible asset paths as a batch for downstream cleanup, curation, or prompt-tracking work.
 - Copy selected or visible asset metadata as CSV for spreadsheets, issue reports, and lightweight inventory work.
-- Copy selected or visible asset metadata as a structured JSON manifest for automation and reproducible downstream workflows.
+- Copy selected or visible asset metadata as a structured JSON manifest that can include local curation annotations for automation and reproducible downstream workflows.
 - Copy a Markdown workflow report summarizing selected, saved, and review-queue assets.
 - Keep private local paths visible only to the local user.
 

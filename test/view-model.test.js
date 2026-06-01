@@ -351,6 +351,49 @@ test("createAssetManifest exports selected asset metadata as stable JSON", () =>
   assert.match(manifest, /\n$/);
 });
 
+test("createAssetManifest can include local curation annotations", () => {
+  const manifest = createAssetManifest(index.assets, {
+    generatedAt: "2026-06-01T15:30:00.000Z",
+    label: "visible",
+    savedAssetIds: ["a"],
+    reviewAssetIds: new Set(["b"]),
+    assetTags: {
+      a: ["Keeper", "portrait"],
+      c: ["draft"]
+    },
+    assetNotes: {
+      a: "  Final profile image  ",
+      c: "Needs SVG cleanup"
+    },
+    duplicateAssetIds: new Set(["a", "b"])
+  });
+
+  const parsed = JSON.parse(manifest);
+  assert.deepEqual(parsed.assets.map((asset) => asset.curation), [
+    {
+      saved: true,
+      review: false,
+      tags: ["keeper", "portrait"],
+      note: "Final profile image",
+      duplicate: true
+    },
+    {
+      saved: false,
+      review: true,
+      tags: [],
+      note: "",
+      duplicate: true
+    },
+    {
+      saved: false,
+      review: false,
+      tags: ["draft"],
+      note: "Needs SVG cleanup",
+      duplicate: false
+    }
+  ]);
+});
+
 test("createMarkBackup and parseMarkBackup round-trip saved and review ids", () => {
   const backup = createMarkBackup({
     savedAssetIds: new Set(["a", "missing", "a"]),
