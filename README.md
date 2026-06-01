@@ -23,7 +23,7 @@ The default config scans `sample-library/`, so a fresh clone opens with a safe d
 - Search for `terrace` or `mint`.
 - Open a card to inspect metadata, generated description, AI-style review, and copy buttons.
 - Use the duplicate and similar-group panels to see how cleanup candidates are surfaced.
-- Click "Choose folder" when you are ready to browse for your own image library.
+- Paste a real image folder path into "Scan by path" when you are ready to index your own library.
 
 ## Demo Scenario
 
@@ -51,7 +51,7 @@ This project focuses on one workflow: local image-library triage for generated a
 - Similar visual groups from local theme, orientation, color vibe, and palette signals.
 - Local descriptions, alt text, AI-style reviews, suggested filenames, contact sheets, CSV, JSON manifests, and Markdown reports.
 - Embedded SVG and PNG text metadata extraction for prompt/title search and provenance reports.
-- Native browser folder picker for quick local previews, plus a path scanner for users who want to persist `data/index.json`.
+- Server-backed path scanner for real folders, with browser-local curation tools for tags, notes, saved items, and review queues.
 - No database, no telemetry, no external network calls in the default workflow.
 
 ## Local Rules vs. AI
@@ -64,9 +64,9 @@ Future AI features, such as real image captioning or embedding-based semantic se
 
 ## Scan Your Own Folders
 
-The fastest way is to start the server and click "Choose folder". This opens the system folder picker and builds a browser-only gallery from file names, sizes, dates, and preview URLs so folders appear quickly. Browser-only previews are capped to keep the tab responsive; use "Scan by path" for very large libraries. When a browser supports direct directory handles, the app can also use that path as an alternate picker.
+The safest way is to start the server, paste an absolute folder path into "Scan by path", and press "Scan path". The Node server rescans that local path, computes exact duplicate hashes and dimensions, updates `data/index.json`, and refreshes the gallery. Recent typed paths are remembered in your browser.
 
-Use "Scan by path" when you want the Node server to rescan an absolute local path, compute exact duplicate hashes and dimensions, and update `data/index.json`. The gallery refreshes after the scan and remembers recent typed paths in your browser.
+The app avoids opening a native browser folder picker by default because embedded Windows browsers can be unstable around directory picker dialogs. That keeps the default workflow boring but reliable.
 
 For a checked-in-safe config, copy the example file:
 

@@ -12,7 +12,7 @@ test("README explains the product quickly and links a demo screenshot", async ()
   assert.match(readme, /What You Can Try In Two Minutes/);
   assert.match(readme, /Local Rules vs\. AI/);
   assert.match(readme, /Demo Scenario/);
-  assert.match(readme, /Choose folder/);
+  assert.match(readme, /Scan by path/);
   assert.ok(screenshot.size > 10_000, "demo screenshot should be a real image, not an empty placeholder");
 });
 
@@ -28,7 +28,7 @@ test("project docs include demo and contribution guidance", async () => {
 
   assert.match(demo, /Demo Scenario/);
   assert.match(demo, /sample-library/);
-  assert.match(demo, /Choose folder/);
+  assert.match(demo, /Scan by path/);
   assert.match(demo, /local rules, not cloud AI/i);
   assert.match(contributing, /Product Principles/);
   assert.match(roadmap, /Polish Before More Buttons/);

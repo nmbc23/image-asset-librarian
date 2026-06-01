@@ -127,15 +127,6 @@ h1 {
   display: flex;
 }
 
-.folder-file-input {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  opacity: 0;
-  pointer-events: none;
-}
-
 .folder-picker-primary .primary-action {
   min-width: 170px;
 }

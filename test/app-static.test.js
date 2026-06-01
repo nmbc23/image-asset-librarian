@@ -97,24 +97,21 @@ test("folder scanning controls post to the server and refresh the gallery", asyn
   assert.match(cssSource, /\.library-kind/);
 });
 
-test("folder scanner exposes a native folder picker before the path fallback", async () => {
+test("folder scanner defaults to crash-safe path scanning", async () => {
   const [appSource, htmlSource, cssSource] = await Promise.all([
     readFile(new URL("../public/app.js", import.meta.url), "utf8"),
     readFile(new URL("../public/index.html", import.meta.url), "utf8"),
     readFile(new URL("../public/styles.css", import.meta.url), "utf8")
   ]);
 
+  assert.match(htmlSource, /<details id="path-scan-details" class="path-scan-fallback" open>/);
   assert.match(htmlSource, /id="choose-folder-button"/);
-  assert.match(htmlSource, /id="folder-file-input"/);
-  assert.match(htmlSource, /webkitdirectory/);
-  assert.match(htmlSource, /<summary>Scan by path<\/summary>/);
-  assert.match(appSource, /createBrowserFolderIndex/);
-  assert.match(appSource, /createBrowserFileListIndex/);
+  assert.match(htmlSource, /Use safe path scan/);
   assert.match(appSource, /chooseFolderFromBrowser/);
-  assert.match(appSource, /folderFileInput\.click/);
-  assert.match(appSource, /handleBrowserFolderFiles/);
-  assert.match(appSource, /showDirectoryPicker/);
-  assert.match(appSource, /revokeBrowserAssetUrls/);
+  assert.match(appSource, /focusPathScanner/);
+  assert.doesNotMatch(appSource, /folderFileInput\.click/);
+  assert.doesNotMatch(appSource, /showDirectoryPicker/);
+  assert.doesNotMatch(htmlSource, /webkitdirectory/);
   assert.match(cssSource, /\.folder-picker-primary/);
   assert.match(cssSource, /\.path-scan-fallback/);
 });

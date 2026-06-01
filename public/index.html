@@ -21,10 +21,9 @@
 
       <section class="scan-panel" aria-label="Image folder scanner">
         <div class="folder-picker-primary">
-          <button type="button" id="choose-folder-button" class="primary-action">Choose folder</button>
-          <input id="folder-file-input" class="folder-file-input" type="file" webkitdirectory directory multiple accept="image/*,.svg,.webp,.avif,.bmp,.tif,.tiff,.jfif,.jpe">
+          <button type="button" id="choose-folder-button" class="primary-action">Use safe path scan</button>
         </div>
-        <details class="path-scan-fallback">
+        <details id="path-scan-details" class="path-scan-fallback" open>
           <summary>Scan by path</summary>
           <form id="scan-folder-form" class="scan-folder-form">
             <label>
