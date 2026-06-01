@@ -3,6 +3,7 @@ import {
   applyTagBatch,
   createActiveFilterChips,
   createAssetAltTextList,
+  createAssetCollectionBrief,
   createAssetContactSheet,
   createAssetCsv,
   createAssetDescription,
@@ -102,6 +103,10 @@ const elements = {
   copySelectedPromptKeywordReport: document.querySelector("#copy-selected-prompt-keyword-report"),
   downloadVisiblePromptKeywordReport: document.querySelector("#download-visible-prompt-keyword-report"),
   downloadSelectedPromptKeywordReport: document.querySelector("#download-selected-prompt-keyword-report"),
+  copyVisibleCollectionBrief: document.querySelector("#copy-visible-collection-brief"),
+  copySelectedCollectionBrief: document.querySelector("#copy-selected-collection-brief"),
+  downloadVisibleCollectionBrief: document.querySelector("#download-visible-collection-brief"),
+  downloadSelectedCollectionBrief: document.querySelector("#download-selected-collection-brief"),
   copyVisibleCsv: document.querySelector("#copy-visible-csv"),
   copySelectedCsv: document.querySelector("#copy-selected-csv"),
   copyVisibleManifest: document.querySelector("#copy-visible-manifest"),
@@ -298,6 +303,10 @@ function bindEvents() {
   elements.copySelectedPromptKeywordReport.addEventListener("click", copySelectedPromptKeywordReport);
   elements.downloadVisiblePromptKeywordReport.addEventListener("click", downloadVisiblePromptKeywordReport);
   elements.downloadSelectedPromptKeywordReport.addEventListener("click", downloadSelectedPromptKeywordReport);
+  elements.copyVisibleCollectionBrief.addEventListener("click", copyVisibleCollectionBrief);
+  elements.copySelectedCollectionBrief.addEventListener("click", copySelectedCollectionBrief);
+  elements.downloadVisibleCollectionBrief.addEventListener("click", downloadVisibleCollectionBrief);
+  elements.downloadSelectedCollectionBrief.addEventListener("click", downloadSelectedCollectionBrief);
   elements.copyVisibleCsv.addEventListener("click", copyVisibleCsv);
   elements.copySelectedCsv.addEventListener("click", copySelectedCsv);
   elements.copyVisibleManifest.addEventListener("click", copyVisibleManifest);
@@ -655,6 +664,10 @@ function renderWorkflow() {
   elements.copySelectedPromptKeywordReport.disabled = selectedAssetIds.size === 0;
   elements.downloadVisiblePromptKeywordReport.disabled = !currentView?.assets.length;
   elements.downloadSelectedPromptKeywordReport.disabled = selectedAssetIds.size === 0;
+  elements.copyVisibleCollectionBrief.disabled = !currentView?.assets.length;
+  elements.copySelectedCollectionBrief.disabled = selectedAssetIds.size === 0;
+  elements.downloadVisibleCollectionBrief.disabled = !currentView?.assets.length;
+  elements.downloadSelectedCollectionBrief.disabled = selectedAssetIds.size === 0;
   elements.copyVisibleCsv.disabled = !currentView?.assets.length;
   elements.copySelectedCsv.disabled = selectedAssetIds.size === 0;
   elements.copyVisibleManifest.disabled = !currentView?.assets.length;
@@ -1547,6 +1560,44 @@ function downloadVisiblePromptKeywordReport() {
   downloadPromptKeywordReport(visibleAssets, "visible", elements.downloadVisiblePromptKeywordReport);
 }
 
+async function copySelectedCollectionBrief() {
+  const selectedAssets = getSelectedAssets();
+  if (!selectedAssets.length) {
+    return;
+  }
+  await copyFromButton(
+    elements.copySelectedCollectionBrief,
+    createAssetCollectionBrief(selectedAssets, createCollectionBriefOptions("selected"))
+  );
+}
+
+async function copyVisibleCollectionBrief() {
+  const visibleAssets = currentView?.assets ?? [];
+  if (!visibleAssets.length) {
+    return;
+  }
+  await copyFromButton(
+    elements.copyVisibleCollectionBrief,
+    createAssetCollectionBrief(visibleAssets, createCollectionBriefOptions("visible"))
+  );
+}
+
+function downloadSelectedCollectionBrief() {
+  const selectedAssets = getSelectedAssets();
+  if (!selectedAssets.length) {
+    return;
+  }
+  downloadCollectionBrief(selectedAssets, "selected", elements.downloadSelectedCollectionBrief);
+}
+
+function downloadVisibleCollectionBrief() {
+  const visibleAssets = currentView?.assets ?? [];
+  if (!visibleAssets.length) {
+    return;
+  }
+  downloadCollectionBrief(visibleAssets, "visible", elements.downloadVisibleCollectionBrief);
+}
+
 async function copySelectedCsv() {
   const selectedAssets = getSelectedAssets();
   if (!selectedAssets.length) {
@@ -1675,6 +1726,14 @@ function createPromptKeywordReportOptions(label, generatedAt = new Date().toISOS
   };
 }
 
+function createCollectionBriefOptions(label, generatedAt = new Date().toISOString()) {
+  return {
+    generatedAt,
+    label,
+    duplicateAssetIds: currentView?.duplicateAssetIds
+  };
+}
+
 function downloadAltTextList(assets, label, button) {
   const generatedAt = new Date().toISOString();
   const list = createAssetAltTextList(assets, createAltTextOptions(label, generatedAt));
@@ -1715,6 +1774,13 @@ function downloadPromptKeywordReport(assets, label, button) {
   const report = createAssetPromptKeywordReport(assets, createPromptKeywordReportOptions(label, generatedAt));
   const fileName = createExportFileName(`asset-prompt-keyword-report-${label}`, "md", { generatedAt });
   downloadTextFile(button, report, fileName, "text/markdown");
+}
+
+function downloadCollectionBrief(assets, label, button) {
+  const generatedAt = new Date().toISOString();
+  const brief = createAssetCollectionBrief(assets, createCollectionBriefOptions(label, generatedAt));
+  const fileName = createExportFileName(`asset-collection-brief-${label}`, "md", { generatedAt });
+  downloadTextFile(button, brief, fileName, "text/markdown");
 }
 
 function downloadRenamePlan(assets, label, button) {

@@ -7,6 +7,7 @@ import {
   createActiveFilterChips,
   createAssetAltText,
   createAssetAltTextList,
+  createAssetCollectionBrief,
   createAssetIssueReport,
   createAssetDetails,
   createAssetDescription,
@@ -1085,6 +1086,43 @@ test("createAssetPromptKeywordReport summarizes reusable prompt terms", () => {
     "| pink | 1 | 1 | `flowers/rose.png` |",
     "| portrait | 1 | 1 | `flowers/rose.png` |",
     "| soft | 1 | 1 | `flowers/rose.png` |",
+    ""
+  ].join("\n"));
+});
+
+test("createAssetCollectionBrief exports a publishable summary of selected assets", () => {
+  assert.equal(createAssetCollectionBrief([index.assets[0], index.assets[2]], {
+    generatedAt: "2026-06-02T01:00:00.000Z",
+    label: "selected",
+    duplicateAssetIds: new Set(["a"])
+  }), [
+    "# Image Asset Collection Brief",
+    "",
+    "Generated: 2026-06-02T01:00:00.000Z",
+    "Scope: selected",
+    "Count: 2",
+    "",
+    "## Snapshot",
+    "",
+    "- Sources: Codex (2)",
+    "- File types: .png (1), .svg (1)",
+    "- Themes: character (1), logo (1), portrait (1), vector (1)",
+    "- Color vibes: cool (1), green (1), vivid (1), warm (1)",
+    "- Embedded metadata: 1",
+    "- Needs review: 2",
+    "",
+    "## Publishing Notes",
+    "",
+    "- Duplicate: 1",
+    "- Missing dimensions: 1",
+    "- Tiny resolution: 1",
+    "",
+    "## Assets",
+    "",
+    "| Asset | Source | Type | Description | Issues |",
+    "| --- | --- | --- | --- | --- |",
+    "| `flowers/rose.png` | Codex | .png | Portrait character visual with warm, vivid colors and a rose, teal palette. Metadata suggests: Soft light portrait. | Duplicate; Tiny resolution |",
+    "| `mint.svg` | Codex | .svg | Logo vector visual with cool, green colors and a teal palette. | Missing dimensions |",
     ""
   ].join("\n"));
 });

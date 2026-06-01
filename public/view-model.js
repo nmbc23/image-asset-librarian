@@ -964,6 +964,67 @@ export function createAssetPromptKeywordReport(assets, options = {}) {
   return lines.join("\n");
 }
 
+export function createAssetCollectionBrief(assets, options = {}) {
+  const briefAssets = Array.isArray(assets) ? assets : [];
+  const duplicateAssetIds = toAssetIdSet(options.duplicateAssetIds);
+  const rows = briefAssets.map((asset) => ({
+    asset,
+    issues: getAssetIssues(asset, duplicateAssetIds)
+  }));
+  const issueCounts = new Map(ISSUE_FILTERS.map((issue) => [issue.value, 0]));
+
+  for (const row of rows) {
+    for (const issue of row.issues) {
+      issueCounts.set(issue.value, (issueCounts.get(issue.value) ?? 0) + 1);
+    }
+  }
+
+  const metadataCount = briefAssets.filter((asset) => getAssetMetadataEntries(asset).length > 0).length;
+  const lines = [
+    "# Image Asset Collection Brief",
+    "",
+    `Generated: ${options.generatedAt ?? new Date().toISOString()}`,
+    `Scope: ${String(options.label ?? "assets")}`,
+    `Count: ${briefAssets.length}`,
+    "",
+    "## Snapshot",
+    "",
+    `- Sources: ${formatCountSummary(createBreakdown(briefAssets, "rootName"))}`,
+    `- File types: ${formatCountSummary(createBreakdown(briefAssets, "extension"))}`,
+    `- Themes: ${formatCountSummary(createThemeBreakdown(briefAssets))}`,
+    `- Color vibes: ${formatCountSummary(createColorThemeBreakdown(briefAssets))}`,
+    `- Embedded metadata: ${metadataCount}`,
+    `- Needs review: ${rows.filter((row) => row.issues.length > 0).length}`,
+    "",
+    "## Publishing Notes",
+    "",
+    ...ISSUE_FILTERS.map((issue) => `- ${issue.label}: ${issueCounts.get(issue.value) ?? 0}`),
+    "",
+    "## Assets",
+    "",
+    "| Asset | Source | Type | Description | Issues |",
+    "| --- | --- | --- | --- | --- |"
+  ];
+
+  for (const row of rows) {
+    const path = row.asset.relativePath ?? row.asset.path ?? row.asset.name ?? row.asset.id ?? "";
+    const source = row.asset.rootName ?? row.asset.source ?? "Unknown source";
+    const type = row.asset.extension || "Unknown";
+    const issues = row.issues.length ? row.issues.map((issue) => issue.label).join("; ") : "None";
+    const cells = [
+      `\`${escapeMarkdownCodeText(path)}\``,
+      escapeMarkdownTableText(source),
+      escapeMarkdownTableText(type),
+      escapeMarkdownTableText(createAssetAltText(row.asset)),
+      escapeMarkdownTableText(issues)
+    ];
+    lines.push(`| ${cells.join(" | ")} |`);
+  }
+
+  lines.push("");
+  return lines.join("\n");
+}
+
 export function createSuggestedFileName(asset = {}) {
   const themes = getAssetThemes(asset);
   const colorThemes = getAssetColorThemes(asset);
@@ -1312,6 +1373,13 @@ function createBreakdown(assets, field) {
   return [...counts.entries()]
     .map(([label, count]) => ({ label, count }))
     .sort((a, b) => b.count - a.count || a.label.localeCompare(b.label));
+}
+
+function formatCountSummary(items) {
+  if (!items.length) {
+    return "None";
+  }
+  return items.map((item) => `${item.label} (${item.count})`).join(", ");
 }
 
 function createResolutionBreakdown(assets) {

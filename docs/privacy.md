@@ -19,6 +19,7 @@ Image Asset Librarian is designed to run locally. The default workflow scans a l
 - Readiness reports, which summarize local issue status, suggested filenames, and generated alt text only when copied or downloaded by the user.
 - Provenance reports, which summarize embedded prompt/title/text metadata and only leave the browser when copied or downloaded by the user.
 - Prompt keyword reports, which summarize reusable terms from embedded metadata and only leave the browser when copied or downloaded by the user.
+- Collection briefs, which summarize selected or visible local asset metadata and only leave the browser when copied or downloaded by the user.
 - Rename plans, which can include local relative paths and only leave the browser when copied or downloaded by the user.
 - Saved and review marks, which are stored in browser local storage as asset ids and can be copied or downloaded as JSON backups only when the user clicks the backup controls.
 

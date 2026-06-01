@@ -65,6 +65,7 @@ UI responsibilities:
 - Copy or download selected or visible readiness reports summarizing ready assets, review-needed assets, issue counts, suggested filenames, and alt text.
 - Copy or download selected or visible provenance reports summarizing embedded prompt, title, description, and text metadata by source.
 - Copy or download selected or visible prompt keyword reports that count reusable terms from embedded prompt/title/description metadata.
+- Copy or download selected or visible collection briefs with source, type, theme, color-vibe, metadata, issue, and per-asset publishing summaries.
 - Copy selected or visible asset metadata, including palettes, generated descriptions, and embedded prompt/title metadata, as CSV for spreadsheets, issue reports, and lightweight inventory work.
 - Copy selected or visible asset metadata, including palettes, generated descriptions, and embedded prompt/title metadata, as a structured JSON manifest that can include local curation annotations for automation and reproducible downstream workflows.
 - Copy or download selected or visible rename plans as Markdown so downstream cleanup can review proposed filenames before any file operation happens.
