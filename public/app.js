@@ -72,6 +72,8 @@ const elements = {
   sourceBreakdownCount: document.querySelector("#source-breakdown-count"),
   typeBreakdown: document.querySelector("#type-breakdown"),
   typeBreakdownCount: document.querySelector("#type-breakdown-count"),
+  resolutionBreakdown: document.querySelector("#resolution-breakdown"),
+  resolutionBreakdownCount: document.querySelector("#resolution-breakdown-count"),
   duplicateSummary: document.querySelector("#duplicate-summary"),
   duplicateList: document.querySelector("#duplicate-list"),
   resultCount: document.querySelector("#result-count"),
@@ -216,6 +218,12 @@ function bindEvents() {
     const button = event.target.closest("[data-set-extension-filter]");
     if (button) {
       applyBreakdownFilter("extension", button.dataset.setExtensionFilter);
+    }
+  });
+  elements.resolutionBreakdown.addEventListener("click", (event) => {
+    const button = event.target.closest("[data-set-resolution-filter]");
+    if (button) {
+      applyBreakdownFilter("resolution", button.dataset.setResolutionFilter);
     }
   });
   elements.duplicateList.addEventListener("click", async (event) => {
@@ -469,6 +477,7 @@ function renderSavedView(view) {
 function renderBreakdowns(view) {
   elements.sourceBreakdownCount.textContent = `${view.sourceBreakdown.length} sources`;
   elements.typeBreakdownCount.textContent = `${view.extensionBreakdown.length} types`;
+  elements.resolutionBreakdownCount.textContent = `${view.resolutionBreakdown.length} buckets`;
   elements.sourceBreakdown.innerHTML = view.sourceBreakdown
     .map((item) => renderBreakdownItem(item, "root", item.label))
     .join("");
@@ -478,12 +487,18 @@ function renderBreakdowns(view) {
       count: item.count
     }, "extension", item.label)
   ).join("");
+  elements.resolutionBreakdown.innerHTML = view.resolutionBreakdown
+    .map((item) => renderBreakdownItem(item, "resolution", item.value))
+    .join("");
 }
 
 function renderBreakdownItem(item, filterType, filterValue) {
-  const filterAttribute = filterType === "root"
-    ? `data-set-root-filter="${escapeHtml(filterValue)}"`
-    : `data-set-extension-filter="${escapeHtml(filterValue)}"`;
+  const filterAttributes = {
+    root: "data-set-root-filter",
+    extension: "data-set-extension-filter",
+    resolution: "data-set-resolution-filter"
+  };
+  const filterAttribute = `${filterAttributes[filterType]}="${escapeHtml(filterValue)}"`;
   return `
     <button type="button" class="breakdown-item" ${filterAttribute}>
       <span title="${escapeHtml(item.label)}">${escapeHtml(item.label)}</span>
@@ -495,6 +510,8 @@ function renderBreakdownItem(item, filterType, filterValue) {
 function applyBreakdownFilter(filterType, filterValue) {
   if (filterType === "root") {
     state.root = filterValue;
+  } else if (filterType === "resolution") {
+    state.resolution = filterValue;
   } else {
     state.extension = filterValue;
   }

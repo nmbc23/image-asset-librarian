@@ -111,6 +111,19 @@ test("sort menu exposes resolution sort modes", async () => {
   assert.match(htmlSource, /value="lowest-resolution"/);
 });
 
+test("resolution breakdown is exposed and wired into filter state", async () => {
+  const [appSource, htmlSource] = await Promise.all([
+    readFile(new URL("../public/app.js", import.meta.url), "utf8"),
+    readFile(new URL("../public/index.html", import.meta.url), "utf8")
+  ]);
+
+  assert.match(htmlSource, /id="resolution-breakdown"/);
+  assert.match(htmlSource, /id="resolution-breakdown-count"/);
+  assert.match(appSource, /resolutionBreakdown: document\.querySelector\("#resolution-breakdown"\)/);
+  assert.match(appSource, /data-set-resolution-filter/);
+  assert.match(appSource, /applyBreakdownFilter\("resolution"/);
+});
+
 test("selected assets can be bulk marked from the workflow panel", async () => {
   const [appSource, htmlSource] = await Promise.all([
     readFile(new URL("../public/app.js", import.meta.url), "utf8"),

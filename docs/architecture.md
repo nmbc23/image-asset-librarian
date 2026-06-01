@@ -38,7 +38,7 @@ UI responsibilities:
 - Store browser-local notes per asset, search note text, and filter assets by whether notes exist.
 - Show active filter chips so users can inspect or clear individual filters without resetting the whole gallery.
 - Store named filter views in browser local storage so common curation workflows can be reapplied quickly.
-- Use source and file-type breakdowns as quick filter controls.
+- Use source, file-type, and resolution breakdowns as quick filter controls.
 - Sort by date, file size, resolution, or name.
 - Highlight duplicate assets.
 - Inspect a filtered result set in a detail drawer with previous/next buttons, keyboard navigation, and saved/review mark controls.

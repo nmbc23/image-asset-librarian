@@ -41,6 +41,14 @@ export function normalizeSavedFilterViews(value) {
     }));
 }
 
+const RESOLUTION_BUCKETS = [
+  { value: "huge", label: "Huge 8 MP+" },
+  { value: "large", label: "Large 2-8 MP" },
+  { value: "standard", label: "Standard 0.5-2 MP" },
+  { value: "tiny", label: "Tiny < 0.5 MP" },
+  { value: "missing", label: "Missing dimensions" }
+];
+
 export function applyMarkBatch(options = {}, assetIds = [], action) {
   const saved = new Set(uniqueStrings([...toAssetIdSet(options.savedAssetIds)]));
   const review = new Set(uniqueStrings([...toAssetIdSet(options.reviewAssetIds)]));
@@ -224,6 +232,7 @@ export function createLibraryView(index, state = {}) {
     tags: getAllAssetTags(assetTags),
     sourceBreakdown: createBreakdown(assets, "rootName"),
     extensionBreakdown: createBreakdown(assets, "extension"),
+    resolutionBreakdown: createResolutionBreakdown(assets),
     duplicateAssetIds
   };
 }
@@ -663,6 +672,21 @@ function createBreakdown(assets, field) {
   return [...counts.entries()]
     .map(([label, count]) => ({ label, count }))
     .sort((a, b) => b.count - a.count || a.label.localeCompare(b.label));
+}
+
+function createResolutionBreakdown(assets) {
+  const counts = new Map();
+  for (const asset of assets) {
+    const bucket = getResolutionBucket(asset);
+    counts.set(bucket, (counts.get(bucket) ?? 0) + 1);
+  }
+
+  return RESOLUTION_BUCKETS
+    .map((bucket) => ({
+      ...bucket,
+      count: counts.get(bucket.value) ?? 0
+    }))
+    .filter((bucket) => bucket.count > 0);
 }
 
 function createFilterStateSnapshot(state = {}) {

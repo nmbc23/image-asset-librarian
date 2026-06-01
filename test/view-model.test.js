@@ -264,6 +264,75 @@ test("createLibraryView filters by resolution bucket", () => {
   }
 });
 
+test("createLibraryView creates a resolution breakdown", () => {
+  const resolutionIndex = {
+    assets: [
+      {
+        id: "missing",
+        name: "missing.png",
+        relativePath: "missing.png",
+        rootName: "Test",
+        extension: ".png",
+        sizeBytes: 100,
+        modifiedAt: "2026-06-01T00:00:00.000Z"
+      },
+      {
+        id: "tiny",
+        name: "tiny.png",
+        relativePath: "tiny.png",
+        rootName: "Test",
+        extension: ".png",
+        width: 500,
+        height: 500,
+        sizeBytes: 100,
+        modifiedAt: "2026-06-01T00:00:00.000Z"
+      },
+      {
+        id: "standard",
+        name: "standard.png",
+        relativePath: "standard.png",
+        rootName: "Test",
+        extension: ".png",
+        width: 1200,
+        height: 1000,
+        sizeBytes: 100,
+        modifiedAt: "2026-06-01T00:00:00.000Z"
+      },
+      {
+        id: "large",
+        name: "large.png",
+        relativePath: "large.png",
+        rootName: "Test",
+        extension: ".png",
+        width: 3000,
+        height: 2000,
+        sizeBytes: 100,
+        modifiedAt: "2026-06-01T00:00:00.000Z"
+      },
+      {
+        id: "huge",
+        name: "huge.png",
+        relativePath: "huge.png",
+        rootName: "Test",
+        extension: ".png",
+        width: 5000,
+        height: 3000,
+        sizeBytes: 100,
+        modifiedAt: "2026-06-01T00:00:00.000Z"
+      }
+    ],
+    duplicates: []
+  };
+
+  assert.deepEqual(createLibraryView(resolutionIndex).resolutionBreakdown, [
+    { value: "huge", label: "Huge 8 MP+", count: 1 },
+    { value: "large", label: "Large 2-8 MP", count: 1 },
+    { value: "standard", label: "Standard 0.5-2 MP", count: 1 },
+    { value: "tiny", label: "Tiny < 0.5 MP", count: 1 },
+    { value: "missing", label: "Missing dimensions", count: 1 }
+  ]);
+});
+
 test("createLibraryView filters by maximum age in days", () => {
   assert.deepEqual(
     createLibraryView(index, {
