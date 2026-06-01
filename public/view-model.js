@@ -5,6 +5,7 @@ export function createLibraryView(index, state = {}) {
     query: "",
     root: "all",
     extension: "all",
+    orientation: "all",
     duplicateOnly: false,
     sort: "newest",
     ...state
@@ -14,6 +15,7 @@ export function createLibraryView(index, state = {}) {
     .filter((asset) => matchesSearch(asset, normalizedState.query))
     .filter((asset) => normalizedState.root === "all" || asset.rootName === normalizedState.root)
     .filter((asset) => normalizedState.extension === "all" || asset.extension === normalizedState.extension)
+    .filter((asset) => normalizedState.orientation === "all" || getOrientation(asset) === normalizedState.orientation)
     .filter((asset) => !normalizedState.duplicateOnly || duplicateAssetIds.has(asset.id));
 
   return {
@@ -25,6 +27,16 @@ export function createLibraryView(index, state = {}) {
     extensionBreakdown: createBreakdown(assets, "extension"),
     duplicateAssetIds
   };
+}
+
+export function getOrientation(asset) {
+  if (!asset.width || !asset.height) {
+    return "unknown";
+  }
+  if (asset.width === asset.height) {
+    return "square";
+  }
+  return asset.width > asset.height ? "landscape" : "portrait";
 }
 
 export function createAssetDetails(index, assetId) {

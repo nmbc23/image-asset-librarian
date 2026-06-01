@@ -71,6 +71,17 @@ test("createLibraryView filters by search, root, extension, and duplicate state"
   assert.equal(view.duplicateAssetIds.has("c"), false);
 });
 
+test("createLibraryView filters by orientation", () => {
+  assert.deepEqual(
+    createLibraryView(index, { orientation: "portrait" }).assets.map((asset) => asset.id),
+    ["a"]
+  );
+  assert.deepEqual(
+    createLibraryView(index, { orientation: "unknown" }).assets.map((asset) => asset.id),
+    ["b", "c"]
+  );
+});
+
 test("createLibraryView sorts newest and largest assets", () => {
   assert.deepEqual(
     createLibraryView(index, { sort: "newest" }).assets.map((asset) => asset.id),

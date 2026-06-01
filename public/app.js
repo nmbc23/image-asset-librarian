@@ -9,6 +9,7 @@ const elements = {
   search: document.querySelector("#search-input"),
   root: document.querySelector("#root-filter"),
   extension: document.querySelector("#extension-filter"),
+  orientation: document.querySelector("#orientation-filter"),
   sort: document.querySelector("#sort-select"),
   duplicateToggle: document.querySelector("#duplicate-toggle"),
   sourceBreakdown: document.querySelector("#source-breakdown"),
@@ -30,6 +31,7 @@ const state = {
   query: "",
   root: "all",
   extension: "all",
+  orientation: "all",
   duplicateOnly: false,
   sort: "newest"
 };
@@ -64,6 +66,10 @@ function bindEvents() {
   });
   elements.extension.addEventListener("change", () => {
     state.extension = elements.extension.value;
+    render();
+  });
+  elements.orientation.addEventListener("change", () => {
+    state.orientation = elements.orientation.value;
     render();
   });
   elements.sort.addEventListener("change", () => {
