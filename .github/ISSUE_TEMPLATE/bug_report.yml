@@ -1,0 +1,36 @@
+name: Bug report
+description: Report a problem with scanning, serving, or browsing assets.
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: Thanks for taking the time to report a bug.
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: What went wrong?
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: List the smallest steps that trigger the issue.
+      placeholder: |
+        1. Configure roots with ...
+        2. Run npm run scan
+        3. Open the gallery
+    validations:
+      required: true
+  - type: input
+    id: node-version
+    attributes:
+      label: Node.js version
+      placeholder: "20.x, 22.x, or 24.x"
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant output
+      render: shell

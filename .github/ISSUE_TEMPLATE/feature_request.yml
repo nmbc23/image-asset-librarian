@@ -1,0 +1,35 @@
+name: Feature request
+description: Suggest a workflow, scanner improvement, or UI enhancement.
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Workflow problem
+      description: What image-library workflow would this improve?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: Describe the smallest useful version of the feature.
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Scanner
+        - Gallery UI
+        - Duplicate detection
+        - Metadata
+        - AI-assisted workflow
+        - Documentation
+  - type: textarea
+    id: privacy
+    attributes:
+      label: Privacy or filesystem impact
+      description: Does this touch local files, metadata, or network calls?
