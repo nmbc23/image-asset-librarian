@@ -1,5 +1,7 @@
 # Image Asset Librarian
 
+[![CI](https://github.com/nmbc23/image-asset-librarian/actions/workflows/ci.yml/badge.svg)](https://github.com/nmbc23/image-asset-librarian/actions/workflows/ci.yml)
+
 A zero-dependency local gallery for AI-generated image folders. It scans one or more directories, builds a searchable JSON index, serves thumbnails in the browser, and highlights duplicate files by content hash.
 
 ## Features
