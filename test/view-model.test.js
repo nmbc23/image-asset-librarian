@@ -3,6 +3,7 @@ import test from "node:test";
 
 import {
   applyMarkBatch,
+  applyTagBatch,
   createActiveFilterChips,
   createAssetDetails,
   createAssetCsv,
@@ -14,6 +15,7 @@ import {
   createSavedFilterView,
   createWorkflowReport,
   formatBytes,
+  getAllAssetTags,
   normalizeSavedFilterViews,
   parseMarkBackup
 } from "../public/view-model.js";
@@ -71,6 +73,7 @@ test("createLibraryView filters by search, root, extension, and duplicate state"
     duplicateAssets: 1,
     savedAssets: 0,
     reviewAssets: 0,
+    taggedAssets: 0,
     sources: 1,
     extensions: 1
   });
@@ -113,8 +116,33 @@ test("createLibraryView filters by saved and review marks", () => {
     duplicateAssets: 2,
     savedAssets: 1,
     reviewAssets: 1,
+    taggedAssets: 0,
     sources: 2,
     extensions: 2
+  });
+});
+
+test("createLibraryView filters by local asset tags", () => {
+  const view = createLibraryView(index, {
+    tag: "keeper",
+    assetTags: {
+      a: ["keeper", "portrait"],
+      b: ["review"]
+    },
+    sort: "name"
+  });
+
+  assert.deepEqual(view.assets.map((asset) => asset.id), ["a"]);
+  assert.deepEqual(view.tags, ["keeper", "portrait", "review"]);
+  assert.deepEqual(view.filteredSummary, {
+    totalAssets: 1,
+    totalBytes: 1200,
+    duplicateAssets: 1,
+    savedAssets: 0,
+    reviewAssets: 0,
+    taggedAssets: 1,
+    sources: 1,
+    extensions: 1
   });
 });
 
@@ -268,6 +296,7 @@ test("createDefaultViewState returns resettable filter defaults", () => {
     orientation: "all",
     maxAgeDays: "all",
     mark: "all",
+    tag: "all",
     duplicateOnly: false,
     sort: "newest"
   });
@@ -283,6 +312,7 @@ test("createActiveFilterChips describes only non-default filters", () => {
     orientation: "portrait",
     maxAgeDays: "30",
     mark: "review",
+    tag: "keeper",
     duplicateOnly: true,
     sort: "largest"
   }), [
@@ -292,6 +322,7 @@ test("createActiveFilterChips describes only non-default filters", () => {
     { key: "orientation", label: "Orientation", value: "Portrait" },
     { key: "maxAgeDays", label: "Age", value: "Last 30 days" },
     { key: "mark", label: "Mark", value: "Review queue" },
+    { key: "tag", label: "Tag", value: "keeper" },
     { key: "duplicateOnly", label: "Duplicates", value: "Only duplicates" },
     { key: "sort", label: "Sort", value: "Largest" }
   ]);
@@ -320,6 +351,7 @@ test("createSavedFilterView stores a normalized filter state snapshot", () => {
       orientation: "portrait",
       maxAgeDays: "all",
       mark: "all",
+      tag: "all",
       duplicateOnly: true,
       sort: "largest"
     }
@@ -352,11 +384,40 @@ test("normalizeSavedFilterViews drops invalid entries and restores missing defau
         orientation: "all",
         maxAgeDays: "all",
         mark: "all",
+        tag: "all",
         duplicateOnly: true,
         sort: "oldest"
       }
     }
   ]);
+});
+
+test("applyTagBatch normalizes tags and updates selected assets", () => {
+  assert.deepEqual(applyTagBatch({
+    a: ["Keeper"],
+    b: ["draft"]
+  }, ["a", "c", "c"], "  Review Pick  ", "add"), {
+    a: ["keeper", "review pick"],
+    b: ["draft"],
+    c: ["review pick"]
+  });
+
+  assert.deepEqual(applyTagBatch({
+    a: ["keeper", "review pick"],
+    c: ["review pick"]
+  }, ["a", "c"], "review pick", "remove"), {
+    a: ["keeper"]
+  });
+
+  assert.throws(() => applyTagBatch({}, ["a"], "keeper", "archive"), /Unsupported tag batch action/);
+});
+
+test("getAllAssetTags returns sorted unique normalized tag names", () => {
+  assert.deepEqual(getAllAssetTags({
+    a: ["Keeper", "draft"],
+    b: ["keeper", "", "review"],
+    c: []
+  }), ["draft", "keeper", "review"]);
 });
 
 test("applyMarkBatch updates saved and review queues for selected assets", () => {

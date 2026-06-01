@@ -6,6 +6,7 @@ export function createDefaultViewState() {
     orientation: "all",
     maxAgeDays: "all",
     mark: "all",
+    tag: "all",
     duplicateOnly: false,
     sort: "newest"
   };
@@ -66,6 +67,45 @@ export function applyMarkBatch(options = {}, assetIds = [], action) {
   };
 }
 
+export function applyTagBatch(assetTags = {}, assetIds = [], tag, action) {
+  const updatedTags = normalizeAssetTags(assetTags);
+  const selectedIds = uniqueStrings([...toAssetIdSet(assetIds)]);
+  const normalizedTag = normalizeTag(tag);
+
+  if (action !== "add" && action !== "remove") {
+    throw new Error(`Unsupported tag batch action: ${action}`);
+  }
+  if (!normalizedTag) {
+    return updatedTags;
+  }
+
+  for (const assetId of selectedIds) {
+    const tags = new Set(updatedTags[assetId] ?? []);
+    if (action === "add") {
+      tags.add(normalizedTag);
+    } else {
+      tags.delete(normalizedTag);
+    }
+
+    const nextTags = [...tags];
+    if (nextTags.length) {
+      updatedTags[assetId] = nextTags;
+    } else {
+      delete updatedTags[assetId];
+    }
+  }
+
+  return updatedTags;
+}
+
+export function getAllAssetTags(assetTags = {}) {
+  return uniqueSorted(Object.values(normalizeAssetTags(assetTags)).flat());
+}
+
+export function getAssetTags(assetTags = {}, assetId) {
+  return normalizeAssetTags(assetTags)[assetId] ?? [];
+}
+
 export function createActiveFilterChips(state = {}) {
   const defaults = createDefaultViewState();
   const normalizedState = { ...defaults, ...state };
@@ -102,6 +142,9 @@ export function createActiveFilterChips(state = {}) {
       value: formatMarkLabel(normalizedState.mark)
     });
   }
+  if (normalizedState.tag !== defaults.tag) {
+    chips.push({ key: "tag", label: "Tag", value: normalizedState.tag });
+  }
   if (normalizedState.duplicateOnly !== defaults.duplicateOnly) {
     chips.push({ key: "duplicateOnly", label: "Duplicates", value: "Only duplicates" });
   }
@@ -122,6 +165,7 @@ export function createLibraryView(index, state = {}) {
   };
   const savedAssetIds = toAssetIdSet(normalizedState.savedAssetIds);
   const reviewAssetIds = toAssetIdSet(normalizedState.reviewAssetIds);
+  const assetTags = normalizeAssetTags(normalizedState.assetTags);
 
   const filteredAssets = assets
     .filter((asset) => matchesSearch(asset, normalizedState.query))
@@ -130,13 +174,15 @@ export function createLibraryView(index, state = {}) {
     .filter((asset) => normalizedState.orientation === "all" || getOrientation(asset) === normalizedState.orientation)
     .filter((asset) => isWithinAge(asset, normalizedState.maxAgeDays, normalizedState.now))
     .filter((asset) => matchesMark(asset, normalizedState.mark, savedAssetIds, reviewAssetIds))
+    .filter((asset) => matchesTag(asset, normalizedState.tag, assetTags))
     .filter((asset) => !normalizedState.duplicateOnly || duplicateAssetIds.has(asset.id));
 
   return {
     assets: sortAssets(filteredAssets, normalizedState.sort),
-    filteredSummary: summarizeAssets(filteredAssets, duplicateAssetIds, savedAssetIds, reviewAssetIds),
+    filteredSummary: summarizeAssets(filteredAssets, duplicateAssetIds, savedAssetIds, reviewAssetIds, assetTags),
     roots: uniqueSorted(assets.map((asset) => asset.rootName)),
     extensions: uniqueSorted(assets.map((asset) => asset.extension)),
+    tags: getAllAssetTags(assetTags),
     sourceBreakdown: createBreakdown(assets, "rootName"),
     extensionBreakdown: createBreakdown(assets, "extension"),
     duplicateAssetIds
@@ -367,6 +413,13 @@ function matchesMark(asset, mark, savedAssetIds, reviewAssetIds) {
   return true;
 }
 
+function matchesTag(asset, tag, assetTags) {
+  if (tag === "all") {
+    return true;
+  }
+  return (assetTags[asset.id] ?? []).includes(tag);
+}
+
 function compareDuplicateKeepCandidate(a, b) {
   const byDate = Date.parse(a.modifiedAt) - Date.parse(b.modifiedAt);
   if (Number.isFinite(byDate) && byDate !== 0) {
@@ -426,6 +479,22 @@ function createFilterStateSnapshot(state = {}) {
   );
 }
 
+function normalizeAssetTags(value) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return {};
+  }
+
+  return Object.fromEntries(
+    Object.entries(value)
+      .map(([assetId, tags]) => [assetId, uniqueStrings((Array.isArray(tags) ? tags : []).map(normalizeTag))])
+      .filter(([assetId, tags]) => typeof assetId === "string" && assetId.trim() && tags.length)
+  );
+}
+
+function normalizeTag(value) {
+  return String(value ?? "").trim().replace(/\s+/g, " ").toLowerCase();
+}
+
 function createSavedFilterViewId(createdAt, name) {
   const safeName = String(name ?? "view")
     .toLowerCase()
@@ -456,13 +525,14 @@ function formatCsvCell(value) {
   return `"${String(value ?? "").replaceAll('"', '""')}"`;
 }
 
-function summarizeAssets(assets, duplicateAssetIds, savedAssetIds, reviewAssetIds) {
+function summarizeAssets(assets, duplicateAssetIds, savedAssetIds, reviewAssetIds, assetTags = {}) {
   return {
     totalAssets: assets.length,
     totalBytes: assets.reduce((sum, asset) => sum + asset.sizeBytes, 0),
     duplicateAssets: assets.filter((asset) => duplicateAssetIds.has(asset.id)).length,
     savedAssets: assets.filter((asset) => savedAssetIds.has(asset.id)).length,
     reviewAssets: assets.filter((asset) => reviewAssetIds.has(asset.id)).length,
+    taggedAssets: assets.filter((asset) => (assetTags[asset.id] ?? []).length).length,
     sources: new Set(assets.map((asset) => asset.rootName).filter(Boolean)).size,
     extensions: new Set(assets.map((asset) => asset.extension).filter(Boolean)).size
   };

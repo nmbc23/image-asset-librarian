@@ -113,3 +113,23 @@ test("saved filter views can be created, applied, and deleted", async () => {
   assert.match(appSource, /data-delete-saved-view/);
   assert.match(cssSource, /\.saved-views-panel/);
 });
+
+test("asset tags can be added in batches and used as a gallery filter", async () => {
+  const [appSource, htmlSource, cssSource] = await Promise.all([
+    readFile(new URL("../public/app.js", import.meta.url), "utf8"),
+    readFile(new URL("../public/index.html", import.meta.url), "utf8"),
+    readFile(new URL("../public/styles.css", import.meta.url), "utf8")
+  ]);
+
+  assert.match(htmlSource, /id="tag-filter"/);
+  assert.match(htmlSource, /id="tag-selected-assets"/);
+  assert.match(htmlSource, /id="untag-selected-assets"/);
+  assert.match(appSource, /TAG_STORAGE_KEY/);
+  assert.match(appSource, /applyTagBatch/);
+  assert.match(appSource, /getAllAssetTags/);
+  assert.match(appSource, /assetTags/);
+  assert.match(appSource, /applySelectedTagBatch/);
+  assert.match(appSource, /renderAssetTags/);
+  assert.match(appSource, /data-asset-tag/);
+  assert.match(cssSource, /\.asset-tags/);
+});

@@ -1,5 +1,6 @@
 import {
   applyMarkBatch,
+  applyTagBatch,
   createActiveFilterChips,
   createAssetCsv,
   createAssetDetails,
@@ -12,6 +13,8 @@ import {
   createWorkflowReport,
   formatBytes,
   formatDate,
+  getAllAssetTags,
+  getAssetTags,
   normalizeSavedFilterViews,
   parseMarkBackup
 } from "./view-model.js";
@@ -29,6 +32,7 @@ const elements = {
   age: document.querySelector("#age-filter"),
   sort: document.querySelector("#sort-select"),
   mark: document.querySelector("#mark-filter"),
+  tag: document.querySelector("#tag-filter"),
   duplicateToggle: document.querySelector("#duplicate-toggle"),
   resetFilters: document.querySelector("#reset-filters"),
   activeFilters: document.querySelector("#active-filters"),
@@ -46,6 +50,8 @@ const elements = {
   saveSelectedAssets: document.querySelector("#save-selected-assets"),
   reviewSelectedAssets: document.querySelector("#review-selected-assets"),
   unmarkSelectedAssets: document.querySelector("#unmark-selected-assets"),
+  tagSelectedAssets: document.querySelector("#tag-selected-assets"),
+  untagSelectedAssets: document.querySelector("#untag-selected-assets"),
   copyWorkflowReport: document.querySelector("#copy-workflow-report"),
   copyMarksBackup: document.querySelector("#copy-marks-backup"),
   importMarksBackup: document.querySelector("#import-marks-backup"),
@@ -66,9 +72,11 @@ const elements = {
 };
 
 const MARK_STORAGE_KEY = "image-asset-librarian:marks:v1";
+const TAG_STORAGE_KEY = "image-asset-librarian:asset-tags:v1";
 const FILTER_VIEWS_STORAGE_KEY = "image-asset-librarian:filter-views:v1";
 const state = createDefaultViewState();
 const marks = loadMarks();
+let assetTags = loadAssetTags();
 let savedFilterViews = loadSavedFilterViews();
 const selectedAssetIds = new Set();
 
@@ -121,6 +129,10 @@ function bindEvents() {
     state.mark = elements.mark.value;
     render();
   });
+  elements.tag.addEventListener("change", () => {
+    state.tag = elements.tag.value;
+    render();
+  });
   elements.duplicateToggle.addEventListener("change", () => {
     state.duplicateOnly = elements.duplicateToggle.checked;
     render();
@@ -158,6 +170,8 @@ function bindEvents() {
   elements.saveSelectedAssets.addEventListener("click", () => applySelectedMarkBatch("save", elements.saveSelectedAssets));
   elements.reviewSelectedAssets.addEventListener("click", () => applySelectedMarkBatch("review", elements.reviewSelectedAssets));
   elements.unmarkSelectedAssets.addEventListener("click", () => applySelectedMarkBatch("clear", elements.unmarkSelectedAssets));
+  elements.tagSelectedAssets.addEventListener("click", () => applySelectedTagBatch("add", elements.tagSelectedAssets));
+  elements.untagSelectedAssets.addEventListener("click", () => applySelectedTagBatch("remove", elements.untagSelectedAssets));
   elements.copyWorkflowReport.addEventListener("click", copyWorkflowReport);
   elements.copyMarksBackup.addEventListener("click", copyMarksBackup);
   elements.importMarksBackup.addEventListener("click", importMarksBackup);
@@ -191,6 +205,14 @@ function bindEvents() {
     await copyDuplicateGroupPaths(button, Number.parseInt(button.dataset.copyDuplicateGroup, 10));
   });
   elements.gallery.addEventListener("click", async (event) => {
+    const tagButton = event.target.closest("[data-asset-tag]");
+    if (tagButton) {
+      state.tag = tagButton.dataset.assetTag;
+      syncControlsFromState();
+      render();
+      return;
+    }
+
     const openButton = event.target.closest("[data-open-asset]");
     if (openButton) {
       window.location.assign(openButton.dataset.openAsset);
@@ -256,6 +278,7 @@ function syncControlsFromState() {
   elements.age.value = state.maxAgeDays;
   elements.sort.value = state.sort;
   elements.mark.value = state.mark;
+  elements.tag.value = state.tag;
   elements.duplicateToggle.checked = state.duplicateOnly;
 }
 
@@ -267,7 +290,8 @@ function render() {
   const view = createLibraryView(libraryIndex, {
     ...state,
     savedAssetIds: marks.saved,
-    reviewAssetIds: marks.review
+    reviewAssetIds: marks.review,
+    assetTags
   });
   currentView = view;
   renderSummary(libraryIndex);
@@ -300,6 +324,8 @@ function renderWorkflow() {
   elements.saveSelectedAssets.disabled = selectedAssetIds.size === 0;
   elements.reviewSelectedAssets.disabled = selectedAssetIds.size === 0;
   elements.unmarkSelectedAssets.disabled = selectedAssetIds.size === 0;
+  elements.tagSelectedAssets.disabled = selectedAssetIds.size === 0;
+  elements.untagSelectedAssets.disabled = selectedAssetIds.size === 0;
   elements.copyWorkflowReport.disabled = selectedAssetIds.size + marks.saved.size + marks.review.size === 0;
   elements.copyMarksBackup.disabled = marks.saved.size + marks.review.size === 0;
   elements.clearSelection.disabled = selectedAssetIds.size === 0;
@@ -312,6 +338,7 @@ function renderFilters(view) {
     [["all", "All types"], ...view.extensions.map((extension) => [extension, extension.replace(".", "").toUpperCase()])],
     state.extension
   );
+  syncSelect(elements.tag, [["all", "All tags"], ...view.tags.map((tag) => [tag, tag])], state.tag);
 }
 
 function renderActiveFilters() {
@@ -493,6 +520,7 @@ function renderGallery(view) {
     <div><strong>${view.filteredSummary.duplicateAssets}</strong><span>duplicates shown</span></div>
     <div><strong>${view.filteredSummary.savedAssets}</strong><span>saved shown</span></div>
     <div><strong>${view.filteredSummary.reviewAssets}</strong><span>review shown</span></div>
+    <div><strong>${view.filteredSummary.taggedAssets}</strong><span>tagged shown</span></div>
     <div><strong>${view.filteredSummary.sources}</strong><span>sources shown</span></div>
     <div><strong>${view.filteredSummary.extensions}</strong><span>types shown</span></div>
   `;
@@ -527,6 +555,7 @@ function renderAssetCard(asset, isDuplicate) {
           ${duplicateBadge}
         </div>
         <p title="${escapeHtml(asset.relativePath)}">${escapeHtml(asset.relativePath)}</p>
+        ${renderAssetTags(asset.id)}
         <dl>
           <div><dt>Source</dt><dd>${escapeHtml(asset.rootName)}</dd></div>
           <div><dt>Type</dt><dd>${escapeHtml(asset.extension.replace(".", "").toUpperCase())}</dd></div>
@@ -540,6 +569,19 @@ function renderAssetCard(asset, isDuplicate) {
         </div>
       </div>
     </article>
+  `;
+}
+
+function renderAssetTags(assetId) {
+  const tags = getAssetTags(assetTags, assetId);
+  if (!tags.length) {
+    return "";
+  }
+
+  return `
+    <div class="asset-tags">
+      ${tags.map((tag) => `<button type="button" data-asset-tag="${escapeHtml(tag)}">${escapeHtml(tag)}</button>`).join("")}
+    </div>
   `;
 }
 
@@ -631,6 +673,34 @@ function getMarkBatchFeedback(action) {
     return "Queued";
   }
   return "Unmarked";
+}
+
+function applySelectedTagBatch(action, button) {
+  if (!selectedAssetIds.size) {
+    return;
+  }
+
+  const promptText = action === "add" ? "Tag selected assets" : "Remove tag from selected assets";
+  const defaultTag = action === "remove" ? getSelectedTags()[0] ?? "" : "";
+  const tag = window.prompt(promptText, defaultTag);
+  if (tag === null) {
+    return;
+  }
+
+  assetTags = applyTagBatch(assetTags, selectedAssetIds, tag, action);
+  if (state.tag !== "all" && !getAllAssetTags(assetTags).includes(state.tag)) {
+    state.tag = "all";
+  }
+  saveAssetTags();
+  syncControlsFromState();
+  render();
+  showButtonFeedback(button, action === "add" ? "Tagged" : "Removed");
+}
+
+function getSelectedTags() {
+  return getAllAssetTags(Object.fromEntries(
+    [...selectedAssetIds].map((assetId) => [assetId, getAssetTags(assetTags, assetId)])
+  ));
 }
 
 function selectVisibleAssets() {
@@ -733,6 +803,22 @@ function loadMarks() {
     };
   } catch {
     return { saved: new Set(), review: new Set() };
+  }
+}
+
+function loadAssetTags() {
+  try {
+    return JSON.parse(localStorage.getItem(TAG_STORAGE_KEY) ?? "{}");
+  } catch {
+    return {};
+  }
+}
+
+function saveAssetTags() {
+  try {
+    localStorage.setItem(TAG_STORAGE_KEY, JSON.stringify(assetTags));
+  } catch {
+    // Tags are optional browser-local curation state.
   }
 }
 
