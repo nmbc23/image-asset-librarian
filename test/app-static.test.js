@@ -97,6 +97,28 @@ test("folder scanning controls post to the server and refresh the gallery", asyn
   assert.match(cssSource, /\.library-kind/);
 });
 
+test("folder scanner placeholder does not expose a machine-specific path", async () => {
+  const htmlSource = await readFile(new URL("../public/index.html", import.meta.url), "utf8");
+
+  assert.match(htmlSource, /placeholder="D:\/Images\/generated"/);
+  assert.doesNotMatch(htmlSource, /P:\/AI\/Codex\/generated_images/);
+});
+
+test("workflow actions are grouped so exports do not overwhelm the first screen", async () => {
+  const [htmlSource, cssSource] = await Promise.all([
+    readFile(new URL("../public/index.html", import.meta.url), "utf8"),
+    readFile(new URL("../public/styles.css", import.meta.url), "utf8")
+  ]);
+
+  assert.equal([...htmlSource.matchAll(/class="workflow-action-group"/g)].length, 4);
+  assert.match(htmlSource, /<summary>Selection<\/summary>/);
+  assert.match(htmlSource, /<summary>Descriptions and publishing<\/summary>/);
+  assert.match(htmlSource, /<summary>Reports and manifests<\/summary>/);
+  assert.match(htmlSource, /<summary>Backups<\/summary>/);
+  assert.match(cssSource, /\.workflow-action-group/);
+  assert.match(cssSource, /\.workflow-action-grid/);
+});
+
 test("active filter chips can clear individual filters from the toolbar state", async () => {
   const [appSource, htmlSource, cssSource] = await Promise.all([
     readFile(new URL("../public/app.js", import.meta.url), "utf8"),

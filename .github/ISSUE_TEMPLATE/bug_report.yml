@@ -5,7 +5,7 @@ labels: ["bug"]
 body:
   - type: markdown
     attributes:
-      value: Thanks for taking the time to report a bug.
+      value: Thanks for taking the time to report a bug. Please avoid pasting private absolute paths or prompt metadata unless they are needed and safe to share.
   - type: textarea
     id: summary
     attributes:
@@ -24,11 +24,47 @@ body:
         3. Open the gallery
     validations:
       required: true
+  - type: dropdown
+    id: library-mode
+    attributes:
+      label: Current library mode
+      description: Which data set were you viewing when the bug happened?
+      options:
+        - Sample library
+        - Real local folder
+        - Both
+        - Not sure
+    validations:
+      required: true
+  - type: dropdown
+    id: workflow-area
+    attributes:
+      label: Workflow area
+      options:
+        - Folder scanning
+        - Gallery filtering or sorting
+        - Duplicate review
+        - Similar groups
+        - Descriptions, reviews, or alt text
+        - Export or copy action
+        - Documentation
+        - Other
+  - type: input
+    id: path-style
+    attributes:
+      label: Folder path style
+      description: Share the style, not necessarily the private path.
+      placeholder: "Windows drive, relative path, network share, macOS/Linux absolute path"
   - type: input
     id: node-version
     attributes:
       label: Node.js version
       placeholder: "20.x, 22.x, or 24.x"
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots or screen recording
+      description: Add screenshots when they help, but crop private file names if needed.
   - type: textarea
     id: logs
     attributes:

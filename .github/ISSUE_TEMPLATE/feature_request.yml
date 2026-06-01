@@ -25,9 +25,23 @@ body:
         - Scanner
         - Gallery UI
         - Duplicate detection
+        - Similar visual grouping
+        - Local descriptions or reviews
         - Metadata
         - AI-assisted workflow
         - Documentation
+  - type: textarea
+    id: clutter
+    attributes:
+      label: Does this reduce UI clutter?
+      description: Explain whether this replaces, combines, or simplifies an existing workflow. If it adds a new control, why is it worth the extra surface area?
+    validations:
+      required: true
+  - type: textarea
+    id: local-ai-boundary
+    attributes:
+      label: Local rules or real AI?
+      description: Should this be implemented with local metadata rules, or does it need an explicit opt-in AI/API integration?
   - type: textarea
     id: privacy
     attributes:

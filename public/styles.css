@@ -285,17 +285,14 @@ h1 {
 }
 
 .workflow-panel {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+  display: grid;
   gap: 14px;
   margin-bottom: 16px;
   padding: 14px;
   border-radius: 8px;
 }
 
-.workflow-stats,
-.workflow-actions {
+.workflow-stats {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
@@ -310,6 +307,56 @@ h1 {
   font-size: 0.82rem;
   font-weight: 800;
   padding: 8px 10px;
+}
+
+.workflow-actions {
+  display: grid;
+  gap: 10px;
+}
+
+.workflow-action-group {
+  border-top: 1px solid var(--line);
+  padding-top: 8px;
+}
+
+.workflow-action-group:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+
+.workflow-action-group summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 34px;
+  color: var(--text);
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 800;
+  list-style: none;
+}
+
+.workflow-action-group summary::-webkit-details-marker {
+  display: none;
+}
+
+.workflow-action-group summary::after {
+  content: "+";
+  color: var(--muted);
+  font-size: 1rem;
+  font-weight: 900;
+  padding-left: 12px;
+}
+
+.workflow-action-group[open] summary::after {
+  content: "-";
+}
+
+.workflow-action-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding-top: 8px;
 }
 
 .workflow-actions .secondary-button {
@@ -1311,7 +1358,6 @@ button:disabled {
 
   .workflow-panel {
     align-items: stretch;
-    flex-direction: column;
   }
 
   .saved-view {

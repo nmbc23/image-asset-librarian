@@ -23,7 +23,7 @@
         <form id="scan-folder-form" class="scan-folder-form">
           <label>
             <span>Image folder path</span>
-            <input id="folder-path-input" type="text" list="recent-folder-list" placeholder="P:/AI/Codex/generated_images" autocomplete="off">
+            <input id="folder-path-input" type="text" list="recent-folder-list" placeholder="D:/Images/generated" autocomplete="off">
           </label>
           <datalist id="recent-folder-list"></datalist>
           <button type="submit" id="scan-folder-button" class="primary-action">Scan folder</button>
@@ -170,71 +170,91 @@
           <span id="selected-count">0 selected</span>
         </div>
         <div class="workflow-actions">
-          <button type="button" id="select-visible-assets" class="secondary-button">Select visible</button>
-          <button type="button" id="copy-visible-paths" class="secondary-button">Copy visible paths</button>
-          <button type="button" id="copy-selected-paths" class="secondary-button">Copy selected paths</button>
-          <button type="button" id="copy-visible-descriptions" class="secondary-button">Copy visible descriptions</button>
-          <button type="button" id="copy-selected-descriptions" class="secondary-button">Copy selected descriptions</button>
-          <button type="button" id="copy-visible-ai-reviews" class="secondary-button">Copy visible AI reviews</button>
-          <button type="button" id="copy-selected-ai-reviews" class="secondary-button">Copy selected AI reviews</button>
-          <button type="button" id="copy-visible-alt-text" class="secondary-button">Copy visible alt text</button>
-          <button type="button" id="copy-selected-alt-text" class="secondary-button">Copy selected alt text</button>
-          <button type="button" id="download-visible-alt-text" class="secondary-button">Download visible alt text</button>
-          <button type="button" id="download-selected-alt-text" class="secondary-button">Download selected alt text</button>
-          <button type="button" id="copy-visible-contact-sheet" class="secondary-button">Copy visible contact sheet</button>
-          <button type="button" id="copy-selected-contact-sheet" class="secondary-button">Copy selected contact sheet</button>
-          <button type="button" id="download-visible-contact-sheet" class="secondary-button">Download visible contact sheet</button>
-          <button type="button" id="download-selected-contact-sheet" class="secondary-button">Download selected contact sheet</button>
-          <button type="button" id="copy-visible-embeds" class="secondary-button">Copy visible embeds</button>
-          <button type="button" id="copy-selected-embeds" class="secondary-button">Copy selected embeds</button>
-          <button type="button" id="download-visible-embeds" class="secondary-button">Download visible embeds</button>
-          <button type="button" id="download-selected-embeds" class="secondary-button">Download selected embeds</button>
-          <button type="button" id="copy-visible-publishing-checklist" class="secondary-button">Copy visible publishing checklist</button>
-          <button type="button" id="copy-selected-publishing-checklist" class="secondary-button">Copy selected publishing checklist</button>
-          <button type="button" id="download-visible-publishing-checklist" class="secondary-button">Download visible publishing checklist</button>
-          <button type="button" id="download-selected-publishing-checklist" class="secondary-button">Download selected publishing checklist</button>
-          <button type="button" id="copy-visible-readiness-report" class="secondary-button">Copy visible readiness report</button>
-          <button type="button" id="copy-selected-readiness-report" class="secondary-button">Copy selected readiness report</button>
-          <button type="button" id="download-visible-readiness-report" class="secondary-button">Download visible readiness report</button>
-          <button type="button" id="download-selected-readiness-report" class="secondary-button">Download selected readiness report</button>
-          <button type="button" id="copy-visible-provenance-report" class="secondary-button">Copy visible provenance report</button>
-          <button type="button" id="copy-selected-provenance-report" class="secondary-button">Copy selected provenance report</button>
-          <button type="button" id="download-visible-provenance-report" class="secondary-button">Download visible provenance report</button>
-          <button type="button" id="download-selected-provenance-report" class="secondary-button">Download selected provenance report</button>
-          <button type="button" id="copy-visible-prompt-keyword-report" class="secondary-button">Copy visible prompt keyword report</button>
-          <button type="button" id="copy-selected-prompt-keyword-report" class="secondary-button">Copy selected prompt keyword report</button>
-          <button type="button" id="download-visible-prompt-keyword-report" class="secondary-button">Download visible prompt keyword report</button>
-          <button type="button" id="download-selected-prompt-keyword-report" class="secondary-button">Download selected prompt keyword report</button>
-          <button type="button" id="copy-visible-collection-brief" class="secondary-button">Copy visible collection brief</button>
-          <button type="button" id="copy-selected-collection-brief" class="secondary-button">Copy selected collection brief</button>
-          <button type="button" id="download-visible-collection-brief" class="secondary-button">Download visible collection brief</button>
-          <button type="button" id="download-selected-collection-brief" class="secondary-button">Download selected collection brief</button>
-          <button type="button" id="copy-visible-csv" class="secondary-button">Copy visible CSV</button>
-          <button type="button" id="copy-selected-csv" class="secondary-button">Copy selected CSV</button>
-          <button type="button" id="copy-visible-manifest" class="secondary-button">Copy visible manifest</button>
-          <button type="button" id="copy-selected-manifest" class="secondary-button">Copy selected manifest</button>
-          <button type="button" id="copy-visible-rename-plan" class="secondary-button">Copy visible rename plan</button>
-          <button type="button" id="copy-selected-rename-plan" class="secondary-button">Copy selected rename plan</button>
-          <button type="button" id="download-visible-rename-plan" class="secondary-button">Download visible rename plan</button>
-          <button type="button" id="download-selected-rename-plan" class="secondary-button">Download selected rename plan</button>
-          <button type="button" id="save-selected-assets" class="secondary-button">Save selected</button>
-          <button type="button" id="review-selected-assets" class="secondary-button">Review selected</button>
-          <button type="button" id="unmark-selected-assets" class="secondary-button">Unmark selected</button>
-          <button type="button" id="tag-selected-assets" class="secondary-button">Tag selected</button>
-          <button type="button" id="untag-selected-assets" class="secondary-button">Remove tag</button>
-          <button type="button" id="copy-workflow-report" class="secondary-button">Copy workflow report</button>
-          <button type="button" id="download-workflow-report" class="secondary-button">Download workflow report</button>
-          <button type="button" id="copy-health-report" class="secondary-button">Copy health report</button>
-          <button type="button" id="download-health-report" class="secondary-button">Download health report</button>
-          <button type="button" id="copy-issue-report" class="secondary-button">Copy issue report</button>
-          <button type="button" id="download-issue-report" class="secondary-button">Download issue report</button>
-          <button type="button" id="copy-marks-backup" class="secondary-button">Copy marks backup</button>
-          <button type="button" id="download-marks-backup" class="secondary-button">Download marks backup</button>
-          <button type="button" id="import-marks-backup" class="secondary-button">Import marks</button>
-          <button type="button" id="copy-curation-backup" class="secondary-button">Copy curation backup</button>
-          <button type="button" id="download-curation-backup" class="secondary-button">Download curation backup</button>
-          <button type="button" id="import-curation-backup" class="secondary-button">Import curation</button>
-          <button type="button" id="clear-selection" class="secondary-button">Clear selection</button>
+          <details class="workflow-action-group" open>
+            <summary>Selection</summary>
+            <div class="workflow-action-grid">
+              <button type="button" id="select-visible-assets" class="secondary-button">Select visible</button>
+              <button type="button" id="copy-visible-paths" class="secondary-button">Copy visible paths</button>
+              <button type="button" id="copy-selected-paths" class="secondary-button">Copy selected paths</button>
+              <button type="button" id="save-selected-assets" class="secondary-button">Save selected</button>
+              <button type="button" id="review-selected-assets" class="secondary-button">Review selected</button>
+              <button type="button" id="unmark-selected-assets" class="secondary-button">Unmark selected</button>
+              <button type="button" id="tag-selected-assets" class="secondary-button">Tag selected</button>
+              <button type="button" id="untag-selected-assets" class="secondary-button">Remove tag</button>
+              <button type="button" id="clear-selection" class="secondary-button">Clear selection</button>
+            </div>
+          </details>
+          <details class="workflow-action-group">
+            <summary>Descriptions and publishing</summary>
+            <div class="workflow-action-grid">
+              <button type="button" id="copy-visible-descriptions" class="secondary-button">Copy visible descriptions</button>
+              <button type="button" id="copy-selected-descriptions" class="secondary-button">Copy selected descriptions</button>
+              <button type="button" id="copy-visible-ai-reviews" class="secondary-button">Copy visible AI reviews</button>
+              <button type="button" id="copy-selected-ai-reviews" class="secondary-button">Copy selected AI reviews</button>
+              <button type="button" id="copy-visible-alt-text" class="secondary-button">Copy visible alt text</button>
+              <button type="button" id="copy-selected-alt-text" class="secondary-button">Copy selected alt text</button>
+              <button type="button" id="download-visible-alt-text" class="secondary-button">Download visible alt text</button>
+              <button type="button" id="download-selected-alt-text" class="secondary-button">Download selected alt text</button>
+              <button type="button" id="copy-visible-contact-sheet" class="secondary-button">Copy visible contact sheet</button>
+              <button type="button" id="copy-selected-contact-sheet" class="secondary-button">Copy selected contact sheet</button>
+              <button type="button" id="download-visible-contact-sheet" class="secondary-button">Download visible contact sheet</button>
+              <button type="button" id="download-selected-contact-sheet" class="secondary-button">Download selected contact sheet</button>
+              <button type="button" id="copy-visible-embeds" class="secondary-button">Copy visible embeds</button>
+              <button type="button" id="copy-selected-embeds" class="secondary-button">Copy selected embeds</button>
+              <button type="button" id="download-visible-embeds" class="secondary-button">Download visible embeds</button>
+              <button type="button" id="download-selected-embeds" class="secondary-button">Download selected embeds</button>
+              <button type="button" id="copy-visible-publishing-checklist" class="secondary-button">Copy visible publishing checklist</button>
+              <button type="button" id="copy-selected-publishing-checklist" class="secondary-button">Copy selected publishing checklist</button>
+              <button type="button" id="download-visible-publishing-checklist" class="secondary-button">Download visible publishing checklist</button>
+              <button type="button" id="download-selected-publishing-checklist" class="secondary-button">Download selected publishing checklist</button>
+            </div>
+          </details>
+          <details class="workflow-action-group">
+            <summary>Reports and manifests</summary>
+            <div class="workflow-action-grid">
+              <button type="button" id="copy-visible-readiness-report" class="secondary-button">Copy visible readiness report</button>
+              <button type="button" id="copy-selected-readiness-report" class="secondary-button">Copy selected readiness report</button>
+              <button type="button" id="download-visible-readiness-report" class="secondary-button">Download visible readiness report</button>
+              <button type="button" id="download-selected-readiness-report" class="secondary-button">Download selected readiness report</button>
+              <button type="button" id="copy-visible-provenance-report" class="secondary-button">Copy visible provenance report</button>
+              <button type="button" id="copy-selected-provenance-report" class="secondary-button">Copy selected provenance report</button>
+              <button type="button" id="download-visible-provenance-report" class="secondary-button">Download visible provenance report</button>
+              <button type="button" id="download-selected-provenance-report" class="secondary-button">Download selected provenance report</button>
+              <button type="button" id="copy-visible-prompt-keyword-report" class="secondary-button">Copy visible prompt keyword report</button>
+              <button type="button" id="copy-selected-prompt-keyword-report" class="secondary-button">Copy selected prompt keyword report</button>
+              <button type="button" id="download-visible-prompt-keyword-report" class="secondary-button">Download visible prompt keyword report</button>
+              <button type="button" id="download-selected-prompt-keyword-report" class="secondary-button">Download selected prompt keyword report</button>
+              <button type="button" id="copy-visible-collection-brief" class="secondary-button">Copy visible collection brief</button>
+              <button type="button" id="copy-selected-collection-brief" class="secondary-button">Copy selected collection brief</button>
+              <button type="button" id="download-visible-collection-brief" class="secondary-button">Download visible collection brief</button>
+              <button type="button" id="download-selected-collection-brief" class="secondary-button">Download selected collection brief</button>
+              <button type="button" id="copy-visible-csv" class="secondary-button">Copy visible CSV</button>
+              <button type="button" id="copy-selected-csv" class="secondary-button">Copy selected CSV</button>
+              <button type="button" id="copy-visible-manifest" class="secondary-button">Copy visible manifest</button>
+              <button type="button" id="copy-selected-manifest" class="secondary-button">Copy selected manifest</button>
+              <button type="button" id="copy-visible-rename-plan" class="secondary-button">Copy visible rename plan</button>
+              <button type="button" id="copy-selected-rename-plan" class="secondary-button">Copy selected rename plan</button>
+              <button type="button" id="download-visible-rename-plan" class="secondary-button">Download visible rename plan</button>
+              <button type="button" id="download-selected-rename-plan" class="secondary-button">Download selected rename plan</button>
+              <button type="button" id="copy-workflow-report" class="secondary-button">Copy workflow report</button>
+              <button type="button" id="download-workflow-report" class="secondary-button">Download workflow report</button>
+              <button type="button" id="copy-health-report" class="secondary-button">Copy health report</button>
+              <button type="button" id="download-health-report" class="secondary-button">Download health report</button>
+              <button type="button" id="copy-issue-report" class="secondary-button">Copy issue report</button>
+              <button type="button" id="download-issue-report" class="secondary-button">Download issue report</button>
+            </div>
+          </details>
+          <details class="workflow-action-group">
+            <summary>Backups</summary>
+            <div class="workflow-action-grid">
+              <button type="button" id="copy-marks-backup" class="secondary-button">Copy marks backup</button>
+              <button type="button" id="download-marks-backup" class="secondary-button">Download marks backup</button>
+              <button type="button" id="import-marks-backup" class="secondary-button">Import marks</button>
+              <button type="button" id="copy-curation-backup" class="secondary-button">Copy curation backup</button>
+              <button type="button" id="download-curation-backup" class="secondary-button">Download curation backup</button>
+              <button type="button" id="import-curation-backup" class="secondary-button">Import curation</button>
+            </div>
+          </details>
         </div>
       </section>
 

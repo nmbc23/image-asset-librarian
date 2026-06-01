@@ -2,20 +2,13 @@
 
 [![CI](https://github.com/nmbc23/image-asset-librarian/actions/workflows/ci.yml/badge.svg)](https://github.com/nmbc23/image-asset-librarian/actions/workflows/ci.yml)
 
-A zero-dependency local gallery for AI-generated image folders. It scans one or more directories, builds a searchable JSON index, serves thumbnails in the browser, and highlights duplicate files by content hash.
+Organize AI image folders locally.
 
-## Features
+Image Asset Librarian is a small local web app for people with messy AI image output folders. It scans image directories, opens a browser gallery, highlights exact duplicates, groups similar visual themes, and prepares descriptions, alt text, contact sheets, and cleanup notes without uploading private files.
 
-- Local-first scanner for PNG, JPG, GIF, SVG, WebP, AVIF, BMP, and TIFF files
-- Browser gallery with a top-of-page folder scanner, search, saved filter views, inferred theme, color-vibe and visual-similarity grouping, palette swatches, local asset issue badges for duplicates, missing dimensions and tiny images, generated image captions shown on cards, local suggested image descriptions, AI-style visual reviews, and alt text that can be copied one-by-one or in selected/visible batches, clickable source/type/resolution/theme/color/issue breakdowns, local asset tags and notes, active filter chips, detail drawer previous/next navigation and marking controls, age/orientation/resolution/theme/color-vibe/issue/mark filters, duplicate-only mode, and size/date/name/resolution sorting
-- Embedded SVG/PNG text metadata extraction for prompt/title search, detail inspection, suggested descriptions, provenance reports, prompt keyword reports, CSV export, and JSON manifests
-- Saved and review marks stored in your browser, with batch marking, marks-only backup/restore, full curation backup/restore, selected/visible path, description, AI review, alt text, Markdown/HTML image embeds, publishing checklists, readiness reports, provenance reports, prompt keyword reports, collection briefs, downloadable contact sheets, CSV, curation-aware JSON manifest exports, safe Markdown rename plans with suggested filenames, Markdown library health reports, Markdown workflow reports that include local tags and notes, and Markdown asset issue reports for duplicate/missing/tiny files, with key reports/backups available as copyable text or downloadable files
-- Duplicate groups with reclaimable storage estimates, suggested keep files, and copy actions for full groups or cleanup candidates
-- Similar visual groups built from local themes, orientation, color vibes, and dominant palette colors, with thumbnail previews, one-click filtering, copyable group paths, and copyable Markdown contact sheets
-- No database and no external services
-- Public-repo friendly sample library and config
+![Image Asset Librarian screenshot](docs/assets/demo-gallery.png)
 
-## Quick Start
+## What You Can Try In Two Minutes
 
 ```bash
 npm install
@@ -25,11 +18,55 @@ npm run serve
 
 Open `http://127.0.0.1:4173`.
 
-The default config scans `sample-library/`, so the project works immediately after cloning.
+The default config scans `sample-library/`, so a fresh clone opens with a safe demo library. In the gallery, try:
+
+- Search for `terrace` or `mint`.
+- Open a card to inspect metadata, generated description, AI-style review, and copy buttons.
+- Use the duplicate and similar-group panels to see how cleanup candidates are surfaced.
+- Paste a real image folder into the top scanner when you are ready to scan your own library.
+
+## Demo Scenario
+
+The sample library is intentionally small and public-repo friendly. It includes a few SVG assets, one exact duplicate, and a related visual pair so visitors can test the main workflow quickly:
+
+1. Scan the bundled `sample-library/`.
+2. Notice the "Sample Library" badge before touching private files.
+3. Filter by source, theme, color vibe, duplicate state, or similar group.
+4. Copy a Markdown contact sheet or local description batch.
+5. Switch to a real folder and confirm the badge changes to an actual library.
+
+See [docs/demo.md](docs/demo.md) for a guided walkthrough.
+
+## Why It Exists
+
+AI image tools can produce hundreds of files fast. The hard part is not only generating more images. It is finding the useful ones, spotting repeated outputs, keeping notes, and preparing assets for README files, wikis, prompt studies, or publishing.
+
+This project focuses on one workflow: local image-library triage for generated assets.
+
+## Core Features
+
+- Local scanner for PNG, JPG, GIF, SVG, WebP, AVIF, BMP, and TIFF files.
+- Browser gallery with search, filters, sort modes, detail drawer navigation, saved/review marks, local tags, and local notes.
+- Exact duplicate detection using SHA-256 content hashes with suggested keep files and cleanup-candidate copy actions.
+- Similar visual groups from local theme, orientation, color vibe, and palette signals.
+- Local descriptions, alt text, AI-style reviews, suggested filenames, contact sheets, CSV, JSON manifests, and Markdown reports.
+- Embedded SVG and PNG text metadata extraction for prompt/title search and provenance reports.
+- Folder scanner in the browser with recent folders saved in local storage.
+- No database, no telemetry, no external network calls in the default workflow.
+
+## Local Rules vs. AI
+
+The current app uses local rules, not cloud AI.
+
+"AI-style" descriptions and reviews are generated from local signals: filenames, folders, dimensions, duplicate status, embedded metadata, inferred themes, color vibes, and palette samples. The app does not call OpenAI, does not upload images, and does not require API keys.
+
+Future AI features, such as real image captioning or embedding-based semantic search, should stay explicit opt-in additions. The local workflow should remain useful without credentials.
 
 ## Scan Your Own Folders
 
-Copy the example config:
+The fastest way is to start the server, paste an image folder path into the top scanner, and click "Scan folder". The gallery refreshes after the scan and remembers recent folders in your browser.
+
+For a checked-in-safe config, copy the example file:
 
 ```bash
 copy asset-librarian.config.example.json asset-librarian.config.local.json
@@ -49,12 +86,14 @@ Edit `asset-librarian.config.local.json`:
 }
 ```
 
-Run:
+Then run:
 
 ```bash
 node src/cli.js scan --config asset-librarian.config.local.json
 node src/server.js --config asset-librarian.config.local.json
 ```
+
+Keep `asset-librarian.config.local.json` and `data/index.json` out of public commits. They may contain local paths or embedded prompt metadata.
 
 ## Scripts
 
@@ -63,18 +102,20 @@ node src/server.js --config asset-librarian.config.local.json
 - `npm run report` writes a duplicate review report to `reports/duplicates.md`.
 - `npm run serve` starts the local gallery at `http://127.0.0.1:4173`.
 
-## How It Works
+## Project Structure
 
-The scanner walks each configured root, records file metadata, extracts basic dimensions when possible, reads embedded SVG title/description and PNG text metadata, infers local theme labels, samples SVG/PNG colors for color-vibe labels and compact palettes, groups visually similar assets from those local signatures, hashes file contents with SHA-256, and writes a static JSON index. The server exposes that index at `/api/index`, serves image files by indexed asset id at `/assets/:id`, and accepts local folder rescans through `POST /api/scan`. The browser scanner stores recent folder paths in local storage and reloads the gallery after each successful scan.
+- `src/scanner.js` walks configured roots, extracts metadata, hashes files, and builds the index.
+- `src/server.js` serves the local app, image assets, `GET /api/index`, and `POST /api/scan`.
+- `public/app.js` renders the gallery and browser-only curation tools.
+- `public/view-model.js` keeps filtering and formatting logic testable.
+- `sample-library/` is the public demo fixture.
 
-For a deeper overview, see [docs/architecture.md](docs/architecture.md). Planned improvements live in [ROADMAP.md](ROADMAP.md).
+For a deeper overview, see [docs/architecture.md](docs/architecture.md). Privacy details live in [docs/privacy.md](docs/privacy.md). Planned work lives in [ROADMAP.md](ROADMAP.md), and contribution expectations live in [CONTRIBUTING.md](CONTRIBUTING.md).
 
-## Security and Privacy
+## Trust Signals
 
-Image Asset Librarian is local-first. It does not upload files or metadata in the current version, and `data/index.json` is ignored because it can contain absolute local paths. See [SECURITY.md](SECURITY.md) and [docs/privacy.md](docs/privacy.md) for details.
-
-## GitHub Release Checklist
-
-- Add a screenshot to the README after running the app with your real image folder.
-- Keep personal folders in `asset-librarian.config.local.json`; it is ignored by git.
-- Commit the sample config so new users can run the demo immediately.
+- The default demo works from a fresh clone.
+- CI runs `npm test` on supported Node versions.
+- The generated local index is ignored by git.
+- Runtime code uses Node.js built-ins and browser APIs rather than a hosted backend.
+- Documentation separates current local-rule behavior from future optional AI integrations.
