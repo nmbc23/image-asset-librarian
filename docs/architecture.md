@@ -40,6 +40,7 @@ UI responsibilities:
 - Highlight duplicate assets.
 - Suggest a stable file to keep in each duplicate group, copy all group paths, and copy only cleanup-candidate paths that exclude the suggested keep file.
 - Store saved/review marks in browser local storage so the generated index stays disposable.
+- Apply saved/review/unmarked states to selected assets in batches for faster curation.
 - Copy and import saved/review mark backups as JSON through the clipboard.
 - Select all currently visible filtered assets and copy selected or visible asset paths as a batch for downstream cleanup, curation, or prompt-tracking work.
 - Copy a Markdown workflow report summarizing selected, saved, and review-queue assets.

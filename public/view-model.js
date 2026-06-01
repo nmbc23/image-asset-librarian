@@ -11,6 +11,34 @@ export function createDefaultViewState() {
   };
 }
 
+export function applyMarkBatch(options = {}, assetIds = [], action) {
+  const saved = new Set(uniqueStrings([...toAssetIdSet(options.savedAssetIds)]));
+  const review = new Set(uniqueStrings([...toAssetIdSet(options.reviewAssetIds)]));
+  const selectedIds = uniqueStrings([...toAssetIdSet(assetIds)]);
+
+  if (action === "save") {
+    for (const assetId of selectedIds) {
+      saved.add(assetId);
+    }
+  } else if (action === "review") {
+    for (const assetId of selectedIds) {
+      review.add(assetId);
+    }
+  } else if (action === "clear") {
+    for (const assetId of selectedIds) {
+      saved.delete(assetId);
+      review.delete(assetId);
+    }
+  } else {
+    throw new Error(`Unsupported mark batch action: ${action}`);
+  }
+
+  return {
+    saved: [...saved],
+    review: [...review]
+  };
+}
+
 export function createActiveFilterChips(state = {}) {
   const defaults = createDefaultViewState();
   const normalizedState = { ...defaults, ...state };

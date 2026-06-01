@@ -62,3 +62,19 @@ test("active filter chips can clear individual filters from the toolbar state", 
   assert.match(appSource, /clearFilterChip/);
   assert.match(cssSource, /\.active-filters/);
 });
+
+test("selected assets can be bulk marked from the workflow panel", async () => {
+  const [appSource, htmlSource] = await Promise.all([
+    readFile(new URL("../public/app.js", import.meta.url), "utf8"),
+    readFile(new URL("../public/index.html", import.meta.url), "utf8")
+  ]);
+
+  assert.match(htmlSource, /id="save-selected-assets"/);
+  assert.match(htmlSource, /id="review-selected-assets"/);
+  assert.match(htmlSource, /id="unmark-selected-assets"/);
+  assert.match(appSource, /applyMarkBatch/);
+  assert.match(appSource, /applySelectedMarkBatch/);
+  assert.match(appSource, /saveSelectedAssets/);
+  assert.match(appSource, /reviewSelectedAssets/);
+  assert.match(appSource, /unmarkSelectedAssets/);
+});

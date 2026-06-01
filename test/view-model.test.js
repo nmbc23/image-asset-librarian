@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
+  applyMarkBatch,
   createActiveFilterChips,
   createAssetDetails,
   createDefaultViewState,
@@ -277,4 +278,32 @@ test("createActiveFilterChips describes only non-default filters", () => {
     { key: "duplicateOnly", label: "Duplicates", value: "Only duplicates" },
     { key: "sort", label: "Sort", value: "Largest" }
   ]);
+});
+
+test("applyMarkBatch updates saved and review queues for selected assets", () => {
+  assert.deepEqual(applyMarkBatch({
+    savedAssetIds: ["a"],
+    reviewAssetIds: ["b"]
+  }, ["b", "c", "c"], "save"), {
+    saved: ["a", "b", "c"],
+    review: ["b"]
+  });
+
+  assert.deepEqual(applyMarkBatch({
+    savedAssetIds: ["a", "c"],
+    reviewAssetIds: ["b"]
+  }, ["a", "c"], "review"), {
+    saved: ["a", "c"],
+    review: ["b", "a", "c"]
+  });
+
+  assert.deepEqual(applyMarkBatch({
+    savedAssetIds: ["a", "c"],
+    reviewAssetIds: ["b", "c"]
+  }, ["c"], "clear"), {
+    saved: ["a"],
+    review: ["b"]
+  });
+
+  assert.throws(() => applyMarkBatch({}, ["a"], "archive"), /Unsupported mark batch action/);
 });

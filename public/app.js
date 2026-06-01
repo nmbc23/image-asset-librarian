@@ -1,4 +1,5 @@
 import {
+  applyMarkBatch,
   createActiveFilterChips,
   createAssetDetails,
   createDefaultViewState,
@@ -34,6 +35,9 @@ const elements = {
   selectVisibleAssets: document.querySelector("#select-visible-assets"),
   copyVisiblePaths: document.querySelector("#copy-visible-paths"),
   copySelectedPaths: document.querySelector("#copy-selected-paths"),
+  saveSelectedAssets: document.querySelector("#save-selected-assets"),
+  reviewSelectedAssets: document.querySelector("#review-selected-assets"),
+  unmarkSelectedAssets: document.querySelector("#unmark-selected-assets"),
   copyWorkflowReport: document.querySelector("#copy-workflow-report"),
   copyMarksBackup: document.querySelector("#copy-marks-backup"),
   importMarksBackup: document.querySelector("#import-marks-backup"),
@@ -126,6 +130,9 @@ function bindEvents() {
   elements.selectVisibleAssets.addEventListener("click", selectVisibleAssets);
   elements.copyVisiblePaths.addEventListener("click", copyVisiblePaths);
   elements.copySelectedPaths.addEventListener("click", copySelectedPaths);
+  elements.saveSelectedAssets.addEventListener("click", () => applySelectedMarkBatch("save", elements.saveSelectedAssets));
+  elements.reviewSelectedAssets.addEventListener("click", () => applySelectedMarkBatch("review", elements.reviewSelectedAssets));
+  elements.unmarkSelectedAssets.addEventListener("click", () => applySelectedMarkBatch("clear", elements.unmarkSelectedAssets));
   elements.copyWorkflowReport.addEventListener("click", copyWorkflowReport);
   elements.copyMarksBackup.addEventListener("click", copyMarksBackup);
   elements.importMarksBackup.addEventListener("click", importMarksBackup);
@@ -262,6 +269,9 @@ function renderWorkflow() {
   elements.selectVisibleAssets.disabled = !currentView?.assets.length;
   elements.copyVisiblePaths.disabled = !currentView?.assets.length;
   elements.copySelectedPaths.disabled = selectedAssetIds.size === 0;
+  elements.saveSelectedAssets.disabled = selectedAssetIds.size === 0;
+  elements.reviewSelectedAssets.disabled = selectedAssetIds.size === 0;
+  elements.unmarkSelectedAssets.disabled = selectedAssetIds.size === 0;
   elements.copyWorkflowReport.disabled = selectedAssetIds.size + marks.saved.size + marks.review.size === 0;
   elements.copyMarksBackup.disabled = marks.saved.size + marks.review.size === 0;
   elements.clearSelection.disabled = selectedAssetIds.size === 0;
@@ -484,6 +494,32 @@ async function copySelectedPaths() {
     return;
   }
   await copyFromButton(elements.copySelectedPaths, createPathList(selectedAssets));
+}
+
+function applySelectedMarkBatch(action, button) {
+  if (!selectedAssetIds.size) {
+    return;
+  }
+
+  const updatedMarks = applyMarkBatch({
+    savedAssetIds: marks.saved,
+    reviewAssetIds: marks.review
+  }, selectedAssetIds, action);
+  marks.saved = new Set(updatedMarks.saved);
+  marks.review = new Set(updatedMarks.review);
+  saveMarks();
+  render();
+  showButtonFeedback(button, getMarkBatchFeedback(action));
+}
+
+function getMarkBatchFeedback(action) {
+  if (action === "save") {
+    return "Saved";
+  }
+  if (action === "review") {
+    return "Queued";
+  }
+  return "Unmarked";
 }
 
 function selectVisibleAssets() {
