@@ -82,6 +82,7 @@ h1 {
 
 .metrics div,
 .toolbar,
+.saved-views-panel,
 .workflow-panel,
 .breakdown-panel,
 .duplicates-panel,
@@ -159,6 +160,79 @@ h1 {
   color: var(--muted);
   font-size: 0.8rem;
   font-weight: 800;
+}
+
+.saved-views-panel {
+  display: grid;
+  gap: 12px;
+  margin-bottom: 16px;
+  padding: 14px;
+  border-radius: 8px;
+}
+
+.saved-view-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.saved-view-toolbar .secondary-button {
+  min-height: 34px;
+}
+
+.saved-views {
+  display: grid;
+  gap: 8px;
+}
+
+.saved-view {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  padding: 10px;
+}
+
+.saved-view div {
+  min-width: 0;
+}
+
+.saved-view strong,
+.saved-view span {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.saved-view strong {
+  font-size: 0.9rem;
+}
+
+.saved-view span {
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.saved-view-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.saved-view-actions button {
+  min-height: 32px;
+  border: 1px solid rgba(31, 138, 112, 0.35);
+  border-radius: 7px;
+  background: rgba(31, 138, 112, 0.1);
+  color: var(--accent);
+  cursor: pointer;
+  font-size: 0.78rem;
+  font-weight: 800;
+  padding: 0 10px;
 }
 
 .workflow-panel {
@@ -801,6 +875,10 @@ button:disabled {
   .workflow-panel {
     align-items: stretch;
     flex-direction: column;
+  }
+
+  .saved-view {
+    grid-template-columns: 1fr;
   }
 
   .asset-card {

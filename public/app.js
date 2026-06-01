@@ -8,9 +8,11 @@ import {
   createLibraryView,
   createMarkBackup,
   createPathList,
+  createSavedFilterView,
   createWorkflowReport,
   formatBytes,
   formatDate,
+  normalizeSavedFilterViews,
   parseMarkBackup
 } from "./view-model.js";
 
@@ -30,6 +32,9 @@ const elements = {
   duplicateToggle: document.querySelector("#duplicate-toggle"),
   resetFilters: document.querySelector("#reset-filters"),
   activeFilters: document.querySelector("#active-filters"),
+  saveFilterView: document.querySelector("#save-filter-view"),
+  savedViewCount: document.querySelector("#saved-view-count"),
+  savedViews: document.querySelector("#saved-views"),
   savedCount: document.querySelector("#saved-count"),
   reviewCount: document.querySelector("#review-count"),
   selectedCount: document.querySelector("#selected-count"),
@@ -61,8 +66,10 @@ const elements = {
 };
 
 const MARK_STORAGE_KEY = "image-asset-librarian:marks:v1";
+const FILTER_VIEWS_STORAGE_KEY = "image-asset-librarian:filter-views:v1";
 const state = createDefaultViewState();
 const marks = loadMarks();
+let savedFilterViews = loadSavedFilterViews();
 const selectedAssetIds = new Set();
 
 let libraryIndex = null;
@@ -128,6 +135,19 @@ function bindEvents() {
     const button = event.target.closest("[data-clear-filter]");
     if (button) {
       clearFilterChip(button.dataset.clearFilter);
+    }
+  });
+  elements.saveFilterView.addEventListener("click", saveCurrentFilterView);
+  elements.savedViews.addEventListener("click", (event) => {
+    const deleteButton = event.target.closest("[data-delete-saved-view]");
+    if (deleteButton) {
+      deleteSavedFilterView(deleteButton.dataset.deleteSavedView);
+      return;
+    }
+
+    const applyButton = event.target.closest("[data-apply-saved-view]");
+    if (applyButton) {
+      applySavedFilterView(applyButton.dataset.applySavedView);
     }
   });
   elements.selectVisibleAssets.addEventListener("click", selectVisibleAssets);
@@ -254,6 +274,7 @@ function render() {
   renderWorkflow();
   renderFilters(view);
   renderActiveFilters();
+  renderSavedViews();
   renderBreakdowns(view);
   renderDuplicates(libraryIndex);
   renderGallery(view);
@@ -313,6 +334,33 @@ function renderActiveFilterChip(chip) {
   `;
 }
 
+function renderSavedViews() {
+  elements.savedViewCount.textContent = `${savedFilterViews.length} views`;
+  elements.savedViews.innerHTML = savedFilterViews.length
+    ? savedFilterViews.map(renderSavedView).join("")
+    : `<div class="notice">No saved views yet.</div>`;
+}
+
+function renderSavedView(view) {
+  const chips = createActiveFilterChips(view.state);
+  const summary = chips.length
+    ? chips.map((chip) => `${chip.label}: ${chip.value}`).join(" / ")
+    : "Default filters";
+
+  return `
+    <article class="saved-view">
+      <div>
+        <strong title="${escapeHtml(view.name)}">${escapeHtml(view.name)}</strong>
+        <span title="${escapeHtml(summary)}">${escapeHtml(summary)}</span>
+      </div>
+      <div class="saved-view-actions">
+        <button type="button" data-apply-saved-view="${escapeHtml(view.id)}">Apply</button>
+        <button type="button" data-delete-saved-view="${escapeHtml(view.id)}">Delete</button>
+      </div>
+    </article>
+  `;
+}
+
 function renderBreakdowns(view) {
   elements.sourceBreakdownCount.textContent = `${view.sourceBreakdown.length} sources`;
   elements.typeBreakdownCount.textContent = `${view.extensionBreakdown.length} types`;
@@ -363,6 +411,46 @@ function clearAllFilters() {
   Object.assign(state, createDefaultViewState());
   syncControlsFromState();
   render();
+}
+
+function saveCurrentFilterView() {
+  const viewName = window.prompt("Name this saved view", createSuggestedFilterViewName());
+  if (viewName === null) {
+    return;
+  }
+
+  const savedView = createSavedFilterView(viewName, state);
+  savedFilterViews = [
+    savedView,
+    ...savedFilterViews.filter((view) => view.name !== savedView.name)
+  ].slice(0, 16);
+  saveSavedFilterViews();
+  renderSavedViews();
+  showButtonFeedback(elements.saveFilterView, "Saved");
+}
+
+function createSuggestedFilterViewName() {
+  const chips = createActiveFilterChips(state);
+  if (!chips.length) {
+    return "Default view";
+  }
+  return chips.slice(0, 3).map((chip) => chip.value).join(" + ");
+}
+
+function applySavedFilterView(viewId) {
+  const savedView = savedFilterViews.find((view) => view.id === viewId);
+  if (!savedView) {
+    return;
+  }
+  Object.assign(state, createDefaultViewState(), savedView.state);
+  syncControlsFromState();
+  render();
+}
+
+function deleteSavedFilterView(viewId) {
+  savedFilterViews = savedFilterViews.filter((view) => view.id !== viewId);
+  saveSavedFilterViews();
+  renderSavedViews();
 }
 
 function renderDuplicates(index) {
@@ -645,6 +733,22 @@ function loadMarks() {
     };
   } catch {
     return { saved: new Set(), review: new Set() };
+  }
+}
+
+function loadSavedFilterViews() {
+  try {
+    return normalizeSavedFilterViews(JSON.parse(localStorage.getItem(FILTER_VIEWS_STORAGE_KEY) ?? "[]"));
+  } catch {
+    return [];
+  }
+}
+
+function saveSavedFilterViews() {
+  try {
+    localStorage.setItem(FILTER_VIEWS_STORAGE_KEY, JSON.stringify(savedFilterViews));
+  } catch {
+    // Saved views are optional browser-local convenience state.
   }
 }
 

@@ -91,3 +91,25 @@ test("visible and selected asset metadata can be copied as CSV", async () => {
   assert.match(appSource, /copyVisibleCsv/);
   assert.match(appSource, /copySelectedCsv/);
 });
+
+test("saved filter views can be created, applied, and deleted", async () => {
+  const [appSource, htmlSource, cssSource] = await Promise.all([
+    readFile(new URL("../public/app.js", import.meta.url), "utf8"),
+    readFile(new URL("../public/index.html", import.meta.url), "utf8"),
+    readFile(new URL("../public/styles.css", import.meta.url), "utf8")
+  ]);
+
+  assert.match(htmlSource, /id="save-filter-view"/);
+  assert.match(htmlSource, /id="saved-views"/);
+  assert.match(htmlSource, /id="saved-view-count"/);
+  assert.match(appSource, /FILTER_VIEWS_STORAGE_KEY/);
+  assert.match(appSource, /createSavedFilterView/);
+  assert.match(appSource, /normalizeSavedFilterViews/);
+  assert.match(appSource, /renderSavedViews/);
+  assert.match(appSource, /saveCurrentFilterView/);
+  assert.match(appSource, /applySavedFilterView/);
+  assert.match(appSource, /deleteSavedFilterView/);
+  assert.match(appSource, /data-apply-saved-view/);
+  assert.match(appSource, /data-delete-saved-view/);
+  assert.match(cssSource, /\.saved-views-panel/);
+});

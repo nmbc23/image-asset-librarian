@@ -11,6 +11,33 @@ export function createDefaultViewState() {
   };
 }
 
+export function createSavedFilterView(name, state = {}, options = {}) {
+  const createdAt = options.createdAt ?? new Date().toISOString();
+  const viewName = String(name ?? "").trim() || "Saved view";
+
+  return {
+    id: options.id ?? createSavedFilterViewId(createdAt, viewName),
+    name: viewName,
+    createdAt,
+    state: createFilterStateSnapshot(state)
+  };
+}
+
+export function normalizeSavedFilterViews(value) {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return value
+    .filter((view) => view && typeof view.id === "string" && view.id.trim())
+    .map((view) => ({
+      id: view.id,
+      name: String(view.name ?? "Saved view").trim() || "Saved view",
+      createdAt: typeof view.createdAt === "string" ? view.createdAt : "",
+      state: createFilterStateSnapshot(view.state)
+    }));
+}
+
 export function applyMarkBatch(options = {}, assetIds = [], action) {
   const saved = new Set(uniqueStrings([...toAssetIdSet(options.savedAssetIds)]));
   const review = new Set(uniqueStrings([...toAssetIdSet(options.reviewAssetIds)]));
@@ -385,6 +412,27 @@ function createBreakdown(assets, field) {
   return [...counts.entries()]
     .map(([label, count]) => ({ label, count }))
     .sort((a, b) => b.count - a.count || a.label.localeCompare(b.label));
+}
+
+function createFilterStateSnapshot(state = {}) {
+  const defaults = createDefaultViewState();
+  const normalizedState = { ...defaults, ...(state ?? {}) };
+
+  return Object.fromEntries(
+    Object.keys(defaults).map((key) => [
+      key,
+      key === "duplicateOnly" ? normalizedState[key] === true : String(normalizedState[key] ?? defaults[key])
+    ])
+  );
+}
+
+function createSavedFilterViewId(createdAt, name) {
+  const safeName = String(name ?? "view")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "")
+    .slice(0, 36) || "view";
+  return `view-${Date.parse(createdAt) || Date.now()}-${safeName}`;
 }
 
 function formatExtensionLabel(extension) {

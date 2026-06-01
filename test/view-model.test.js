@@ -11,8 +11,10 @@ import {
   createLibraryView,
   createMarkBackup,
   createPathList,
+  createSavedFilterView,
   createWorkflowReport,
   formatBytes,
+  normalizeSavedFilterViews,
   parseMarkBackup
 } from "../public/view-model.js";
 
@@ -292,6 +294,68 @@ test("createActiveFilterChips describes only non-default filters", () => {
     { key: "mark", label: "Mark", value: "Review queue" },
     { key: "duplicateOnly", label: "Duplicates", value: "Only duplicates" },
     { key: "sort", label: "Sort", value: "Largest" }
+  ]);
+});
+
+test("createSavedFilterView stores a normalized filter state snapshot", () => {
+  assert.deepEqual(createSavedFilterView("  Portrait picks  ", {
+    query: "rose",
+    root: "Codex",
+    extension: ".png",
+    orientation: "portrait",
+    duplicateOnly: true,
+    sort: "largest",
+    unrelated: "ignored"
+  }, {
+    id: "view-1",
+    createdAt: "2026-06-01T12:00:00.000Z"
+  }), {
+    id: "view-1",
+    name: "Portrait picks",
+    createdAt: "2026-06-01T12:00:00.000Z",
+    state: {
+      query: "rose",
+      root: "Codex",
+      extension: ".png",
+      orientation: "portrait",
+      maxAgeDays: "all",
+      mark: "all",
+      duplicateOnly: true,
+      sort: "largest"
+    }
+  });
+});
+
+test("normalizeSavedFilterViews drops invalid entries and restores missing defaults", () => {
+  assert.deepEqual(normalizeSavedFilterViews([
+    {
+      id: "view-a",
+      name: "Duplicates",
+      createdAt: "2026-06-01T12:00:00.000Z",
+      state: { duplicateOnly: true, sort: "oldest" }
+    },
+    {
+      id: "",
+      name: "Broken",
+      state: {}
+    },
+    null
+  ]), [
+    {
+      id: "view-a",
+      name: "Duplicates",
+      createdAt: "2026-06-01T12:00:00.000Z",
+      state: {
+        query: "",
+        root: "all",
+        extension: "all",
+        orientation: "all",
+        maxAgeDays: "all",
+        mark: "all",
+        duplicateOnly: true,
+        sort: "oldest"
+      }
+    }
   ]);
 });
 
