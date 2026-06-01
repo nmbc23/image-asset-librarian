@@ -12,8 +12,14 @@ const elements = {
   orientation: document.querySelector("#orientation-filter"),
   age: document.querySelector("#age-filter"),
   sort: document.querySelector("#sort-select"),
+  mark: document.querySelector("#mark-filter"),
   duplicateToggle: document.querySelector("#duplicate-toggle"),
   resetFilters: document.querySelector("#reset-filters"),
+  savedCount: document.querySelector("#saved-count"),
+  reviewCount: document.querySelector("#review-count"),
+  selectedCount: document.querySelector("#selected-count"),
+  copySelectedPaths: document.querySelector("#copy-selected-paths"),
+  clearSelection: document.querySelector("#clear-selection"),
   sourceBreakdown: document.querySelector("#source-breakdown"),
   sourceBreakdownCount: document.querySelector("#source-breakdown-count"),
   typeBreakdown: document.querySelector("#type-breakdown"),
@@ -29,7 +35,10 @@ const elements = {
   drawerContent: document.querySelector("#drawer-content")
 };
 
+const MARK_STORAGE_KEY = "image-asset-librarian:marks:v1";
 const state = createDefaultViewState();
+const marks = loadMarks();
+const selectedAssetIds = new Set();
 
 let libraryIndex = null;
 
@@ -75,6 +84,10 @@ function bindEvents() {
     state.sort = elements.sort.value;
     render();
   });
+  elements.mark.addEventListener("change", () => {
+    state.mark = elements.mark.value;
+    render();
+  });
   elements.duplicateToggle.addEventListener("change", () => {
     state.duplicateOnly = elements.duplicateToggle.checked;
     render();
@@ -84,10 +97,36 @@ function bindEvents() {
     syncControlsFromState();
     render();
   });
+  elements.copySelectedPaths.addEventListener("click", copySelectedPaths);
+  elements.clearSelection.addEventListener("click", () => {
+    selectedAssetIds.clear();
+    render();
+  });
   elements.gallery.addEventListener("click", async (event) => {
     const openButton = event.target.closest("[data-open-asset]");
     if (openButton) {
       window.location.assign(openButton.dataset.openAsset);
+      return;
+    }
+
+    const selectInput = event.target.closest("[data-select-asset]");
+    if (selectInput) {
+      setAssetSelected(selectInput.dataset.selectAsset, selectInput.checked);
+      render();
+      return;
+    }
+
+    const saveButton = event.target.closest("[data-toggle-save]");
+    if (saveButton) {
+      toggleMark("saved", saveButton.dataset.toggleSave);
+      render();
+      return;
+    }
+
+    const reviewButton = event.target.closest("[data-toggle-review]");
+    if (reviewButton) {
+      toggleMark("review", reviewButton.dataset.toggleReview);
+      render();
       return;
     }
 
@@ -128,6 +167,7 @@ function syncControlsFromState() {
   elements.orientation.value = state.orientation;
   elements.age.value = state.maxAgeDays;
   elements.sort.value = state.sort;
+  elements.mark.value = state.mark;
   elements.duplicateToggle.checked = state.duplicateOnly;
 }
 
@@ -136,8 +176,13 @@ function render() {
     return;
   }
 
-  const view = createLibraryView(libraryIndex, state);
+  const view = createLibraryView(libraryIndex, {
+    ...state,
+    savedAssetIds: marks.saved,
+    reviewAssetIds: marks.review
+  });
   renderSummary(libraryIndex);
+  renderWorkflow();
   renderFilters(view);
   renderBreakdowns(view);
   renderDuplicates(libraryIndex);
@@ -150,6 +195,14 @@ function renderSummary(index) {
   elements.duplicates.textContent = String(index.summary.duplicateGroups ?? 0);
   elements.reclaimable.textContent = formatBytes(index.summary.reclaimableBytes ?? 0);
   elements.status.textContent = `Indexed ${formatDate(index.generatedAt)}`;
+}
+
+function renderWorkflow() {
+  elements.savedCount.textContent = `${marks.saved.size} saved`;
+  elements.reviewCount.textContent = `${marks.review.size} review`;
+  elements.selectedCount.textContent = `${selectedAssetIds.size} selected`;
+  elements.copySelectedPaths.disabled = selectedAssetIds.size === 0;
+  elements.clearSelection.disabled = selectedAssetIds.size === 0;
 }
 
 function renderFilters(view) {
@@ -216,6 +269,8 @@ function renderGallery(view) {
   elements.filteredSummary.innerHTML = `
     <div><strong>${formatBytes(view.filteredSummary.totalBytes)}</strong><span>shown size</span></div>
     <div><strong>${view.filteredSummary.duplicateAssets}</strong><span>duplicates shown</span></div>
+    <div><strong>${view.filteredSummary.savedAssets}</strong><span>saved shown</span></div>
+    <div><strong>${view.filteredSummary.reviewAssets}</strong><span>review shown</span></div>
     <div><strong>${view.filteredSummary.sources}</strong><span>sources shown</span></div>
     <div><strong>${view.filteredSummary.extensions}</strong><span>types shown</span></div>
   `;
@@ -226,12 +281,25 @@ function renderGallery(view) {
 function renderAssetCard(asset, isDuplicate) {
   const dimensions = asset.width && asset.height ? `${asset.width} x ${asset.height}` : "Unknown size";
   const duplicateBadge = isDuplicate ? `<span class="badge duplicate">Duplicate</span>` : "";
+  const isSaved = marks.saved.has(asset.id);
+  const isReview = marks.review.has(asset.id);
+  const isSelected = selectedAssetIds.has(asset.id);
   return `
-    <article class="asset-card">
+    <article class="asset-card${isSelected ? " selected" : ""}">
       <a class="asset-preview" href="/assets/${encodeURIComponent(asset.id)}" target="_blank" rel="noreferrer">
         <img loading="lazy" src="/assets/${encodeURIComponent(asset.id)}" alt="${escapeHtml(asset.name)}">
       </a>
       <div class="asset-body">
+        <div class="asset-card-controls">
+          <label class="asset-select">
+            <input type="checkbox" data-select-asset="${escapeHtml(asset.id)}" ${isSelected ? "checked" : ""}>
+            <span>Select</span>
+          </label>
+          <div class="asset-mark-actions">
+            <button type="button" class="${isSaved ? "is-active" : ""}" data-toggle-save="${escapeHtml(asset.id)}" aria-pressed="${isSaved}">Saved</button>
+            <button type="button" class="${isReview ? "is-active" : ""}" data-toggle-review="${escapeHtml(asset.id)}" aria-pressed="${isReview}">Review</button>
+          </div>
+        </div>
         <div class="asset-title">
           <h3 title="${escapeHtml(asset.name)}">${escapeHtml(asset.name)}</h3>
           ${duplicateBadge}
@@ -291,6 +359,60 @@ function renderDetailField(field) {
       ${copyButton}
     </div>
   `;
+}
+
+async function copySelectedPaths() {
+  const selectedAssets = getSelectedAssets();
+  if (!selectedAssets.length) {
+    return;
+  }
+  await copyFromButton(elements.copySelectedPaths, selectedAssets.map((asset) => asset.path).join("\n"));
+}
+
+function getSelectedAssets() {
+  const assets = Array.isArray(libraryIndex?.assets) ? libraryIndex.assets : [];
+  return assets.filter((asset) => selectedAssetIds.has(asset.id));
+}
+
+function setAssetSelected(assetId, isSelected) {
+  if (isSelected) {
+    selectedAssetIds.add(assetId);
+  } else {
+    selectedAssetIds.delete(assetId);
+  }
+}
+
+function toggleMark(kind, assetId) {
+  const set = kind === "review" ? marks.review : marks.saved;
+  if (set.has(assetId)) {
+    set.delete(assetId);
+  } else {
+    set.add(assetId);
+  }
+  saveMarks();
+}
+
+function loadMarks() {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(MARK_STORAGE_KEY) ?? "{}");
+    return {
+      saved: new Set(Array.isArray(parsed.saved) ? parsed.saved : []),
+      review: new Set(Array.isArray(parsed.review) ? parsed.review : [])
+    };
+  } catch {
+    return { saved: new Set(), review: new Set() };
+  }
+}
+
+function saveMarks() {
+  try {
+    localStorage.setItem(MARK_STORAGE_KEY, JSON.stringify({
+      saved: [...marks.saved],
+      review: [...marks.review]
+    }));
+  } catch {
+    // Keep the UI usable even when browser storage is unavailable.
+  }
 }
 
 async function copyFromButton(button, value) {

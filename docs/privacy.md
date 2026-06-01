@@ -8,6 +8,7 @@ Image Asset Librarian is designed to run locally. The default workflow scans a l
 - Absolute paths in the generated index.
 - File names, sizes, hashes, dimensions, and modification times.
 - Duplicate group information.
+- Saved and review marks, which are stored in browser local storage as asset ids.
 
 ## Network Behavior
 

@@ -82,6 +82,7 @@ h1 {
 
 .metrics div,
 .toolbar,
+.workflow-panel,
 .breakdown-panel,
 .duplicates-panel,
 .gallery-section {
@@ -109,12 +110,45 @@ h1 {
 
 .toolbar {
   display: grid;
-  grid-template-columns: minmax(220px, 2fr) repeat(5, minmax(120px, 1fr)) auto;
+  grid-template-columns: minmax(220px, 2fr) repeat(4, minmax(120px, 1fr));
   align-items: end;
   gap: 12px;
   margin-bottom: 16px;
   padding: 14px;
   border-radius: 8px;
+}
+
+.workflow-panel {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 16px;
+  padding: 14px;
+  border-radius: 8px;
+}
+
+.workflow-stats,
+.workflow-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.workflow-stats span {
+  min-height: 34px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: var(--surface);
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 800;
+  padding: 8px 10px;
+}
+
+.workflow-actions .secondary-button {
+  min-height: 34px;
+  align-self: auto;
 }
 
 .breakdown-panel {
@@ -301,7 +335,7 @@ a:focus-visible {
 
 .filtered-summary {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
   gap: 10px;
   margin-bottom: 14px;
 }
@@ -332,6 +366,11 @@ a:focus-visible {
   overflow: hidden;
 }
 
+.asset-card.selected {
+  border-color: rgba(31, 138, 112, 0.72);
+  box-shadow: 0 0 0 2px rgba(31, 138, 112, 0.12);
+}
+
 .asset-preview {
   display: grid;
   min-height: 0;
@@ -357,6 +396,58 @@ a:focus-visible {
   gap: 10px;
   min-width: 0;
   padding: 12px;
+}
+
+.asset-card-controls,
+.asset-mark-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.asset-card-controls {
+  justify-content: space-between;
+  min-width: 0;
+}
+
+.asset-select {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.asset-select input {
+  width: 16px;
+  min-height: 16px;
+  accent-color: var(--accent);
+}
+
+.asset-select span {
+  font-size: 0.76rem;
+}
+
+.asset-mark-actions {
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.asset-mark-actions button {
+  min-height: 28px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: var(--surface);
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 0.75rem;
+  font-weight: 800;
+  padding: 0 8px;
+}
+
+.asset-mark-actions button.is-active {
+  border-color: rgba(31, 138, 112, 0.45);
+  background: rgba(31, 138, 112, 0.12);
+  color: var(--accent);
 }
 
 .asset-title {
@@ -446,6 +537,11 @@ dd {
   cursor: pointer;
   padding: 0 10px;
   text-decoration: none;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
 }
 
 .asset-actions a,
@@ -619,6 +715,11 @@ dd {
   .breakdown-panel,
   .filtered-summary {
     grid-template-columns: 1fr;
+  }
+
+  .workflow-panel {
+    align-items: stretch;
+    flex-direction: column;
   }
 
   .asset-card {

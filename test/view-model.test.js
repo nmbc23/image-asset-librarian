@@ -54,6 +54,8 @@ test("createLibraryView filters by search, root, extension, and duplicate state"
     totalAssets: 1,
     totalBytes: 1200,
     duplicateAssets: 1,
+    savedAssets: 0,
+    reviewAssets: 0,
     sources: 1,
     extensions: 1
   });
@@ -69,6 +71,36 @@ test("createLibraryView filters by search, root, extension, and duplicate state"
   ]);
   assert.equal(view.duplicateAssetIds.has("a"), true);
   assert.equal(view.duplicateAssetIds.has("c"), false);
+});
+
+test("createLibraryView filters by saved and review marks", () => {
+  const markState = {
+    savedAssetIds: new Set(["a"]),
+    reviewAssetIds: ["b"],
+    sort: "name"
+  };
+
+  assert.deepEqual(
+    createLibraryView(index, { ...markState, mark: "saved" }).assets.map((asset) => asset.id),
+    ["a"]
+  );
+  assert.deepEqual(
+    createLibraryView(index, { ...markState, mark: "review" }).assets.map((asset) => asset.id),
+    ["b"]
+  );
+  assert.deepEqual(
+    createLibraryView(index, { ...markState, mark: "unmarked" }).assets.map((asset) => asset.id),
+    ["c"]
+  );
+  assert.deepEqual(createLibraryView(index, markState).filteredSummary, {
+    totalAssets: 3,
+    totalBytes: 2490,
+    duplicateAssets: 2,
+    savedAssets: 1,
+    reviewAssets: 1,
+    sources: 2,
+    extensions: 2
+  });
 });
 
 test("createLibraryView filters by orientation", () => {
@@ -143,6 +175,7 @@ test("createDefaultViewState returns resettable filter defaults", () => {
     extension: "all",
     orientation: "all",
     maxAgeDays: "all",
+    mark: "all",
     duplicateOnly: false,
     sort: "newest"
   });

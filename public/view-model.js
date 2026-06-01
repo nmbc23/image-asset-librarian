@@ -5,6 +5,7 @@ export function createDefaultViewState() {
     extension: "all",
     orientation: "all",
     maxAgeDays: "all",
+    mark: "all",
     duplicateOnly: false,
     sort: "newest"
   };
@@ -18,6 +19,8 @@ export function createLibraryView(index, state = {}) {
     ...createDefaultViewState(),
     ...state
   };
+  const savedAssetIds = toAssetIdSet(normalizedState.savedAssetIds);
+  const reviewAssetIds = toAssetIdSet(normalizedState.reviewAssetIds);
 
   const filteredAssets = assets
     .filter((asset) => matchesSearch(asset, normalizedState.query))
@@ -25,11 +28,12 @@ export function createLibraryView(index, state = {}) {
     .filter((asset) => normalizedState.extension === "all" || asset.extension === normalizedState.extension)
     .filter((asset) => normalizedState.orientation === "all" || getOrientation(asset) === normalizedState.orientation)
     .filter((asset) => isWithinAge(asset, normalizedState.maxAgeDays, normalizedState.now))
+    .filter((asset) => matchesMark(asset, normalizedState.mark, savedAssetIds, reviewAssetIds))
     .filter((asset) => !normalizedState.duplicateOnly || duplicateAssetIds.has(asset.id));
 
   return {
     assets: sortAssets(filteredAssets, normalizedState.sort),
-    filteredSummary: summarizeAssets(filteredAssets, duplicateAssetIds),
+    filteredSummary: summarizeAssets(filteredAssets, duplicateAssetIds, savedAssetIds, reviewAssetIds),
     roots: uniqueSorted(assets.map((asset) => asset.rootName)),
     extensions: uniqueSorted(assets.map((asset) => asset.extension)),
     sourceBreakdown: createBreakdown(assets, "rootName"),
@@ -145,6 +149,19 @@ function matchesSearch(asset, query) {
   return normalizedQuery.split(/\s+/).every((term) => haystack.includes(term));
 }
 
+function matchesMark(asset, mark, savedAssetIds, reviewAssetIds) {
+  if (mark === "saved") {
+    return savedAssetIds.has(asset.id);
+  }
+  if (mark === "review") {
+    return reviewAssetIds.has(asset.id);
+  }
+  if (mark === "unmarked") {
+    return !savedAssetIds.has(asset.id) && !reviewAssetIds.has(asset.id);
+  }
+  return true;
+}
+
 function sortAssets(assets, sort) {
   const sorted = [...assets];
   const byName = (a, b) => a.name.localeCompare(b.name);
@@ -184,12 +201,24 @@ function createBreakdown(assets, field) {
     .sort((a, b) => b.count - a.count || a.label.localeCompare(b.label));
 }
 
-function summarizeAssets(assets, duplicateAssetIds) {
+function summarizeAssets(assets, duplicateAssetIds, savedAssetIds, reviewAssetIds) {
   return {
     totalAssets: assets.length,
     totalBytes: assets.reduce((sum, asset) => sum + asset.sizeBytes, 0),
     duplicateAssets: assets.filter((asset) => duplicateAssetIds.has(asset.id)).length,
+    savedAssets: assets.filter((asset) => savedAssetIds.has(asset.id)).length,
+    reviewAssets: assets.filter((asset) => reviewAssetIds.has(asset.id)).length,
     sources: new Set(assets.map((asset) => asset.rootName).filter(Boolean)).size,
     extensions: new Set(assets.map((asset) => asset.extension).filter(Boolean)).size
   };
+}
+
+function toAssetIdSet(value) {
+  if (value instanceof Set) {
+    return value;
+  }
+  if (Array.isArray(value)) {
+    return new Set(value);
+  }
+  return new Set();
 }

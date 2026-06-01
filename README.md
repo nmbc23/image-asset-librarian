@@ -7,7 +7,8 @@ A zero-dependency local gallery for AI-generated image folders. It scans one or 
 ## Features
 
 - Local-first scanner for PNG, JPG, GIF, SVG, WebP, AVIF, BMP, and TIFF files
-- Browser gallery with search, source/type filters, duplicate-only mode, and size/date/name sorting
+- Browser gallery with search, source/type/age/orientation/mark filters, duplicate-only mode, and size/date/name sorting
+- Saved and review marks stored in your browser, plus selection tools for copying file paths in batches
 - Duplicate groups with reclaimable storage estimates
 - No database and no external services
 - Public-repo friendly sample library and config

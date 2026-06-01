@@ -33,9 +33,11 @@ The server is intentionally small and uses Node.js built-ins only.
 UI responsibilities:
 
 - Search by name, relative path, source, or extension.
-- Filter by source and file type.
+- Filter by source, file type, orientation, age, duplicate state, and local review marks.
 - Sort by date, size, or name.
 - Highlight duplicate assets.
+- Store saved/review marks in browser local storage so the generated index stays disposable.
+- Copy selected asset paths as a batch for downstream cleanup, curation, or prompt-tracking work.
 - Keep private local paths visible only to the local user.
 
 ## Data Flow
