@@ -341,6 +341,24 @@ test("visible and selected publishing checklists can be copied and downloaded", 
   assert.match(appSource, /asset-publishing-checklist/);
 });
 
+test("visible and selected readiness reports can be copied and downloaded", async () => {
+  const [appSource, htmlSource] = await Promise.all([
+    readFile(new URL("../public/app.js", import.meta.url), "utf8"),
+    readFile(new URL("../public/index.html", import.meta.url), "utf8")
+  ]);
+
+  assert.match(htmlSource, /id="copy-visible-readiness-report"/);
+  assert.match(htmlSource, /id="copy-selected-readiness-report"/);
+  assert.match(htmlSource, /id="download-visible-readiness-report"/);
+  assert.match(htmlSource, /id="download-selected-readiness-report"/);
+  assert.match(appSource, /createAssetReadinessReport/);
+  assert.match(appSource, /copyVisibleReadinessReport/);
+  assert.match(appSource, /copySelectedReadinessReport/);
+  assert.match(appSource, /downloadVisibleReadinessReport/);
+  assert.match(appSource, /downloadSelectedReadinessReport/);
+  assert.match(appSource, /asset-readiness-report/);
+});
+
 test("selected assets can be bulk marked from the workflow panel", async () => {
   const [appSource, htmlSource] = await Promise.all([
     readFile(new URL("../public/app.js", import.meta.url), "utf8"),

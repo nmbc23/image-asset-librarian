@@ -13,6 +13,7 @@ import {
   createAssetManifest,
   createAssetNavigation,
   createAssetPublishingChecklist,
+  createAssetReadinessReport,
   createAssetRenamePlan,
   createCurationBackup,
   createDefaultViewState,
@@ -87,6 +88,10 @@ const elements = {
   copySelectedPublishingChecklist: document.querySelector("#copy-selected-publishing-checklist"),
   downloadVisiblePublishingChecklist: document.querySelector("#download-visible-publishing-checklist"),
   downloadSelectedPublishingChecklist: document.querySelector("#download-selected-publishing-checklist"),
+  copyVisibleReadinessReport: document.querySelector("#copy-visible-readiness-report"),
+  copySelectedReadinessReport: document.querySelector("#copy-selected-readiness-report"),
+  downloadVisibleReadinessReport: document.querySelector("#download-visible-readiness-report"),
+  downloadSelectedReadinessReport: document.querySelector("#download-selected-readiness-report"),
   copyVisibleCsv: document.querySelector("#copy-visible-csv"),
   copySelectedCsv: document.querySelector("#copy-selected-csv"),
   copyVisibleManifest: document.querySelector("#copy-visible-manifest"),
@@ -271,6 +276,10 @@ function bindEvents() {
   elements.copySelectedPublishingChecklist.addEventListener("click", copySelectedPublishingChecklist);
   elements.downloadVisiblePublishingChecklist.addEventListener("click", downloadVisiblePublishingChecklist);
   elements.downloadSelectedPublishingChecklist.addEventListener("click", downloadSelectedPublishingChecklist);
+  elements.copyVisibleReadinessReport.addEventListener("click", copyVisibleReadinessReport);
+  elements.copySelectedReadinessReport.addEventListener("click", copySelectedReadinessReport);
+  elements.downloadVisibleReadinessReport.addEventListener("click", downloadVisibleReadinessReport);
+  elements.downloadSelectedReadinessReport.addEventListener("click", downloadSelectedReadinessReport);
   elements.copyVisibleCsv.addEventListener("click", copyVisibleCsv);
   elements.copySelectedCsv.addEventListener("click", copySelectedCsv);
   elements.copyVisibleManifest.addEventListener("click", copyVisibleManifest);
@@ -616,6 +625,10 @@ function renderWorkflow() {
   elements.copySelectedPublishingChecklist.disabled = selectedAssetIds.size === 0;
   elements.downloadVisiblePublishingChecklist.disabled = !currentView?.assets.length;
   elements.downloadSelectedPublishingChecklist.disabled = selectedAssetIds.size === 0;
+  elements.copyVisibleReadinessReport.disabled = !currentView?.assets.length;
+  elements.copySelectedReadinessReport.disabled = selectedAssetIds.size === 0;
+  elements.downloadVisibleReadinessReport.disabled = !currentView?.assets.length;
+  elements.downloadSelectedReadinessReport.disabled = selectedAssetIds.size === 0;
   elements.copyVisibleCsv.disabled = !currentView?.assets.length;
   elements.copySelectedCsv.disabled = selectedAssetIds.size === 0;
   elements.copyVisibleManifest.disabled = !currentView?.assets.length;
@@ -1394,6 +1407,44 @@ function downloadVisiblePublishingChecklist() {
   downloadPublishingChecklist(visibleAssets, "visible", elements.downloadVisiblePublishingChecklist);
 }
 
+async function copySelectedReadinessReport() {
+  const selectedAssets = getSelectedAssets();
+  if (!selectedAssets.length) {
+    return;
+  }
+  await copyFromButton(
+    elements.copySelectedReadinessReport,
+    createAssetReadinessReport(selectedAssets, createReadinessReportOptions("selected"))
+  );
+}
+
+async function copyVisibleReadinessReport() {
+  const visibleAssets = currentView?.assets ?? [];
+  if (!visibleAssets.length) {
+    return;
+  }
+  await copyFromButton(
+    elements.copyVisibleReadinessReport,
+    createAssetReadinessReport(visibleAssets, createReadinessReportOptions("visible"))
+  );
+}
+
+function downloadSelectedReadinessReport() {
+  const selectedAssets = getSelectedAssets();
+  if (!selectedAssets.length) {
+    return;
+  }
+  downloadReadinessReport(selectedAssets, "selected", elements.downloadSelectedReadinessReport);
+}
+
+function downloadVisibleReadinessReport() {
+  const visibleAssets = currentView?.assets ?? [];
+  if (!visibleAssets.length) {
+    return;
+  }
+  downloadReadinessReport(visibleAssets, "visible", elements.downloadVisibleReadinessReport);
+}
+
 async function copySelectedCsv() {
   const selectedAssets = getSelectedAssets();
   if (!selectedAssets.length) {
@@ -1500,6 +1551,14 @@ function createPublishingChecklistOptions(label, generatedAt = new Date().toISOS
   };
 }
 
+function createReadinessReportOptions(label, generatedAt = new Date().toISOString()) {
+  return {
+    generatedAt,
+    label,
+    duplicateAssetIds: currentView?.duplicateAssetIds
+  };
+}
+
 function downloadAltTextList(assets, label, button) {
   const generatedAt = new Date().toISOString();
   const list = createAssetAltTextList(assets, createAltTextOptions(label, generatedAt));
@@ -1519,6 +1578,13 @@ function downloadPublishingChecklist(assets, label, button) {
   const checklist = createAssetPublishingChecklist(assets, createPublishingChecklistOptions(label, generatedAt));
   const fileName = createExportFileName(`asset-publishing-checklist-${label}`, "md", { generatedAt });
   downloadTextFile(button, checklist, fileName, "text/markdown");
+}
+
+function downloadReadinessReport(assets, label, button) {
+  const generatedAt = new Date().toISOString();
+  const report = createAssetReadinessReport(assets, createReadinessReportOptions(label, generatedAt));
+  const fileName = createExportFileName(`asset-readiness-report-${label}`, "md", { generatedAt });
+  downloadTextFile(button, report, fileName, "text/markdown");
 }
 
 function downloadRenamePlan(assets, label, button) {

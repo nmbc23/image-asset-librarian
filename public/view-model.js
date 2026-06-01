@@ -788,6 +788,58 @@ export function createAssetPublishingChecklist(assets, options = {}) {
   return lines.join("\n");
 }
 
+export function createAssetReadinessReport(assets, options = {}) {
+  const readinessAssets = Array.isArray(assets) ? assets : [];
+  const duplicateAssetIds = toAssetIdSet(options.duplicateAssetIds);
+  const rows = readinessAssets.map((asset) => ({
+    asset,
+    issues: getAssetIssues(asset, duplicateAssetIds)
+  }));
+  const readyCount = rows.filter((row) => row.issues.length === 0).length;
+  const issueCounts = new Map(ISSUE_FILTERS.map((issue) => [issue.value, 0]));
+
+  for (const row of rows) {
+    for (const issue of row.issues) {
+      issueCounts.set(issue.value, (issueCounts.get(issue.value) ?? 0) + 1);
+    }
+  }
+
+  const lines = [
+    "# Image Asset Readiness Report",
+    "",
+    `Generated: ${options.generatedAt ?? new Date().toISOString()}`,
+    `Scope: ${String(options.label ?? "assets")}`,
+    `Count: ${readinessAssets.length}`,
+    "",
+    "## Summary",
+    "",
+    `- Ready assets: ${readyCount}`,
+    `- Needs review: ${readinessAssets.length - readyCount}`,
+    ...ISSUE_FILTERS.map((issue) => `- ${issue.label}: ${issueCounts.get(issue.value) ?? 0}`),
+    "",
+    "## Assets",
+    "",
+    "| Status | Asset | Issues | Suggested filename | Alt text |",
+    "| --- | --- | --- | --- | --- |"
+  ];
+
+  for (const row of rows) {
+    const path = row.asset.relativePath ?? row.asset.path ?? row.asset.name ?? row.asset.id ?? "";
+    const issueText = row.issues.length ? row.issues.map((issue) => issue.label).join("; ") : "None";
+    const cells = [
+      row.issues.length ? "Needs review" : "Ready",
+      `\`${escapeMarkdownCodeText(path)}\``,
+      escapeMarkdownTableText(issueText),
+      `\`${escapeMarkdownCodeText(createSuggestedFileName(row.asset))}\``,
+      escapeMarkdownTableText(createAssetAltText(row.asset))
+    ];
+    lines.push(`| ${cells.join(" | ")} |`);
+  }
+
+  lines.push("");
+  return lines.join("\n");
+}
+
 export function createSuggestedFileName(asset = {}) {
   const themes = getAssetThemes(asset);
   const colorThemes = getAssetColorThemes(asset);

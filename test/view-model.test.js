@@ -18,6 +18,7 @@ import {
   createAssetManifest,
   createAssetRenamePlan,
   createAssetPublishingChecklist,
+  createAssetReadinessReport,
   createCurationBackup,
   createDefaultViewState,
   createDuplicateGroupDetails,
@@ -973,6 +974,51 @@ test("createAssetPublishingChecklist exports per-asset publishing tasks", () => 
     "- Dimensions: Unknown dimensions",
     "- Issues: Missing dimensions",
     "- Markdown embed: `![Logo vector visual with cool, green colors and a teal palette.](http://127.0.0.1:4173/assets/c)`",
+    ""
+  ].join("\n"));
+});
+
+test("createAssetReadinessReport summarizes publish readiness for selected assets", () => {
+  const readyAsset = {
+    id: "ready",
+    name: "ready.png",
+    relativePath: "ready.png",
+    rootName: "Test",
+    extension: ".png",
+    sizeBytes: 2000,
+    width: 1600,
+    height: 1600,
+    themes: ["background", "landscape"],
+    colorThemes: ["cool"],
+    palette: [],
+    modifiedAt: "2026-06-01T00:00:00.000Z"
+  };
+
+  assert.equal(createAssetReadinessReport([index.assets[0], readyAsset], {
+    generatedAt: "2026-06-01T22:00:00.000Z",
+    label: "selected",
+    duplicateAssetIds: new Set(["a"])
+  }), [
+    "# Image Asset Readiness Report",
+    "",
+    "Generated: 2026-06-01T22:00:00.000Z",
+    "Scope: selected",
+    "Count: 2",
+    "",
+    "## Summary",
+    "",
+    "- Ready assets: 1",
+    "- Needs review: 1",
+    "- Duplicate: 1",
+    "- Missing dimensions: 0",
+    "- Tiny resolution: 1",
+    "",
+    "## Assets",
+    "",
+    "| Status | Asset | Issues | Suggested filename | Alt text |",
+    "| --- | --- | --- | --- | --- |",
+    "| Needs review | `flowers/rose.png` | Duplicate; Tiny resolution | `portrait-character-warm-vivid-512x768.png` | Portrait character visual with warm, vivid colors and a rose, teal palette. Metadata suggests: Soft light portrait. |",
+    "| Ready | `ready.png` | None | `background-landscape-cool-1600x1600.png` | Square background visual with cool colors. |",
     ""
   ].join("\n"));
 });

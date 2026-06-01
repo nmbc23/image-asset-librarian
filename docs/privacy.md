@@ -16,6 +16,7 @@ Image Asset Librarian is designed to run locally. The default workflow scans a l
 - Image embed snippets, which use local asset URLs and only leave the browser when copied or downloaded by the user.
 - Contact sheets, including similar-group contact sheets, which use local asset URLs and only leave the browser when copied by the user.
 - Publishing checklists, which combine local metadata, issue status, alt text, and local asset URLs only when copied or downloaded by the user.
+- Readiness reports, which summarize local issue status, suggested filenames, and generated alt text only when copied or downloaded by the user.
 - Rename plans, which can include local relative paths and only leave the browser when copied or downloaded by the user.
 - Saved and review marks, which are stored in browser local storage as asset ids and can be copied or downloaded as JSON backups only when the user clicks the backup controls.
 
