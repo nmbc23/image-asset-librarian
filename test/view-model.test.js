@@ -16,8 +16,10 @@ import {
   createWorkflowReport,
   formatBytes,
   getAllAssetTags,
+  getAssetNote,
   normalizeSavedFilterViews,
-  parseMarkBackup
+  parseMarkBackup,
+  setAssetNote
 } from "../public/view-model.js";
 
 const index = {
@@ -74,6 +76,7 @@ test("createLibraryView filters by search, root, extension, and duplicate state"
     savedAssets: 0,
     reviewAssets: 0,
     taggedAssets: 0,
+    notedAssets: 0,
     sources: 1,
     extensions: 1
   });
@@ -117,6 +120,7 @@ test("createLibraryView filters by saved and review marks", () => {
     savedAssets: 1,
     reviewAssets: 1,
     taggedAssets: 0,
+    notedAssets: 0,
     sources: 2,
     extensions: 2
   });
@@ -141,6 +145,37 @@ test("createLibraryView filters by local asset tags", () => {
     savedAssets: 0,
     reviewAssets: 0,
     taggedAssets: 1,
+    notedAssets: 0,
+    sources: 1,
+    extensions: 1
+  });
+});
+
+test("createLibraryView filters and searches browser-local asset notes", () => {
+  const assetNotes = {
+    a: "  Final portrait pick for the Codex bio  ",
+    c: "mint logo draft"
+  };
+
+  assert.deepEqual(
+    createLibraryView(index, { note: "with-notes", assetNotes, sort: "name" }).assets.map((asset) => asset.id),
+    ["c", "a"]
+  );
+  assert.deepEqual(
+    createLibraryView(index, { note: "without-notes", assetNotes, sort: "name" }).assets.map((asset) => asset.id),
+    ["b"]
+  );
+
+  const searchView = createLibraryView(index, { query: "bio", assetNotes });
+  assert.deepEqual(searchView.assets.map((asset) => asset.id), ["a"]);
+  assert.deepEqual(searchView.filteredSummary, {
+    totalAssets: 1,
+    totalBytes: 1200,
+    duplicateAssets: 1,
+    savedAssets: 0,
+    reviewAssets: 0,
+    taggedAssets: 0,
+    notedAssets: 1,
     sources: 1,
     extensions: 1
   });
@@ -297,6 +332,7 @@ test("createDefaultViewState returns resettable filter defaults", () => {
     maxAgeDays: "all",
     mark: "all",
     tag: "all",
+    note: "all",
     duplicateOnly: false,
     sort: "newest"
   });
@@ -313,6 +349,7 @@ test("createActiveFilterChips describes only non-default filters", () => {
     maxAgeDays: "30",
     mark: "review",
     tag: "keeper",
+    note: "with-notes",
     duplicateOnly: true,
     sort: "largest"
   }), [
@@ -323,6 +360,7 @@ test("createActiveFilterChips describes only non-default filters", () => {
     { key: "maxAgeDays", label: "Age", value: "Last 30 days" },
     { key: "mark", label: "Mark", value: "Review queue" },
     { key: "tag", label: "Tag", value: "keeper" },
+    { key: "note", label: "Notes", value: "With notes" },
     { key: "duplicateOnly", label: "Duplicates", value: "Only duplicates" },
     { key: "sort", label: "Sort", value: "Largest" }
   ]);
@@ -352,6 +390,7 @@ test("createSavedFilterView stores a normalized filter state snapshot", () => {
       maxAgeDays: "all",
       mark: "all",
       tag: "all",
+      note: "all",
       duplicateOnly: true,
       sort: "largest"
     }
@@ -385,6 +424,7 @@ test("normalizeSavedFilterViews drops invalid entries and restores missing defau
         maxAgeDays: "all",
         mark: "all",
         tag: "all",
+        note: "all",
         duplicateOnly: true,
         sort: "oldest"
       }
@@ -418,6 +458,26 @@ test("getAllAssetTags returns sorted unique normalized tag names", () => {
     b: ["keeper", "", "review"],
     c: []
   }), ["draft", "keeper", "review"]);
+});
+
+test("setAssetNote trims notes and removes blank values", () => {
+  assert.deepEqual(setAssetNote({
+    a: "existing note",
+    ignored: 4
+  }, " b ", "  Fresh note\nfor export  "), {
+    a: "existing note",
+    b: "Fresh note\nfor export"
+  });
+
+  assert.deepEqual(setAssetNote({
+    a: "existing note",
+    b: "temporary"
+  }, "b", "   "), {
+    a: "existing note"
+  });
+
+  assert.equal(getAssetNote({ a: "  Saved note  " }, "a"), "Saved note");
+  assert.equal(getAssetNote({ a: "Saved note" }, "missing"), "");
 });
 
 test("applyMarkBatch updates saved and review queues for selected assets", () => {

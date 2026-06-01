@@ -28,7 +28,8 @@ body {
 
 button,
 input,
-select {
+select,
+textarea {
   font: inherit;
 }
 
@@ -329,7 +330,8 @@ label span {
 }
 
 input,
-select {
+select,
+textarea {
   width: 100%;
   min-height: 42px;
   border: 1px solid var(--line);
@@ -341,6 +343,7 @@ select {
 
 input:focus,
 select:focus,
+textarea:focus,
 button:focus-visible,
 a:focus-visible {
   outline: 3px solid rgba(31, 138, 112, 0.28);
@@ -662,6 +665,19 @@ a:focus-visible {
   padding: 0 8px;
 }
 
+.asset-note-preview {
+  display: -webkit-box;
+  overflow: hidden;
+  border-left: 3px solid rgba(31, 138, 112, 0.42);
+  background: #f3f7f5;
+  color: var(--muted);
+  font-size: 0.78rem;
+  line-height: 1.35;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  padding: 7px 9px;
+}
+
 dl {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -822,6 +838,27 @@ button:disabled {
   font-size: 0.9rem;
   font-weight: 800;
   padding: 10px 12px;
+}
+
+.note-editor {
+  display: grid;
+  gap: 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fbfcfb;
+  padding: 12px;
+}
+
+.note-editor textarea {
+  min-height: 118px;
+  padding: 10px 12px;
+  line-height: 1.35;
+  resize: vertical;
+}
+
+.note-editor .secondary-button {
+  justify-self: start;
+  min-height: 34px;
 }
 
 .detail-list {

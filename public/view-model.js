@@ -7,6 +7,7 @@ export function createDefaultViewState() {
     maxAgeDays: "all",
     mark: "all",
     tag: "all",
+    note: "all",
     duplicateOnly: false,
     sort: "newest"
   };
@@ -106,6 +107,30 @@ export function getAssetTags(assetTags = {}, assetId) {
   return normalizeAssetTags(assetTags)[assetId] ?? [];
 }
 
+export function setAssetNote(assetNotes = {}, assetId, note) {
+  const updatedNotes = normalizeAssetNotes(assetNotes);
+  const normalizedId = String(assetId ?? "").trim();
+  const normalizedNote = String(note ?? "").trim();
+
+  if (!normalizedId) {
+    return updatedNotes;
+  }
+  if (normalizedNote) {
+    updatedNotes[normalizedId] = normalizedNote;
+  } else {
+    delete updatedNotes[normalizedId];
+  }
+  return updatedNotes;
+}
+
+export function getAssetNote(assetNotes = {}, assetId) {
+  const normalizedId = String(assetId ?? "").trim();
+  if (!normalizedId) {
+    return "";
+  }
+  return normalizeAssetNotes(assetNotes)[normalizedId] ?? "";
+}
+
 export function createActiveFilterChips(state = {}) {
   const defaults = createDefaultViewState();
   const normalizedState = { ...defaults, ...state };
@@ -145,6 +170,9 @@ export function createActiveFilterChips(state = {}) {
   if (normalizedState.tag !== defaults.tag) {
     chips.push({ key: "tag", label: "Tag", value: normalizedState.tag });
   }
+  if (normalizedState.note !== defaults.note) {
+    chips.push({ key: "note", label: "Notes", value: formatNoteFilterLabel(normalizedState.note) });
+  }
   if (normalizedState.duplicateOnly !== defaults.duplicateOnly) {
     chips.push({ key: "duplicateOnly", label: "Duplicates", value: "Only duplicates" });
   }
@@ -166,20 +194,22 @@ export function createLibraryView(index, state = {}) {
   const savedAssetIds = toAssetIdSet(normalizedState.savedAssetIds);
   const reviewAssetIds = toAssetIdSet(normalizedState.reviewAssetIds);
   const assetTags = normalizeAssetTags(normalizedState.assetTags);
+  const assetNotes = normalizeAssetNotes(normalizedState.assetNotes);
 
   const filteredAssets = assets
-    .filter((asset) => matchesSearch(asset, normalizedState.query))
+    .filter((asset) => matchesSearch(asset, normalizedState.query, assetNotes))
     .filter((asset) => normalizedState.root === "all" || asset.rootName === normalizedState.root)
     .filter((asset) => normalizedState.extension === "all" || asset.extension === normalizedState.extension)
     .filter((asset) => normalizedState.orientation === "all" || getOrientation(asset) === normalizedState.orientation)
     .filter((asset) => isWithinAge(asset, normalizedState.maxAgeDays, normalizedState.now))
     .filter((asset) => matchesMark(asset, normalizedState.mark, savedAssetIds, reviewAssetIds))
     .filter((asset) => matchesTag(asset, normalizedState.tag, assetTags))
+    .filter((asset) => matchesNote(asset, normalizedState.note, assetNotes))
     .filter((asset) => !normalizedState.duplicateOnly || duplicateAssetIds.has(asset.id));
 
   return {
     assets: sortAssets(filteredAssets, normalizedState.sort),
-    filteredSummary: summarizeAssets(filteredAssets, duplicateAssetIds, savedAssetIds, reviewAssetIds, assetTags),
+    filteredSummary: summarizeAssets(filteredAssets, duplicateAssetIds, savedAssetIds, reviewAssetIds, assetTags, assetNotes),
     roots: uniqueSorted(assets.map((asset) => asset.rootName)),
     extensions: uniqueSorted(assets.map((asset) => asset.extension)),
     tags: getAllAssetTags(assetTags),
@@ -384,8 +414,8 @@ export function formatDate(value) {
   }).format(new Date(value));
 }
 
-function matchesSearch(asset, query) {
-  const normalizedQuery = query.trim().toLowerCase();
+function matchesSearch(asset, query, assetNotes = {}) {
+  const normalizedQuery = String(query ?? "").trim().toLowerCase();
   if (!normalizedQuery) {
     return true;
   }
@@ -394,7 +424,8 @@ function matchesSearch(asset, query) {
     asset.name,
     asset.relativePath,
     asset.rootName,
-    asset.extension
+    asset.extension,
+    assetNotes[asset.id]
   ].join(" ").toLowerCase();
 
   return normalizedQuery.split(/\s+/).every((term) => haystack.includes(term));
@@ -418,6 +449,16 @@ function matchesTag(asset, tag, assetTags) {
     return true;
   }
   return (assetTags[asset.id] ?? []).includes(tag);
+}
+
+function matchesNote(asset, note, assetNotes) {
+  if (note === "with-notes") {
+    return Boolean(assetNotes[asset.id]);
+  }
+  if (note === "without-notes") {
+    return !assetNotes[asset.id];
+  }
+  return true;
 }
 
 function compareDuplicateKeepCandidate(a, b) {
@@ -491,6 +532,18 @@ function normalizeAssetTags(value) {
   );
 }
 
+function normalizeAssetNotes(value) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return {};
+  }
+
+  return Object.fromEntries(
+    Object.entries(value)
+      .map(([assetId, note]) => [String(assetId ?? "").trim(), typeof note === "string" ? note.trim() : ""])
+      .filter(([assetId, note]) => assetId && note)
+  );
+}
+
 function normalizeTag(value) {
   return String(value ?? "").trim().replace(/\s+/g, " ").toLowerCase();
 }
@@ -521,11 +574,21 @@ function formatMarkLabel(value) {
   return formatChoiceLabel(value);
 }
 
+function formatNoteFilterLabel(value) {
+  if (value === "with-notes") {
+    return "With notes";
+  }
+  if (value === "without-notes") {
+    return "Without notes";
+  }
+  return formatChoiceLabel(value);
+}
+
 function formatCsvCell(value) {
   return `"${String(value ?? "").replaceAll('"', '""')}"`;
 }
 
-function summarizeAssets(assets, duplicateAssetIds, savedAssetIds, reviewAssetIds, assetTags = {}) {
+function summarizeAssets(assets, duplicateAssetIds, savedAssetIds, reviewAssetIds, assetTags = {}, assetNotes = {}) {
   return {
     totalAssets: assets.length,
     totalBytes: assets.reduce((sum, asset) => sum + asset.sizeBytes, 0),
@@ -533,6 +596,7 @@ function summarizeAssets(assets, duplicateAssetIds, savedAssetIds, reviewAssetId
     savedAssets: assets.filter((asset) => savedAssetIds.has(asset.id)).length,
     reviewAssets: assets.filter((asset) => reviewAssetIds.has(asset.id)).length,
     taggedAssets: assets.filter((asset) => (assetTags[asset.id] ?? []).length).length,
+    notedAssets: assets.filter((asset) => assetNotes[asset.id]).length,
     sources: new Set(assets.map((asset) => asset.rootName).filter(Boolean)).size,
     extensions: new Set(assets.map((asset) => asset.extension).filter(Boolean)).size
   };

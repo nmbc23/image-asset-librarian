@@ -14,9 +14,11 @@ import {
   formatBytes,
   formatDate,
   getAllAssetTags,
+  getAssetNote,
   getAssetTags,
   normalizeSavedFilterViews,
-  parseMarkBackup
+  parseMarkBackup,
+  setAssetNote
 } from "./view-model.js";
 
 const elements = {
@@ -33,6 +35,7 @@ const elements = {
   sort: document.querySelector("#sort-select"),
   mark: document.querySelector("#mark-filter"),
   tag: document.querySelector("#tag-filter"),
+  note: document.querySelector("#note-filter"),
   duplicateToggle: document.querySelector("#duplicate-toggle"),
   resetFilters: document.querySelector("#reset-filters"),
   activeFilters: document.querySelector("#active-filters"),
@@ -73,10 +76,12 @@ const elements = {
 
 const MARK_STORAGE_KEY = "image-asset-librarian:marks:v1";
 const TAG_STORAGE_KEY = "image-asset-librarian:asset-tags:v1";
+const NOTE_STORAGE_KEY = "image-asset-librarian:asset-notes:v1";
 const FILTER_VIEWS_STORAGE_KEY = "image-asset-librarian:filter-views:v1";
 const state = createDefaultViewState();
 const marks = loadMarks();
 let assetTags = loadAssetTags();
+let assetNotes = loadAssetNotes();
 let savedFilterViews = loadSavedFilterViews();
 const selectedAssetIds = new Set();
 
@@ -131,6 +136,10 @@ function bindEvents() {
   });
   elements.tag.addEventListener("change", () => {
     state.tag = elements.tag.value;
+    render();
+  });
+  elements.note.addEventListener("change", () => {
+    state.note = elements.note.value;
     render();
   });
   elements.duplicateToggle.addEventListener("change", () => {
@@ -261,6 +270,12 @@ function bindEvents() {
     const copyButton = event.target.closest("[data-copy-value]");
     if (copyButton) {
       await copyFromButton(copyButton, copyButton.dataset.copyValue);
+      return;
+    }
+
+    const noteButton = event.target.closest("[data-save-note]");
+    if (noteButton) {
+      saveAssetNote(noteButton.dataset.saveNote);
     }
   });
   document.addEventListener("keydown", (event) => {
@@ -279,6 +294,7 @@ function syncControlsFromState() {
   elements.sort.value = state.sort;
   elements.mark.value = state.mark;
   elements.tag.value = state.tag;
+  elements.note.value = state.note;
   elements.duplicateToggle.checked = state.duplicateOnly;
 }
 
@@ -291,7 +307,8 @@ function render() {
     ...state,
     savedAssetIds: marks.saved,
     reviewAssetIds: marks.review,
-    assetTags
+    assetTags,
+    assetNotes
   });
   currentView = view;
   renderSummary(libraryIndex);
@@ -521,6 +538,7 @@ function renderGallery(view) {
     <div><strong>${view.filteredSummary.savedAssets}</strong><span>saved shown</span></div>
     <div><strong>${view.filteredSummary.reviewAssets}</strong><span>review shown</span></div>
     <div><strong>${view.filteredSummary.taggedAssets}</strong><span>tagged shown</span></div>
+    <div><strong>${view.filteredSummary.notedAssets}</strong><span>notes shown</span></div>
     <div><strong>${view.filteredSummary.sources}</strong><span>sources shown</span></div>
     <div><strong>${view.filteredSummary.extensions}</strong><span>types shown</span></div>
   `;
@@ -556,6 +574,7 @@ function renderAssetCard(asset, isDuplicate) {
         </div>
         <p title="${escapeHtml(asset.relativePath)}">${escapeHtml(asset.relativePath)}</p>
         ${renderAssetTags(asset.id)}
+        ${renderAssetNotePreview(asset.id)}
         <dl>
           <div><dt>Source</dt><dd>${escapeHtml(asset.rootName)}</dd></div>
           <div><dt>Type</dt><dd>${escapeHtml(asset.extension.replace(".", "").toUpperCase())}</dd></div>
@@ -570,6 +589,15 @@ function renderAssetCard(asset, isDuplicate) {
       </div>
     </article>
   `;
+}
+
+function renderAssetNotePreview(assetId) {
+  const note = getAssetNote(assetNotes, assetId);
+  if (!note) {
+    return "";
+  }
+
+  return `<div class="asset-note-preview" title="${escapeHtml(note)}">${escapeHtml(note)}</div>`;
 }
 
 function renderAssetTags(assetId) {
@@ -591,6 +619,7 @@ function showDetails(assetId) {
     return;
   }
 
+  details.note = getAssetNote(assetNotes, assetId);
   elements.drawerTitle.textContent = details.name;
   elements.drawerContent.innerHTML = renderDetails(details);
   elements.detailDrawer.setAttribute("aria-hidden", "false");
@@ -606,6 +635,13 @@ function renderDetails(details) {
       <img src="${details.imageUrl}" alt="${escapeHtml(details.name)}">
     </a>
     ${details.isDuplicate ? `<div class="drawer-alert">${details.duplicateGroup.count} duplicate files, ${details.duplicateGroup.reclaimable} reclaimable</div>` : ""}
+    <section class="note-editor" aria-label="Local asset note">
+      <label>
+        <span>Local note</span>
+        <textarea rows="5" data-note-asset="${escapeHtml(details.id)}" placeholder="Add usage notes, prompt context, or publishing status">${escapeHtml(details.note)}</textarea>
+      </label>
+      <button type="button" class="secondary-button" data-save-note="${escapeHtml(details.id)}">Save note</button>
+    </section>
     <dl class="detail-list">
       ${details.fields.map(renderDetailField).join("")}
     </dl>
@@ -701,6 +737,23 @@ function getSelectedTags() {
   return getAllAssetTags(Object.fromEntries(
     [...selectedAssetIds].map((assetId) => [assetId, getAssetTags(assetTags, assetId)])
   ));
+}
+
+function saveAssetNote(assetId) {
+  const textarea = elements.drawerContent.querySelector("[data-note-asset]");
+  if (!textarea || textarea.dataset.noteAsset !== assetId) {
+    return;
+  }
+
+  assetNotes = setAssetNote(assetNotes, assetId, textarea.value);
+  saveAssetNotes();
+  render();
+  showDetails(assetId);
+
+  const button = elements.drawerContent.querySelector("[data-save-note]");
+  if (button) {
+    showButtonFeedback(button, "Saved");
+  }
 }
 
 function selectVisibleAssets() {
@@ -814,11 +867,27 @@ function loadAssetTags() {
   }
 }
 
+function loadAssetNotes() {
+  try {
+    return JSON.parse(localStorage.getItem(NOTE_STORAGE_KEY) ?? "{}");
+  } catch {
+    return {};
+  }
+}
+
 function saveAssetTags() {
   try {
     localStorage.setItem(TAG_STORAGE_KEY, JSON.stringify(assetTags));
   } catch {
     // Tags are optional browser-local curation state.
+  }
+}
+
+function saveAssetNotes() {
+  try {
+    localStorage.setItem(NOTE_STORAGE_KEY, JSON.stringify(assetNotes));
+  } catch {
+    // Notes are optional browser-local curation state.
   }
 }
 

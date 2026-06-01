@@ -38,7 +38,7 @@
       <section class="toolbar" aria-label="Gallery filters">
         <label class="search-field">
           <span>Search</span>
-          <input id="search-input" type="search" placeholder="Name, folder, source, type">
+          <input id="search-input" type="search" placeholder="Name, folder, source, type, note">
         </label>
         <label>
           <span>Source</span>
@@ -89,6 +89,14 @@
         <label>
           <span>Tag</span>
           <select id="tag-filter"></select>
+        </label>
+        <label>
+          <span>Notes</span>
+          <select id="note-filter">
+            <option value="all">All notes</option>
+            <option value="with-notes">With notes</option>
+            <option value="without-notes">Without notes</option>
+          </select>
         </label>
         <label class="toggle">
           <input id="duplicate-toggle" type="checkbox">
