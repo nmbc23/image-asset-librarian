@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { createBrowserFolderIndex } from "../public/browser-folder-index.js";
+import { createBrowserFileListIndex, createBrowserFolderIndex } from "../public/browser-folder-index.js";
 
 test("createBrowserFolderIndex builds a local index from a picked directory handle", async () => {
   const root = createDirectoryHandle("Generated", [
@@ -79,6 +79,30 @@ test("createBrowserFolderIndex accepts common JPEG filename variants", async () 
   assert.deepEqual(index.assets.map((asset) => asset.extension).sort(), [".jfif", ".jpe", ".jpg"]);
 });
 
+test("createBrowserFileListIndex builds a local index from a directory file input", async () => {
+  const files = [
+    createBrowserFile("hero.png", "pixels", "Generated/hero.png"),
+    createBrowserFile("notes.txt", "ignore me", "Generated/notes.txt"),
+    createBrowserFile("mint-landscape.svg", "<svg></svg>", "Generated/archive/mint-landscape.svg")
+  ];
+
+  const index = await createBrowserFileListIndex(files, {
+    createObjectUrl: (file) => `blob:test/${file.name}`,
+    readDimensions: async (file) => file.name.endsWith(".svg")
+      ? { width: 900, height: 520 }
+      : { width: 1024, height: 1024 },
+    now: "2026-06-01T00:00:00.000Z"
+  });
+
+  assert.equal(index.mode, "browser-folder");
+  assert.equal(index.roots[0].name, "Generated");
+  assert.equal(index.summary.totalAssets, 2);
+  assert.deepEqual(index.assets.map((asset) => asset.relativePath).sort(), [
+    "archive/mint-landscape.svg",
+    "hero.png"
+  ]);
+});
+
 test("createBrowserFolderIndex records inaccessible files without aborting the whole scan", async () => {
   const root = createDirectoryHandle("Mixed", [
     createFileHandle("good.png", "good"),
@@ -110,6 +134,20 @@ function createDirectoryHandle(name, children) {
       for (const child of children) {
         yield [child.name, child];
       }
+    }
+  };
+}
+
+function createBrowserFile(name, content, webkitRelativePath, options = {}) {
+  const bytes = new TextEncoder().encode(content);
+  return {
+    name,
+    webkitRelativePath,
+    size: bytes.byteLength,
+    lastModified: options.lastModified ?? 1_700_000_000_000,
+    type: options.type ?? "",
+    async arrayBuffer() {
+      return bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength);
     }
   };
 }

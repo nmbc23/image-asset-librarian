@@ -64,7 +64,7 @@ Future AI features, such as real image captioning or embedding-based semantic se
 
 ## Scan Your Own Folders
 
-The fastest way is to start the server and click "Choose folder". In browsers that support the File System Access API, this opens the system folder picker and builds a browser-only gallery from file names, sizes, dates, and preview URLs so large folders appear quickly.
+The fastest way is to start the server and click "Choose folder". This opens the system folder picker and builds a browser-only gallery from file names, sizes, dates, and preview URLs so large folders appear quickly. When a browser supports direct directory handles, the app can also use that path as an alternate picker.
 
 Use "Scan by path" when you want the Node server to rescan an absolute local path, compute exact duplicate hashes and dimensions, and update `data/index.json`. The gallery refreshes after the scan and remembers recent typed paths in your browser.
 

@@ -17,12 +17,41 @@ export async function createBrowserFolderIndex(directoryHandle, options = {}) {
   const rootName = String(directoryHandle?.name ?? "Selected folder").trim() || "Selected folder";
   const errors = [];
   const files = [];
-  const hashFiles = Boolean(options.hashFiles);
-  const readDimensions = Boolean(options.readImageDimensions) || typeof options.readDimensions === "function";
 
   await collectImageFiles(directoryHandle, "", files, errors, options.onProgress);
 
+  return createBrowserIndex(rootName, files, errors, options);
+}
+
+export async function createBrowserFileListIndex(fileList, options = {}) {
+  const sourceFiles = [...(fileList ?? [])];
+  const rootName = getFileListRootName(sourceFiles, options.rootName);
+  const errors = [];
+  const files = [];
+
+  for (const file of sourceFiles) {
+    const relativePath = getFileListRelativePath(file, rootName);
+    const extension = getExtension(file?.name || relativePath);
+    if (!SUPPORTED_IMAGE_EXTENSIONS.has(extension)) {
+      continue;
+    }
+
+    files.push({ file, relativePath, extension });
+    options.onProgress?.({
+      phase: "collecting",
+      scanned: files.length,
+      path: relativePath
+    });
+  }
+
+  return createBrowserIndex(rootName, files, errors, options);
+}
+
+async function createBrowserIndex(rootName, files, errors, options = {}) {
+  const hashFiles = Boolean(options.hashFiles);
+  const readDimensions = Boolean(options.readImageDimensions) || typeof options.readDimensions === "function";
   const assets = [];
+
   for (const [index, entry] of files.entries()) {
     options.onProgress?.({
       phase: "indexing",
@@ -146,6 +175,33 @@ async function* mapDirectoryValues(values) {
   for await (const handle of values) {
     yield [handle.name, handle];
   }
+}
+
+function getFileListRootName(files, fallbackName) {
+  const fallback = String(fallbackName ?? "Selected folder").trim() || "Selected folder";
+  for (const file of files) {
+    const segments = splitRelativePath(file?.webkitRelativePath || file?.relativePath || "");
+    if (segments.length > 1) {
+      return segments[0];
+    }
+  }
+  return fallback;
+}
+
+function getFileListRelativePath(file, rootName) {
+  const pathSegments = splitRelativePath(file?.webkitRelativePath || file?.relativePath || file?.name || "");
+  if (pathSegments.length > 1 && pathSegments[0] === rootName) {
+    return pathSegments.slice(1).join("/");
+  }
+  return pathSegments.join("/") || String(file?.name ?? "untitled");
+}
+
+function splitRelativePath(relativePath) {
+  return String(relativePath ?? "")
+    .replaceAll("\\", "/")
+    .split("/")
+    .map((segment) => segment.trim())
+    .filter(Boolean);
 }
 
 async function safeReadDimensions(file, objectUrl, extension, relativePath, readDimensions = defaultReadDimensions) {

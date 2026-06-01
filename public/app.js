@@ -45,12 +45,13 @@ import {
   parseMarkBackup,
   setAssetNote
 } from "./view-model.js";
-import { createBrowserFolderIndex } from "./browser-folder-index.js";
+import { createBrowserFileListIndex, createBrowserFolderIndex } from "./browser-folder-index.js";
 
 const elements = {
   status: document.querySelector("#scan-status"),
   libraryKind: document.querySelector("#library-kind"),
   chooseFolderButton: document.querySelector("#choose-folder-button"),
+  folderFileInput: document.querySelector("#folder-file-input"),
   scanFolderForm: document.querySelector("#scan-folder-form"),
   folderPathInput: document.querySelector("#folder-path-input"),
   scanFolderButton: document.querySelector("#scan-folder-button"),
@@ -212,6 +213,21 @@ async function loadIndex() {
 }
 
 async function chooseFolderFromBrowser() {
+  if (elements.folderFileInput) {
+    elements.status.textContent = "Opening folder picker...";
+    elements.folderFileInput.value = "";
+    try {
+      elements.folderFileInput.click();
+      return;
+    } catch {
+      elements.status.textContent = "Trying alternate folder picker...";
+    }
+  }
+
+  await chooseFolderFromDirectoryHandle();
+}
+
+async function chooseFolderFromDirectoryHandle() {
   if (typeof window.showDirectoryPicker !== "function") {
     elements.status.textContent = "Folder picker is not supported. Use Scan by path instead.";
     elements.folderPathInput.focus();
@@ -234,14 +250,7 @@ async function chooseFolderFromBrowser() {
       }
     });
 
-    revokeBrowserAssetUrls();
-    browserAssetObjectUrls = nextIndex.assets.map((asset) => asset.objectUrl).filter(Boolean);
-    libraryIndex = nextIndex;
-    resetViewAfterScan();
-    render();
-    elements.status.textContent = nextIndex.assets.length
-      ? `Loaded ${nextIndex.assets.length} asset(s) from ${directoryHandle.name}. Use Scan by path for exact duplicate hashes.`
-      : `No supported image files found in ${directoryHandle.name}`;
+    applyBrowserIndex(nextIndex);
   } catch (error) {
     if (error.name === "AbortError") {
       elements.status.textContent = "Folder selection cancelled";
@@ -251,6 +260,47 @@ async function chooseFolderFromBrowser() {
   } finally {
     setScanControlsBusy(false);
   }
+}
+
+async function handleBrowserFolderFiles(event) {
+  const files = [...(event.target.files ?? [])];
+  if (!files.length) {
+    elements.status.textContent = "Folder selection cancelled";
+    return;
+  }
+
+  setScanControlsBusy(true);
+  elements.status.textContent = "Indexing selected folder...";
+  try {
+    const nextIndex = await createBrowserFileListIndex(files, {
+      onProgress: (progress) => {
+        if (progress.phase === "collecting") {
+          elements.status.textContent = `Found ${progress.scanned} image file(s)`;
+        }
+        if (progress.phase === "indexing") {
+          elements.status.textContent = `Indexing selected folder: ${progress.scanned}/${progress.total}`;
+        }
+      }
+    });
+
+    applyBrowserIndex(nextIndex);
+  } catch (error) {
+    elements.status.textContent = `Folder pick failed: ${error.message}`;
+  } finally {
+    setScanControlsBusy(false);
+    event.target.value = "";
+  }
+}
+
+function applyBrowserIndex(nextIndex) {
+  revokeBrowserAssetUrls();
+  browserAssetObjectUrls = nextIndex.assets.map((asset) => asset.objectUrl).filter(Boolean);
+  libraryIndex = nextIndex;
+  resetViewAfterScan();
+  render();
+  elements.status.textContent = nextIndex.assets.length
+    ? `Loaded ${nextIndex.assets.length} asset(s) from ${nextIndex.roots[0]?.name ?? "selected folder"}. Use Scan by path for exact duplicate hashes.`
+    : `No supported image files found in ${nextIndex.roots[0]?.name ?? "selected folder"}`;
 }
 
 async function scanFolderFromInput(event) {
@@ -306,6 +356,7 @@ function revokeBrowserAssetUrls() {
 function setScanControlsBusy(isBusy) {
   elements.chooseFolderButton.disabled = isBusy;
   elements.chooseFolderButton.textContent = isBusy ? "Working..." : "Choose folder";
+  elements.folderFileInput.disabled = isBusy;
   elements.folderPathInput.disabled = isBusy;
   elements.scanFolderButton.disabled = isBusy;
   elements.scanFolderButton.textContent = isBusy ? "Scanning..." : "Scan path";
@@ -313,6 +364,7 @@ function setScanControlsBusy(isBusy) {
 
 function bindEvents() {
   elements.chooseFolderButton.addEventListener("click", chooseFolderFromBrowser);
+  elements.folderFileInput.addEventListener("change", handleBrowserFolderFiles);
   elements.scanFolderForm.addEventListener("submit", scanFolderFromInput);
   elements.search.addEventListener("input", () => {
     state.query = elements.search.value;

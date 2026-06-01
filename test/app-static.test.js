@@ -105,9 +105,14 @@ test("folder scanner exposes a native folder picker before the path fallback", a
   ]);
 
   assert.match(htmlSource, /id="choose-folder-button"/);
+  assert.match(htmlSource, /id="folder-file-input"/);
+  assert.match(htmlSource, /webkitdirectory/);
   assert.match(htmlSource, /<summary>Scan by path<\/summary>/);
   assert.match(appSource, /createBrowserFolderIndex/);
+  assert.match(appSource, /createBrowserFileListIndex/);
   assert.match(appSource, /chooseFolderFromBrowser/);
+  assert.match(appSource, /folderFileInput\.click/);
+  assert.match(appSource, /handleBrowserFolderFiles/);
   assert.match(appSource, /showDirectoryPicker/);
   assert.match(appSource, /revokeBrowserAssetUrls/);
   assert.match(cssSource, /\.folder-picker-primary/);
