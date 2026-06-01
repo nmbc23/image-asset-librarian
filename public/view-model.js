@@ -109,6 +109,9 @@ export function createDuplicateGroupDetails(index, group) {
   const assetsById = new Map((index?.assets ?? []).map((asset) => [asset.id, asset]));
   const assets = (group?.assetIds ?? []).map((assetId) => assetsById.get(assetId)).filter(Boolean);
   const recommendedKeepAsset = [...assets].sort(compareDuplicateKeepCandidate)[0] ?? null;
+  const cleanupCandidateAssets = recommendedKeepAsset
+    ? assets.filter((asset) => asset.id !== recommendedKeepAsset.id)
+    : [];
 
   return {
     count: group?.count ?? assets.length,
@@ -116,7 +119,9 @@ export function createDuplicateGroupDetails(index, group) {
     hash: group?.hash,
     assets,
     recommendedKeepAsset,
-    pathList: createPathList(assets)
+    cleanupCandidateAssets,
+    pathList: createPathList(assets),
+    cleanupPathList: createPathList(cleanupCandidateAssets)
   };
 }
 

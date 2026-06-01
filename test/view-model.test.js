@@ -184,6 +184,8 @@ test("createDuplicateGroupDetails recommends a stable asset to keep and exports 
   assert.equal(details.count, 2);
   assert.equal(details.reclaimable, "1.2 KB");
   assert.equal(details.recommendedKeepAsset.id, "a");
+  assert.deepEqual(details.cleanupCandidateAssets.map((asset) => asset.id), ["b"]);
+  assert.equal(details.cleanupPathList, "copies/rose-copy.png");
   assert.deepEqual(details.assets.map((asset) => asset.id), ["a", "b"]);
   assert.equal(details.pathList, [
     "P:/AI/Codex/generated_images/rose.png",

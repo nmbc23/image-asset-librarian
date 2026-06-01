@@ -137,6 +137,12 @@ function bindEvents() {
     }
   });
   elements.duplicateList.addEventListener("click", async (event) => {
+    const cleanupButton = event.target.closest("[data-copy-duplicate-candidates]");
+    if (cleanupButton) {
+      await copyDuplicateCleanupCandidates(cleanupButton, Number.parseInt(cleanupButton.dataset.copyDuplicateCandidates, 10));
+      return;
+    }
+
     const button = event.target.closest("[data-copy-duplicate-group]");
     if (!button) {
       return;
@@ -316,7 +322,10 @@ function renderDuplicates(index) {
             <span>${details.reclaimable} reclaimable</span>
           </div>
           ${details.recommendedKeepAsset ? `<p>Suggested keep: ${escapeHtml(details.recommendedKeepAsset.relativePath)}</p>` : ""}
-          <button type="button" data-copy-duplicate-group="${groupIndex}">Copy group paths</button>
+          <div class="duplicate-actions">
+            <button type="button" data-copy-duplicate-group="${groupIndex}">Copy group paths</button>
+            <button type="button" data-copy-duplicate-candidates="${groupIndex}">Copy cleanup candidates</button>
+          </div>
           <ul>
             ${details.assets.map((asset) => `<li>${escapeHtml(asset.relativePath)} <span>${escapeHtml(asset.rootName)}</span></li>`).join("")}
           </ul>
@@ -453,6 +462,18 @@ async function copyDuplicateGroupPaths(button, groupIndex) {
   }
   const details = createDuplicateGroupDetails(libraryIndex, group);
   await copyFromButton(button, details.pathList);
+}
+
+async function copyDuplicateCleanupCandidates(button, groupIndex) {
+  const group = libraryIndex?.duplicates?.[groupIndex];
+  if (!group) {
+    return;
+  }
+  const details = createDuplicateGroupDetails(libraryIndex, group);
+  if (!details.cleanupPathList) {
+    return;
+  }
+  await copyFromButton(button, details.cleanupPathList);
 }
 
 async function copyWorkflowReport() {

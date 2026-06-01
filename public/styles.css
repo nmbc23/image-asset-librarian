@@ -325,7 +325,6 @@ a:focus-visible {
 
 .duplicate-group button {
   min-height: 32px;
-  margin-bottom: 10px;
   border: 1px solid rgba(31, 138, 112, 0.35);
   border-radius: 7px;
   background: rgba(31, 138, 112, 0.1);
@@ -334,6 +333,15 @@ a:focus-visible {
   font-size: 0.78rem;
   font-weight: 800;
   padding: 0 10px;
+}
+
+.duplicate-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-start;
+  margin-bottom: 10px;
 }
 
 .duplicate-group ul {
