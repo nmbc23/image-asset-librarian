@@ -14,6 +14,7 @@ import {
   createAssetNavigation,
   createAssetPublishingChecklist,
   createAssetProvenanceReport,
+  createAssetPromptKeywordReport,
   createAssetReadinessReport,
   createAssetRenamePlan,
   createCurationBackup,
@@ -97,6 +98,10 @@ const elements = {
   copySelectedProvenanceReport: document.querySelector("#copy-selected-provenance-report"),
   downloadVisibleProvenanceReport: document.querySelector("#download-visible-provenance-report"),
   downloadSelectedProvenanceReport: document.querySelector("#download-selected-provenance-report"),
+  copyVisiblePromptKeywordReport: document.querySelector("#copy-visible-prompt-keyword-report"),
+  copySelectedPromptKeywordReport: document.querySelector("#copy-selected-prompt-keyword-report"),
+  downloadVisiblePromptKeywordReport: document.querySelector("#download-visible-prompt-keyword-report"),
+  downloadSelectedPromptKeywordReport: document.querySelector("#download-selected-prompt-keyword-report"),
   copyVisibleCsv: document.querySelector("#copy-visible-csv"),
   copySelectedCsv: document.querySelector("#copy-selected-csv"),
   copyVisibleManifest: document.querySelector("#copy-visible-manifest"),
@@ -289,6 +294,10 @@ function bindEvents() {
   elements.copySelectedProvenanceReport.addEventListener("click", copySelectedProvenanceReport);
   elements.downloadVisibleProvenanceReport.addEventListener("click", downloadVisibleProvenanceReport);
   elements.downloadSelectedProvenanceReport.addEventListener("click", downloadSelectedProvenanceReport);
+  elements.copyVisiblePromptKeywordReport.addEventListener("click", copyVisiblePromptKeywordReport);
+  elements.copySelectedPromptKeywordReport.addEventListener("click", copySelectedPromptKeywordReport);
+  elements.downloadVisiblePromptKeywordReport.addEventListener("click", downloadVisiblePromptKeywordReport);
+  elements.downloadSelectedPromptKeywordReport.addEventListener("click", downloadSelectedPromptKeywordReport);
   elements.copyVisibleCsv.addEventListener("click", copyVisibleCsv);
   elements.copySelectedCsv.addEventListener("click", copySelectedCsv);
   elements.copyVisibleManifest.addEventListener("click", copyVisibleManifest);
@@ -642,6 +651,10 @@ function renderWorkflow() {
   elements.copySelectedProvenanceReport.disabled = selectedAssetIds.size === 0;
   elements.downloadVisibleProvenanceReport.disabled = !currentView?.assets.length;
   elements.downloadSelectedProvenanceReport.disabled = selectedAssetIds.size === 0;
+  elements.copyVisiblePromptKeywordReport.disabled = !currentView?.assets.length;
+  elements.copySelectedPromptKeywordReport.disabled = selectedAssetIds.size === 0;
+  elements.downloadVisiblePromptKeywordReport.disabled = !currentView?.assets.length;
+  elements.downloadSelectedPromptKeywordReport.disabled = selectedAssetIds.size === 0;
   elements.copyVisibleCsv.disabled = !currentView?.assets.length;
   elements.copySelectedCsv.disabled = selectedAssetIds.size === 0;
   elements.copyVisibleManifest.disabled = !currentView?.assets.length;
@@ -1496,6 +1509,44 @@ function downloadVisibleProvenanceReport() {
   downloadProvenanceReport(visibleAssets, "visible", elements.downloadVisibleProvenanceReport);
 }
 
+async function copySelectedPromptKeywordReport() {
+  const selectedAssets = getSelectedAssets();
+  if (!selectedAssets.length) {
+    return;
+  }
+  await copyFromButton(
+    elements.copySelectedPromptKeywordReport,
+    createAssetPromptKeywordReport(selectedAssets, createPromptKeywordReportOptions("selected"))
+  );
+}
+
+async function copyVisiblePromptKeywordReport() {
+  const visibleAssets = currentView?.assets ?? [];
+  if (!visibleAssets.length) {
+    return;
+  }
+  await copyFromButton(
+    elements.copyVisiblePromptKeywordReport,
+    createAssetPromptKeywordReport(visibleAssets, createPromptKeywordReportOptions("visible"))
+  );
+}
+
+function downloadSelectedPromptKeywordReport() {
+  const selectedAssets = getSelectedAssets();
+  if (!selectedAssets.length) {
+    return;
+  }
+  downloadPromptKeywordReport(selectedAssets, "selected", elements.downloadSelectedPromptKeywordReport);
+}
+
+function downloadVisiblePromptKeywordReport() {
+  const visibleAssets = currentView?.assets ?? [];
+  if (!visibleAssets.length) {
+    return;
+  }
+  downloadPromptKeywordReport(visibleAssets, "visible", elements.downloadVisiblePromptKeywordReport);
+}
+
 async function copySelectedCsv() {
   const selectedAssets = getSelectedAssets();
   if (!selectedAssets.length) {
@@ -1617,6 +1668,13 @@ function createProvenanceReportOptions(label, generatedAt = new Date().toISOStri
   };
 }
 
+function createPromptKeywordReportOptions(label, generatedAt = new Date().toISOString()) {
+  return {
+    generatedAt,
+    label
+  };
+}
+
 function downloadAltTextList(assets, label, button) {
   const generatedAt = new Date().toISOString();
   const list = createAssetAltTextList(assets, createAltTextOptions(label, generatedAt));
@@ -1649,6 +1707,13 @@ function downloadProvenanceReport(assets, label, button) {
   const generatedAt = new Date().toISOString();
   const report = createAssetProvenanceReport(assets, createProvenanceReportOptions(label, generatedAt));
   const fileName = createExportFileName(`asset-provenance-report-${label}`, "md", { generatedAt });
+  downloadTextFile(button, report, fileName, "text/markdown");
+}
+
+function downloadPromptKeywordReport(assets, label, button) {
+  const generatedAt = new Date().toISOString();
+  const report = createAssetPromptKeywordReport(assets, createPromptKeywordReportOptions(label, generatedAt));
+  const fileName = createExportFileName(`asset-prompt-keyword-report-${label}`, "md", { generatedAt });
   downloadTextFile(button, report, fileName, "text/markdown");
 }
 

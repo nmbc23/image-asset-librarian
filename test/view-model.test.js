@@ -19,6 +19,7 @@ import {
   createAssetRenamePlan,
   createAssetPublishingChecklist,
   createAssetProvenanceReport,
+  createAssetPromptKeywordReport,
   createAssetReadinessReport,
   createCurationBackup,
   createDefaultViewState,
@@ -1053,6 +1054,37 @@ test("createAssetProvenanceReport summarizes embedded prompt metadata", () => {
     "",
     "- Source: Codex",
     "- Metadata: None found",
+    ""
+  ].join("\n"));
+});
+
+test("createAssetPromptKeywordReport summarizes reusable prompt terms", () => {
+  assert.equal(createAssetPromptKeywordReport([index.assets[0], index.assets[2]], {
+    generatedAt: "2026-06-02T00:00:00.000Z",
+    label: "selected"
+  }), [
+    "# Image Asset Prompt Keyword Report",
+    "",
+    "Generated: 2026-06-02T00:00:00.000Z",
+    "Scope: selected",
+    "Count: 2",
+    "",
+    "## Summary",
+    "",
+    "- Assets with embedded metadata: 1",
+    "- Unique keywords: 7",
+    "",
+    "## Keywords",
+    "",
+    "| Keyword | Mentions | Assets | Examples |",
+    "| --- | ---: | ---: | --- |",
+    "| rose | 2 | 1 | `flowers/rose.png` |",
+    "| lens | 1 | 1 | `flowers/rose.png` |",
+    "| light | 1 | 1 | `flowers/rose.png` |",
+    "| macro | 1 | 1 | `flowers/rose.png` |",
+    "| pink | 1 | 1 | `flowers/rose.png` |",
+    "| portrait | 1 | 1 | `flowers/rose.png` |",
+    "| soft | 1 | 1 | `flowers/rose.png` |",
     ""
   ].join("\n"));
 });

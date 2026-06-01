@@ -377,6 +377,24 @@ test("visible and selected provenance reports can be copied and downloaded", asy
   assert.match(appSource, /asset-provenance-report/);
 });
 
+test("visible and selected prompt keyword reports can be copied and downloaded", async () => {
+  const [appSource, htmlSource] = await Promise.all([
+    readFile(new URL("../public/app.js", import.meta.url), "utf8"),
+    readFile(new URL("../public/index.html", import.meta.url), "utf8")
+  ]);
+
+  assert.match(htmlSource, /id="copy-visible-prompt-keyword-report"/);
+  assert.match(htmlSource, /id="copy-selected-prompt-keyword-report"/);
+  assert.match(htmlSource, /id="download-visible-prompt-keyword-report"/);
+  assert.match(htmlSource, /id="download-selected-prompt-keyword-report"/);
+  assert.match(appSource, /createAssetPromptKeywordReport/);
+  assert.match(appSource, /copyVisiblePromptKeywordReport/);
+  assert.match(appSource, /copySelectedPromptKeywordReport/);
+  assert.match(appSource, /downloadVisiblePromptKeywordReport/);
+  assert.match(appSource, /downloadSelectedPromptKeywordReport/);
+  assert.match(appSource, /asset-prompt-keyword-report/);
+});
+
 test("selected assets can be bulk marked from the workflow panel", async () => {
   const [appSource, htmlSource] = await Promise.all([
     readFile(new URL("../public/app.js", import.meta.url), "utf8"),

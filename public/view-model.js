@@ -886,6 +886,84 @@ export function createAssetProvenanceReport(assets, options = {}) {
   return lines.join("\n");
 }
 
+export function createAssetPromptKeywordReport(assets, options = {}) {
+  const keywordAssets = Array.isArray(assets) ? assets : [];
+  const keywordRows = new Map();
+  let metadataAssetCount = 0;
+
+  for (const asset of keywordAssets) {
+    const metadataEntries = getAssetMetadataEntries(asset);
+    if (metadataEntries.length) {
+      metadataAssetCount += 1;
+    }
+
+    const path = asset.relativePath ?? asset.path ?? asset.name ?? asset.id ?? "Asset";
+    const assetKey = asset.id ?? path;
+    for (const entry of metadataEntries) {
+      for (const keyword of getPromptKeywords(entry.value)) {
+        if (!keywordRows.has(keyword)) {
+          keywordRows.set(keyword, {
+            keyword,
+            mentions: 0,
+            assetIds: new Set(),
+            examples: []
+          });
+        }
+
+        const row = keywordRows.get(keyword);
+        row.mentions += 1;
+        row.assetIds.add(assetKey);
+        if (!row.examples.includes(path)) {
+          row.examples.push(path);
+        }
+      }
+    }
+  }
+
+  const rows = [...keywordRows.values()].sort((left, right) =>
+    right.mentions - left.mentions
+    || right.assetIds.size - left.assetIds.size
+    || left.keyword.localeCompare(right.keyword)
+  );
+
+  const lines = [
+    "# Image Asset Prompt Keyword Report",
+    "",
+    `Generated: ${options.generatedAt ?? new Date().toISOString()}`,
+    `Scope: ${String(options.label ?? "assets")}`,
+    `Count: ${keywordAssets.length}`,
+    "",
+    "## Summary",
+    "",
+    `- Assets with embedded metadata: ${metadataAssetCount}`,
+    `- Unique keywords: ${rows.length}`,
+    "",
+    "## Keywords"
+  ];
+
+  if (!rows.length) {
+    lines.push("", "No reusable keywords found.", "");
+    return lines.join("\n");
+  }
+
+  lines.push(
+    "",
+    "| Keyword | Mentions | Assets | Examples |",
+    "| --- | ---: | ---: | --- |"
+  );
+
+  for (const row of rows) {
+    const examples = row.examples
+      .slice(0, 3)
+      .map((path) => `\`${escapeMarkdownCodeText(path)}\``)
+      .join(", ");
+    lines.push(`| ${escapeMarkdownTableText(row.keyword)} | ${row.mentions} | ${row.assetIds.size} | ${examples} |`);
+  }
+
+  lines.push("");
+  return lines.join("\n");
+}
+
 export function createSuggestedFileName(asset = {}) {
   const themes = getAssetThemes(asset);
   const colorThemes = getAssetColorThemes(asset);
@@ -1352,6 +1430,26 @@ function normalizeColorTheme(value) {
 function normalizePaletteColor(value) {
   const normalized = String(value ?? "").trim().toLowerCase();
   return /^#[0-9a-f]{6}$/.test(normalized) ? normalized : "";
+}
+
+function getPromptKeywords(value) {
+  const stopWords = new Set([
+    "and",
+    "are",
+    "for",
+    "from",
+    "image",
+    "img",
+    "photo",
+    "picture",
+    "prompt",
+    "the",
+    "this",
+    "with"
+  ]);
+
+  return (String(value ?? "").toLowerCase().match(/[a-z0-9]+(?:-[a-z0-9]+)*/g) ?? [])
+    .filter((word) => word.length >= 3 && !stopWords.has(word));
 }
 
 function normalizeEmbeddedMetadata(value) {
