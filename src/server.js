@@ -1,10 +1,11 @@
 import { createReadStream } from "node:fs";
-import { readFile, stat } from "node:fs/promises";
+import { mkdir, readFile, stat, writeFile } from "node:fs/promises";
 import http from "node:http";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { loadConfig } from "./config.js";
+import { scanLibrary } from "./scanner.js";
 
 const modulePath = fileURLToPath(import.meta.url);
 const moduleDir = path.dirname(modulePath);
@@ -33,12 +34,18 @@ export function createAssetServer(options = {}) {
 
   return http.createServer(async (request, response) => {
     try {
+      const url = new URL(request.url, "http://localhost");
+
+      if (request.method === "POST" && url.pathname === "/api/scan") {
+        await scanPostedFolder(request, response, indexPath);
+        return;
+      }
+
       if (request.method !== "GET" && request.method !== "HEAD") {
         sendText(response, 405, "Method not allowed");
         return;
       }
 
-      const url = new URL(request.url, "http://localhost");
       if (url.pathname === "/api/index") {
         await sendFile(response, indexPath, ".json", request.method);
         return;
@@ -57,10 +64,63 @@ export function createAssetServer(options = {}) {
 
       await sendFile(response, staticPath, path.extname(staticPath).toLowerCase(), request.method);
     } catch (error) {
-      const status = error.code === "ENOENT" ? 404 : 500;
+      const status = error.statusCode ?? (error.code === "ENOENT" ? 404 : 500);
       sendText(response, status, status === 404 ? "Not found" : error.message);
     }
   });
+}
+
+async function scanPostedFolder(request, response, indexPath) {
+  const body = await readJsonBody(request);
+  const folderPath = String(body.folderPath ?? "").trim();
+  if (!folderPath) {
+    sendJson(response, 400, { error: "folderPath is required" });
+    return;
+  }
+
+  const resolvedPath = path.resolve(folderPath);
+  let folderStat;
+  try {
+    folderStat = await stat(resolvedPath);
+  } catch (error) {
+    if (error.code === "ENOENT") {
+      sendJson(response, 400, { error: "Folder not found" });
+      return;
+    }
+    throw error;
+  }
+  if (!folderStat.isDirectory()) {
+    sendJson(response, 400, { error: "Path is not a folder" });
+    return;
+  }
+
+  const index = await scanLibrary({
+    roots: [{
+      name: body.name || path.basename(resolvedPath) || resolvedPath,
+      path: resolvedPath
+    }]
+  });
+
+  await mkdir(path.dirname(indexPath), { recursive: true });
+  await writeFile(indexPath, `${JSON.stringify(index, null, 2)}\n`, "utf8");
+  sendJson(response, 200, index);
+}
+
+async function readJsonBody(request) {
+  let body = "";
+  for await (const chunk of request) {
+    body += chunk;
+    if (body.length > 64_000) {
+      const error = new Error("Request body too large");
+      error.statusCode = 413;
+      throw error;
+    }
+  }
+
+  if (!body.trim()) {
+    return {};
+  }
+  return JSON.parse(body);
 }
 
 async function sendIndexedAsset(response, indexPath, assetId, method) {
@@ -103,6 +163,14 @@ async function sendFile(response, filePath, extension, method) {
 function sendText(response, status, message) {
   response.writeHead(status, { "content-type": "text/plain; charset=utf-8" });
   response.end(message);
+}
+
+function sendJson(response, status, value) {
+  response.writeHead(status, {
+    "content-type": "application/json; charset=utf-8",
+    "cache-control": "no-store"
+  });
+  response.end(`${JSON.stringify(value)}\n`);
 }
 
 async function startServer() {

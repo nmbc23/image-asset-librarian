@@ -48,6 +48,11 @@ import {
 
 const elements = {
   status: document.querySelector("#scan-status"),
+  libraryKind: document.querySelector("#library-kind"),
+  scanFolderForm: document.querySelector("#scan-folder-form"),
+  folderPathInput: document.querySelector("#folder-path-input"),
+  scanFolderButton: document.querySelector("#scan-folder-button"),
+  recentFolderList: document.querySelector("#recent-folder-list"),
   assets: document.querySelector("#metric-assets"),
   size: document.querySelector("#metric-size"),
   duplicates: document.querySelector("#metric-duplicates"),
@@ -168,6 +173,7 @@ const MARK_STORAGE_KEY = "image-asset-librarian:marks:v1";
 const TAG_STORAGE_KEY = "image-asset-librarian:asset-tags:v1";
 const NOTE_STORAGE_KEY = "image-asset-librarian:asset-notes:v1";
 const FILTER_VIEWS_STORAGE_KEY = "image-asset-librarian:filter-views:v1";
+const RECENT_FOLDERS_STORAGE_KEY = "image-asset-librarian:recent-folders:v1";
 const state = createDefaultViewState();
 const marks = loadMarks();
 let assetTags = loadAssetTags();
@@ -183,6 +189,11 @@ init();
 
 async function init() {
   bindEvents();
+  hydrateRecentFolders();
+  await loadIndex();
+}
+
+async function loadIndex() {
   try {
     const response = await fetch("/api/index");
     if (!response.ok) {
@@ -196,7 +207,56 @@ async function init() {
   }
 }
 
+async function scanFolderFromInput(event) {
+  event.preventDefault();
+  const folderPath = elements.folderPathInput.value.trim();
+  if (!folderPath) {
+    elements.status.textContent = "Enter an image folder path";
+    elements.folderPathInput.focus();
+    return;
+  }
+
+  setScanControlsBusy(true);
+  elements.status.textContent = "Scanning folder...";
+  try {
+    const response = await fetch("/api/scan", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ folderPath })
+    });
+    const nextIndex = await response.json();
+    if (!response.ok) {
+      throw new Error(nextIndex.error ?? `Scan failed with ${response.status}`);
+    }
+
+    libraryIndex = nextIndex;
+    resetViewAfterScan();
+    saveRecentFolder(folderPath);
+    hydrateRecentFolders();
+    render();
+  } catch (error) {
+    elements.status.textContent = `Scan failed: ${error.message}`;
+  } finally {
+    setScanControlsBusy(false);
+  }
+}
+
+function resetViewAfterScan() {
+  Object.assign(state, createDefaultViewState());
+  selectedAssetIds.clear();
+  activeDetailAssetId = null;
+  elements.detailDrawer.setAttribute("aria-hidden", "true");
+  syncControlsFromState();
+}
+
+function setScanControlsBusy(isBusy) {
+  elements.folderPathInput.disabled = isBusy;
+  elements.scanFolderButton.disabled = isBusy;
+  elements.scanFolderButton.textContent = isBusy ? "Scanning..." : "Scan folder";
+}
+
 function bindEvents() {
+  elements.scanFolderForm.addEventListener("submit", scanFolderFromInput);
   elements.search.addEventListener("input", () => {
     state.query = elements.search.value;
     render();
@@ -655,6 +715,22 @@ function renderSummary(index) {
   elements.duplicates.textContent = String(index.summary.duplicateGroups ?? 0);
   elements.reclaimable.textContent = formatBytes(index.summary.reclaimableBytes ?? 0);
   elements.status.textContent = `Indexed ${formatDate(index.generatedAt)}`;
+  renderLibraryKind(index);
+}
+
+function renderLibraryKind(index) {
+  const roots = Array.isArray(index.roots) ? index.roots : [];
+  const isSample = roots.length > 0 && roots.every((root) => isSampleRoot(root));
+  const label = isSample ? "Sample Library" : "Actual Library";
+  const rootNames = roots.map((root) => root.name).filter(Boolean).join(", ");
+  elements.libraryKind.textContent = rootNames ? `${label}: ${rootNames}` : label;
+  elements.libraryKind.classList.toggle("sample", isSample);
+}
+
+function isSampleRoot(root = {}) {
+  const name = String(root.name ?? "").toLowerCase();
+  const rootPath = String(root.path ?? "").replaceAll("\\", "/").toLowerCase();
+  return name.includes("sample") || rootPath.endsWith("/sample-library") || rootPath.includes("/sample-library/");
 }
 
 function renderWorkflow() {
@@ -2281,6 +2357,50 @@ function saveSavedFilterViews() {
   } catch {
     // Saved views are optional browser-local convenience state.
   }
+}
+
+function hydrateRecentFolders() {
+  const recentFolders = loadRecentFolders();
+  elements.recentFolderList.innerHTML = recentFolders
+    .map((folderPath) => `<option value="${escapeHtml(folderPath)}"></option>`)
+    .join("");
+
+  if (!elements.folderPathInput.value && recentFolders[0]) {
+    elements.folderPathInput.value = recentFolders[0];
+  }
+}
+
+function saveRecentFolder(folderPath) {
+  const normalizedPath = String(folderPath ?? "").trim();
+  if (!normalizedPath) {
+    return;
+  }
+
+  const recentFolders = [
+    normalizedPath,
+    ...loadRecentFolders().filter((candidate) => candidate !== normalizedPath)
+  ].slice(0, 8);
+  try {
+    localStorage.setItem(RECENT_FOLDERS_STORAGE_KEY, JSON.stringify(recentFolders));
+  } catch {
+    // Recent folders are optional browser-local convenience state.
+  }
+}
+
+function loadRecentFolders() {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(RECENT_FOLDERS_STORAGE_KEY) ?? "[]");
+    return normalizeRecentFolders(parsed);
+  } catch {
+    return [];
+  }
+}
+
+function normalizeRecentFolders(value) {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+  return [...new Set(value.map((item) => String(item ?? "").trim()).filter(Boolean))].slice(0, 8);
 }
 
 function saveAllCurationState() {

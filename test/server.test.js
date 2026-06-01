@@ -60,3 +60,52 @@ test("createAssetServer serves the static app, index JSON, and indexed assets", 
     assert.equal(await asset.text(), svg);
   });
 });
+
+test("createAssetServer scans a posted image folder and refreshes the index", async () => {
+  await withTempServer(async (origin) => {
+    const scanDir = path.join(os.tmpdir(), `image-asset-librarian-scan-${Date.now()}`);
+    await mkdir(scanDir, { recursive: true });
+    await writeFile(path.join(scanDir, "posted.svg"), svg);
+
+    try {
+      const scan = await fetch(`${origin}/api/scan`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ folderPath: scanDir })
+      });
+      const scanJson = await scan.json();
+      const api = await fetch(`${origin}/api/index`);
+      const index = await api.json();
+      const asset = await fetch(`${origin}/assets/${index.assets[0].id}`);
+
+      assert.equal(scan.status, 200);
+      assert.equal(scanJson.summary.totalAssets, 1);
+      assert.equal(scanJson.roots[0].path, scanDir);
+      assert.equal(index.assets[0].name, "posted.svg");
+      assert.equal(index.roots[0].name, path.basename(scanDir));
+      assert.equal(asset.status, 200);
+      assert.equal(asset.headers.get("content-type"), "image/svg+xml");
+    } finally {
+      await rm(scanDir, { recursive: true, force: true });
+    }
+  });
+});
+
+test("createAssetServer rejects missing scan folders without replacing the index", async () => {
+  await withTempServer(async (origin) => {
+    const missingDir = path.join(os.tmpdir(), `missing-image-folder-${Date.now()}`);
+    const scan = await fetch(`${origin}/api/scan`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ folderPath: missingDir })
+    });
+    const scanJson = await scan.json();
+    const api = await fetch(`${origin}/api/index`);
+    const index = await api.json();
+
+    assert.equal(scan.status, 400);
+    assert.equal(scanJson.error, "Folder not found");
+    assert.equal(index.summary.totalAssets, 1);
+    assert.equal(index.assets[0].id, "asset-one");
+  });
+});

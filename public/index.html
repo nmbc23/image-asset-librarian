@@ -13,8 +13,22 @@
           <p class="eyebrow">Local Library</p>
           <h1>Image Asset Librarian</h1>
         </div>
-        <div class="scan-status" id="scan-status">Loading index...</div>
+        <div class="topbar-status">
+          <div class="library-kind" id="library-kind">Loading library...</div>
+          <div class="scan-status" id="scan-status">Loading index...</div>
+        </div>
       </header>
+
+      <section class="scan-panel" aria-label="Image folder scanner">
+        <form id="scan-folder-form" class="scan-folder-form">
+          <label>
+            <span>Image folder path</span>
+            <input id="folder-path-input" type="text" list="recent-folder-list" placeholder="P:/AI/Codex/generated_images" autocomplete="off">
+          </label>
+          <datalist id="recent-folder-list"></datalist>
+          <button type="submit" id="scan-folder-button" class="primary-action">Scan folder</button>
+        </form>
+      </section>
 
       <section class="metrics" aria-label="Library summary">
         <div>

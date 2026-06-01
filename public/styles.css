@@ -74,6 +74,53 @@ h1 {
   text-align: right;
 }
 
+.topbar-status {
+  display: grid;
+  justify-items: end;
+  gap: 5px;
+}
+
+.library-kind {
+  min-height: 28px;
+  border: 1px solid rgba(31, 138, 112, 0.28);
+  border-radius: 7px;
+  background: rgba(31, 138, 112, 0.1);
+  color: var(--accent);
+  font-size: 0.78rem;
+  font-weight: 800;
+  padding: 6px 9px;
+}
+
+.library-kind.sample {
+  border-color: rgba(184, 86, 66, 0.28);
+  background: #f8e1db;
+  color: var(--warn);
+}
+
+.scan-panel {
+  margin-bottom: 16px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.82);
+  box-shadow: var(--shadow);
+  padding: 14px;
+}
+
+.scan-folder-form {
+  display: grid;
+  grid-template-columns: minmax(240px, 1fr) auto;
+  align-items: end;
+  gap: 12px;
+}
+
+.scan-folder-form label {
+  min-width: 0;
+}
+
+.scan-folder-form input {
+  width: 100%;
+}
+
 .metrics {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -1245,6 +1292,14 @@ button:disabled {
 
   .scan-status {
     text-align: left;
+  }
+
+  .topbar-status {
+    justify-items: start;
+  }
+
+  .scan-folder-form {
+    grid-template-columns: 1fr;
   }
 
   .metrics,

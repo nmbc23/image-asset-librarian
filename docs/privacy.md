@@ -12,6 +12,7 @@ Image Asset Librarian is designed to run locally. The default workflow scans a l
 - AI-style visual reviews derived from local theme, color, palette, metadata, and issue signals.
 - Generated alt text derived from local file metadata, color labels, palettes, and embedded metadata.
 - Duplicate group information.
+- Recently scanned folder paths, which are stored only in browser local storage for the folder scanner autocomplete.
 - Library health reports, which summarize local metadata and only leave the browser when copied or downloaded by the user.
 - Asset issue reports, which are generated locally and only leave the browser when copied or downloaded by the user.
 - Image embed snippets, which use local asset URLs and only leave the browser when copied or downloaded by the user.
@@ -30,6 +31,7 @@ The current app does not make external network requests. Browser requests are lo
 
 - `/api/index`
 - `/assets/:id`
+- `/api/scan`
 - Static files from `public/`
 
 ## Future AI Features

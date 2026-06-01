@@ -25,6 +25,7 @@ Responsibilities:
 
 - `GET /api/index` returns the generated index.
 - `GET /assets/:id` serves only files listed in the generated index.
+- `POST /api/scan` accepts a local `folderPath`, scans that folder, writes the configured index file, and returns the new index. Missing or non-directory paths are rejected without replacing the existing index.
 
 The server is intentionally small and uses Node.js built-ins only.
 
@@ -35,6 +36,8 @@ The server is intentionally small and uses Node.js built-ins only.
 UI responsibilities:
 
 - Search by name, relative path, source, extension, inferred theme, inferred color vibe, palette hex color, generated description, or embedded metadata.
+- Scan a local image folder from the top scanner panel, update the local index through `POST /api/scan`, refresh the gallery automatically, and remember recent folder paths in browser local storage.
+- Label the loaded index as a sample library or actual library from its root metadata so users can tell whether they are looking at the demo assets or their own folders.
 - Filter by source, file type, orientation, resolution bucket, inferred theme, inferred color vibe, local asset issue, age, duplicate state, and local review marks.
 - Apply browser-local tags to selected assets and use those tags as gallery filters.
 - Store browser-local notes per asset, search note text, and filter assets by whether notes exist.

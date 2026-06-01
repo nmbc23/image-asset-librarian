@@ -75,6 +75,28 @@ test("review workflow exposes saved, review, and selected asset controls", async
   assert.match(appSource, /navigator\.clipboard\.readText/);
 });
 
+test("folder scanning controls post to the server and refresh the gallery", async () => {
+  const [appSource, htmlSource, cssSource] = await Promise.all([
+    readFile(new URL("../public/app.js", import.meta.url), "utf8"),
+    readFile(new URL("../public/index.html", import.meta.url), "utf8"),
+    readFile(new URL("../public/styles.css", import.meta.url), "utf8")
+  ]);
+
+  assert.match(htmlSource, /id="scan-folder-form"/);
+  assert.match(htmlSource, /id="folder-path-input"/);
+  assert.match(htmlSource, /id="scan-folder-button"/);
+  assert.match(htmlSource, /id="recent-folder-list"/);
+  assert.match(htmlSource, /id="library-kind"/);
+  assert.match(appSource, /RECENT_FOLDERS_STORAGE_KEY/);
+  assert.match(appSource, /scanFolderFromInput/);
+  assert.match(appSource, /fetch\("\/api\/scan"/);
+  assert.match(appSource, /loadIndex/);
+  assert.match(appSource, /saveRecentFolder/);
+  assert.match(appSource, /renderLibraryKind/);
+  assert.match(cssSource, /\.scan-panel/);
+  assert.match(cssSource, /\.library-kind/);
+});
+
 test("active filter chips can clear individual filters from the toolbar state", async () => {
   const [appSource, htmlSource, cssSource] = await Promise.all([
     readFile(new URL("../public/app.js", import.meta.url), "utf8"),
