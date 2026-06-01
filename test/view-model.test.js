@@ -82,6 +82,17 @@ test("createLibraryView filters by orientation", () => {
   );
 });
 
+test("createLibraryView filters by maximum age in days", () => {
+  assert.deepEqual(
+    createLibraryView(index, {
+      maxAgeDays: "2",
+      now: "2026-06-02T00:00:00.000Z",
+      sort: "oldest"
+    }).assets.map((asset) => asset.id),
+    ["a", "b"]
+  );
+});
+
 test("createLibraryView sorts newest and largest assets", () => {
   assert.deepEqual(
     createLibraryView(index, { sort: "newest" }).assets.map((asset) => asset.id),

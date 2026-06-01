@@ -10,6 +10,7 @@ const elements = {
   root: document.querySelector("#root-filter"),
   extension: document.querySelector("#extension-filter"),
   orientation: document.querySelector("#orientation-filter"),
+  age: document.querySelector("#age-filter"),
   sort: document.querySelector("#sort-select"),
   duplicateToggle: document.querySelector("#duplicate-toggle"),
   sourceBreakdown: document.querySelector("#source-breakdown"),
@@ -32,6 +33,7 @@ const state = {
   root: "all",
   extension: "all",
   orientation: "all",
+  maxAgeDays: "all",
   duplicateOnly: false,
   sort: "newest"
 };
@@ -70,6 +72,10 @@ function bindEvents() {
   });
   elements.orientation.addEventListener("change", () => {
     state.orientation = elements.orientation.value;
+    render();
+  });
+  elements.age.addEventListener("change", () => {
+    state.maxAgeDays = elements.age.value;
     render();
   });
   elements.sort.addEventListener("change", () => {

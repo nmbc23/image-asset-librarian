@@ -6,6 +6,8 @@ export function createLibraryView(index, state = {}) {
     root: "all",
     extension: "all",
     orientation: "all",
+    maxAgeDays: "all",
+    now: new Date().toISOString(),
     duplicateOnly: false,
     sort: "newest",
     ...state
@@ -16,6 +18,7 @@ export function createLibraryView(index, state = {}) {
     .filter((asset) => normalizedState.root === "all" || asset.rootName === normalizedState.root)
     .filter((asset) => normalizedState.extension === "all" || asset.extension === normalizedState.extension)
     .filter((asset) => normalizedState.orientation === "all" || getOrientation(asset) === normalizedState.orientation)
+    .filter((asset) => isWithinAge(asset, normalizedState.maxAgeDays, normalizedState.now))
     .filter((asset) => !normalizedState.duplicateOnly || duplicateAssetIds.has(asset.id));
 
   return {
@@ -27,6 +30,21 @@ export function createLibraryView(index, state = {}) {
     extensionBreakdown: createBreakdown(assets, "extension"),
     duplicateAssetIds
   };
+}
+
+function isWithinAge(asset, maxAgeDays, now) {
+  if (maxAgeDays === "all") {
+    return true;
+  }
+
+  const days = Number.parseInt(maxAgeDays, 10);
+  const modified = Date.parse(asset.modifiedAt);
+  const current = Date.parse(now);
+  if (!Number.isFinite(days) || Number.isNaN(modified) || Number.isNaN(current)) {
+    return false;
+  }
+
+  return current - modified <= days * 24 * 60 * 60 * 1000;
 }
 
 export function getOrientation(asset) {
