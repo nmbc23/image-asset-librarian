@@ -18,11 +18,18 @@ test("review workflow exposes saved, review, and selected asset controls", async
   assert.match(htmlSource, /id="mark-filter"/);
   assert.match(htmlSource, /id="copy-selected-paths"/);
   assert.match(htmlSource, /id="copy-workflow-report"/);
+  assert.match(htmlSource, /id="copy-marks-backup"/);
+  assert.match(htmlSource, /id="import-marks-backup"/);
   assert.match(appSource, /MARK_STORAGE_KEY/);
+  assert.match(appSource, /createMarkBackup/);
+  assert.match(appSource, /parseMarkBackup/);
   assert.match(appSource, /createWorkflowReport/);
   assert.match(appSource, /data-toggle-save/);
   assert.match(appSource, /data-toggle-review/);
   assert.match(appSource, /data-select-asset/);
   assert.match(appSource, /copySelectedPaths/);
   assert.match(appSource, /copyWorkflowReport/);
+  assert.match(appSource, /copyMarksBackup/);
+  assert.match(appSource, /importMarksBackup/);
+  assert.match(appSource, /navigator\.clipboard\.readText/);
 });

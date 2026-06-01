@@ -2,9 +2,11 @@ import {
   createAssetDetails,
   createDefaultViewState,
   createLibraryView,
+  createMarkBackup,
   createWorkflowReport,
   formatBytes,
-  formatDate
+  formatDate,
+  parseMarkBackup
 } from "./view-model.js";
 
 const elements = {
@@ -27,6 +29,8 @@ const elements = {
   selectedCount: document.querySelector("#selected-count"),
   copySelectedPaths: document.querySelector("#copy-selected-paths"),
   copyWorkflowReport: document.querySelector("#copy-workflow-report"),
+  copyMarksBackup: document.querySelector("#copy-marks-backup"),
+  importMarksBackup: document.querySelector("#import-marks-backup"),
   clearSelection: document.querySelector("#clear-selection"),
   sourceBreakdown: document.querySelector("#source-breakdown"),
   sourceBreakdownCount: document.querySelector("#source-breakdown-count"),
@@ -107,6 +111,8 @@ function bindEvents() {
   });
   elements.copySelectedPaths.addEventListener("click", copySelectedPaths);
   elements.copyWorkflowReport.addEventListener("click", copyWorkflowReport);
+  elements.copyMarksBackup.addEventListener("click", copyMarksBackup);
+  elements.importMarksBackup.addEventListener("click", importMarksBackup);
   elements.clearSelection.addEventListener("click", () => {
     selectedAssetIds.clear();
     render();
@@ -212,6 +218,7 @@ function renderWorkflow() {
   elements.selectedCount.textContent = `${selectedAssetIds.size} selected`;
   elements.copySelectedPaths.disabled = selectedAssetIds.size === 0;
   elements.copyWorkflowReport.disabled = selectedAssetIds.size + marks.saved.size + marks.review.size === 0;
+  elements.copyMarksBackup.disabled = marks.saved.size + marks.review.size === 0;
   elements.clearSelection.disabled = selectedAssetIds.size === 0;
 }
 
@@ -389,6 +396,28 @@ async function copyWorkflowReport() {
   await copyFromButton(elements.copyWorkflowReport, report);
 }
 
+async function copyMarksBackup() {
+  const backup = createMarkBackup({
+    generatedAt: new Date().toISOString(),
+    savedAssetIds: marks.saved,
+    reviewAssetIds: marks.review
+  });
+  await copyFromButton(elements.copyMarksBackup, backup);
+}
+
+async function importMarksBackup() {
+  try {
+    const imported = parseMarkBackup(await navigator.clipboard.readText());
+    marks.saved = new Set(imported.saved);
+    marks.review = new Set(imported.review);
+    saveMarks();
+    render();
+    showButtonFeedback(elements.importMarksBackup, "Imported");
+  } catch {
+    showButtonFeedback(elements.importMarksBackup, "Import failed");
+  }
+}
+
 function getSelectedAssets() {
   const assets = Array.isArray(libraryIndex?.assets) ? libraryIndex.assets : [];
   return assets.filter((asset) => selectedAssetIds.has(asset.id));
@@ -437,8 +466,12 @@ function saveMarks() {
 
 async function copyFromButton(button, value) {
   await navigator.clipboard.writeText(value);
+  showButtonFeedback(button, "Copied");
+}
+
+function showButtonFeedback(button, message) {
   const originalText = button.textContent;
-  button.textContent = "Copied";
+  button.textContent = message;
   setTimeout(() => {
     button.textContent = originalText;
   }, 1100);

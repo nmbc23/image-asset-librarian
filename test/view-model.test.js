@@ -5,8 +5,10 @@ import {
   createAssetDetails,
   createDefaultViewState,
   createLibraryView,
+  createMarkBackup,
   createWorkflowReport,
-  formatBytes
+  formatBytes,
+  parseMarkBackup
 } from "../public/view-model.js";
 
 const index = {
@@ -192,6 +194,27 @@ test("createWorkflowReport exports selected, saved, and review queues as markdow
   assert.match(report, /## Saved Assets/);
   assert.match(report, /## Review Queue/);
   assert.match(report, /`copies\/rose-copy\.png` \(Archive, 1\.2 KB, duplicate\)/);
+});
+
+test("createMarkBackup and parseMarkBackup round-trip saved and review ids", () => {
+  const backup = createMarkBackup({
+    savedAssetIds: new Set(["a", "missing", "a"]),
+    reviewAssetIds: ["b"],
+    generatedAt: "2026-06-01T12:00:00.000Z"
+  });
+
+  assert.match(backup, /"schema": "image-asset-librarian-marks-v1"/);
+  assert.match(backup, /"generatedAt": "2026-06-01T12:00:00.000Z"/);
+
+  assert.deepEqual(parseMarkBackup(backup), {
+    saved: ["a", "missing"],
+    review: ["b"]
+  });
+});
+
+test("parseMarkBackup rejects malformed backups", () => {
+  assert.throws(() => parseMarkBackup("{ bad json"), /valid JSON/);
+  assert.throws(() => parseMarkBackup(JSON.stringify({ saved: "a", review: [] })), /saved and review arrays/);
 });
 
 test("createDefaultViewState returns resettable filter defaults", () => {

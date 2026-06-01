@@ -7,8 +7,8 @@ This roadmap focuses on practical improvements for local AI image workflows.
 - Add richer metadata extraction for PNG, JPEG, and WebP.
 - Add keyboard shortcuts for gallery navigation.
 - Add more tests around server path boundaries.
-- Add import/export for saved and review mark state.
 - Add richer cleanup suggestions for duplicate clusters.
+- Add optional file-based mark backup downloads in addition to clipboard backup.
 
 ## AI-Assisted Features
 

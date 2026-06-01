@@ -132,6 +132,33 @@ export function createWorkflowReport(index, options = {}) {
   return lines.join("\n");
 }
 
+export function createMarkBackup(options = {}) {
+  return `${JSON.stringify({
+    schema: "image-asset-librarian-marks-v1",
+    generatedAt: options.generatedAt ?? new Date().toISOString(),
+    saved: [...toAssetIdSet(options.savedAssetIds)],
+    review: [...toAssetIdSet(options.reviewAssetIds)]
+  }, null, 2)}\n`;
+}
+
+export function parseMarkBackup(value) {
+  let parsed;
+  try {
+    parsed = JSON.parse(value);
+  } catch {
+    throw new Error("Mark backup must be valid JSON.");
+  }
+
+  if (!Array.isArray(parsed.saved) || !Array.isArray(parsed.review)) {
+    throw new Error("Mark backup must include saved and review arrays.");
+  }
+
+  return {
+    saved: uniqueStrings(parsed.saved),
+    review: uniqueStrings(parsed.review)
+  };
+}
+
 export function formatBytes(bytes) {
   if (!Number.isFinite(bytes) || bytes <= 0) {
     return "0 B";
@@ -267,4 +294,8 @@ function toAssetIdSet(value) {
     return new Set(value);
   }
   return new Set();
+}
+
+function uniqueStrings(values) {
+  return [...new Set(values.filter((value) => typeof value === "string" && value.trim()))];
 }
