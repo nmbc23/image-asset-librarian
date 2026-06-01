@@ -367,7 +367,15 @@ test("createWorkflowReport exports selected, saved, and review queues as markdow
     generatedAt: "2026-06-01T12:00:00.000Z",
     selectedAssetIds: ["a", "c"],
     savedAssetIds: new Set(["a"]),
-    reviewAssetIds: ["b"]
+    reviewAssetIds: ["b"],
+    assetTags: {
+      a: ["keeper", "profile"],
+      b: ["cleanup"]
+    },
+    assetNotes: {
+      a: "Use in README after cropping",
+      b: "Duplicate candidate for removal"
+    }
   });
 
   assert.match(report, /# Image Asset Workflow Report/);
@@ -377,9 +385,13 @@ test("createWorkflowReport exports selected, saved, and review queues as markdow
   assert.match(report, /Review queue: 1/);
   assert.match(report, /## Selected Assets/);
   assert.match(report, /`flowers\/rose\.png` \(Codex, 1\.2 KB, duplicate\)/);
+  assert.match(report, /Tags: keeper, profile/);
+  assert.match(report, /Note: Use in README after cropping/);
   assert.match(report, /## Saved Assets/);
   assert.match(report, /## Review Queue/);
   assert.match(report, /`copies\/rose-copy\.png` \(Archive, 1\.2 KB, duplicate\)/);
+  assert.match(report, /Tags: cleanup/);
+  assert.match(report, /Note: Duplicate candidate for removal/);
 });
 
 test("createPathList exports asset paths in display order", () => {

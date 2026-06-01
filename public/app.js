@@ -947,7 +947,9 @@ async function copyWorkflowReport() {
     generatedAt: new Date().toISOString(),
     selectedAssetIds,
     savedAssetIds: marks.saved,
-    reviewAssetIds: marks.review
+    reviewAssetIds: marks.review,
+    assetTags,
+    assetNotes
   });
   await copyFromButton(elements.copyWorkflowReport, report);
 }

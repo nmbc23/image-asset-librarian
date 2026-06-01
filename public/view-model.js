@@ -334,6 +334,13 @@ export function createWorkflowReport(index, options = {}) {
   const selectedAssetIds = toAssetIdSet(options.selectedAssetIds);
   const savedAssetIds = toAssetIdSet(options.savedAssetIds);
   const reviewAssetIds = toAssetIdSet(options.reviewAssetIds);
+  const assetTags = normalizeAssetTags(options.assetTags);
+  const assetNotes = normalizeAssetNotes(options.assetNotes);
+  const reportContext = {
+    duplicateAssetIds,
+    assetTags,
+    assetNotes
+  };
   const lines = [
     "# Image Asset Workflow Report",
     "",
@@ -346,9 +353,9 @@ export function createWorkflowReport(index, options = {}) {
     `- Saved: ${savedAssetIds.size}`,
     `- Review queue: ${reviewAssetIds.size}`,
     "",
-    ...renderReportSection("Selected Assets", selectedAssetIds, assetsById, duplicateAssetIds),
-    ...renderReportSection("Saved Assets", savedAssetIds, assetsById, duplicateAssetIds),
-    ...renderReportSection("Review Queue", reviewAssetIds, assetsById, duplicateAssetIds)
+    ...renderReportSection("Selected Assets", selectedAssetIds, assetsById, reportContext),
+    ...renderReportSection("Saved Assets", savedAssetIds, assetsById, reportContext),
+    ...renderReportSection("Review Queue", reviewAssetIds, assetsById, reportContext)
   ];
 
   return lines.join("\n");
@@ -752,8 +759,11 @@ function summarizeAssets(assets, duplicateAssetIds, savedAssetIds, reviewAssetId
   };
 }
 
-function renderReportSection(title, assetIds, assetsById, duplicateAssetIds) {
+function renderReportSection(title, assetIds, assetsById, context = {}) {
   const assets = [...assetIds].map((assetId) => assetsById.get(assetId)).filter(Boolean);
+  const duplicateAssetIds = context.duplicateAssetIds ?? new Set();
+  const assetTags = context.assetTags ?? {};
+  const assetNotes = context.assetNotes ?? {};
   const lines = [`## ${title}`, ""];
   if (!assets.length) {
     lines.push("No assets.", "");
@@ -762,13 +772,25 @@ function renderReportSection(title, assetIds, assetsById, duplicateAssetIds) {
 
   for (const asset of assets) {
     const duplicateLabel = duplicateAssetIds.has(asset.id) ? ", duplicate" : "";
+    const tags = assetTags[asset.id] ?? [];
+    const note = formatReportNote(assetNotes[asset.id]);
     lines.push(`- \`${asset.relativePath}\` (${asset.rootName}, ${formatBytes(asset.sizeBytes)}${duplicateLabel})`);
     if (asset.path) {
       lines.push(`  - Path: \`${asset.path}\``);
     }
+    if (tags.length) {
+      lines.push(`  - Tags: ${tags.join(", ")}`);
+    }
+    if (note) {
+      lines.push(`  - Note: ${note}`);
+    }
   }
   lines.push("");
   return lines;
+}
+
+function formatReportNote(note) {
+  return String(note ?? "").replace(/\s+/g, " ").trim();
 }
 
 function toAssetIdSet(value) {

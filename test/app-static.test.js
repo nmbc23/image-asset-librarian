@@ -149,6 +149,15 @@ test("visible and selected asset metadata can be copied as JSON manifests", asyn
   assert.match(appSource, /assetNotes/);
 });
 
+test("workflow report includes browser-local tags and notes", async () => {
+  const appSource = await readFile(new URL("../public/app.js", import.meta.url), "utf8");
+  const workflowReportFunction = appSource.match(/async function copyWorkflowReport\(\) \{[\s\S]*?\n\}/)?.[0] ?? "";
+
+  assert.match(workflowReportFunction, /createWorkflowReport\(libraryIndex/);
+  assert.match(workflowReportFunction, /assetTags,/);
+  assert.match(workflowReportFunction, /assetNotes/);
+});
+
 test("saved filter views can be created, applied, and deleted", async () => {
   const [appSource, htmlSource, cssSource] = await Promise.all([
     readFile(new URL("../public/app.js", import.meta.url), "utf8"),
