@@ -338,6 +338,20 @@ export function createMarkBackup(options = {}) {
   }, null, 2)}\n`;
 }
 
+export function createCurationBackup(options = {}) {
+  return `${JSON.stringify({
+    schema: "image-asset-librarian-curation-v1",
+    generatedAt: options.generatedAt ?? new Date().toISOString(),
+    marks: {
+      saved: [...toAssetIdSet(options.savedAssetIds)],
+      review: [...toAssetIdSet(options.reviewAssetIds)]
+    },
+    assetTags: normalizeAssetTags(options.assetTags),
+    assetNotes: normalizeAssetNotes(options.assetNotes),
+    savedFilterViews: normalizeSavedFilterViews(options.savedFilterViews)
+  }, null, 2)}\n`;
+}
+
 export function parseMarkBackup(value) {
   let parsed;
   try {
@@ -353,6 +367,31 @@ export function parseMarkBackup(value) {
   return {
     saved: uniqueStrings(parsed.saved),
     review: uniqueStrings(parsed.review)
+  };
+}
+
+export function parseCurationBackup(value) {
+  let parsed;
+  try {
+    parsed = JSON.parse(value);
+  } catch {
+    throw new Error("Curation backup must be valid JSON.");
+  }
+
+  if (!parsed || typeof parsed !== "object" || Array.isArray(parsed) || parsed.schema !== "image-asset-librarian-curation-v1") {
+    throw new Error("Unsupported curation backup schema.");
+  }
+
+  const marks = parsed.marks && typeof parsed.marks === "object" && !Array.isArray(parsed.marks)
+    ? parsed.marks
+    : {};
+
+  return {
+    saved: uniqueStrings(Array.isArray(marks.saved) ? marks.saved : []),
+    review: uniqueStrings(Array.isArray(marks.review) ? marks.review : []),
+    assetTags: normalizeAssetTags(parsed.assetTags),
+    assetNotes: normalizeAssetNotes(parsed.assetNotes),
+    savedFilterViews: normalizeSavedFilterViews(parsed.savedFilterViews)
   };
 }
 

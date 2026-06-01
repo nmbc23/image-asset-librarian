@@ -152,3 +152,18 @@ test("asset notes can be edited locally and used as a gallery filter", async () 
   assert.match(cssSource, /\.asset-note-preview/);
   assert.match(cssSource, /\.note-editor/);
 });
+
+test("full curation state can be copied and restored from the workflow panel", async () => {
+  const [appSource, htmlSource] = await Promise.all([
+    readFile(new URL("../public/app.js", import.meta.url), "utf8"),
+    readFile(new URL("../public/index.html", import.meta.url), "utf8")
+  ]);
+
+  assert.match(htmlSource, /id="copy-curation-backup"/);
+  assert.match(htmlSource, /id="import-curation-backup"/);
+  assert.match(appSource, /createCurationBackup/);
+  assert.match(appSource, /parseCurationBackup/);
+  assert.match(appSource, /copyCurationBackup/);
+  assert.match(appSource, /importCurationBackup/);
+  assert.match(appSource, /saveAllCurationState/);
+});

@@ -4,6 +4,7 @@ import {
   createActiveFilterChips,
   createAssetCsv,
   createAssetDetails,
+  createCurationBackup,
   createDefaultViewState,
   createDuplicateGroupDetails,
   createLibraryView,
@@ -17,6 +18,7 @@ import {
   getAssetNote,
   getAssetTags,
   normalizeSavedFilterViews,
+  parseCurationBackup,
   parseMarkBackup,
   setAssetNote
 } from "./view-model.js";
@@ -58,6 +60,8 @@ const elements = {
   copyWorkflowReport: document.querySelector("#copy-workflow-report"),
   copyMarksBackup: document.querySelector("#copy-marks-backup"),
   importMarksBackup: document.querySelector("#import-marks-backup"),
+  copyCurationBackup: document.querySelector("#copy-curation-backup"),
+  importCurationBackup: document.querySelector("#import-curation-backup"),
   clearSelection: document.querySelector("#clear-selection"),
   sourceBreakdown: document.querySelector("#source-breakdown"),
   sourceBreakdownCount: document.querySelector("#source-breakdown-count"),
@@ -184,6 +188,8 @@ function bindEvents() {
   elements.copyWorkflowReport.addEventListener("click", copyWorkflowReport);
   elements.copyMarksBackup.addEventListener("click", copyMarksBackup);
   elements.importMarksBackup.addEventListener("click", importMarksBackup);
+  elements.copyCurationBackup.addEventListener("click", copyCurationBackup);
+  elements.importCurationBackup.addEventListener("click", importCurationBackup);
   elements.clearSelection.addEventListener("click", () => {
     selectedAssetIds.clear();
     render();
@@ -345,6 +351,7 @@ function renderWorkflow() {
   elements.untagSelectedAssets.disabled = selectedAssetIds.size === 0;
   elements.copyWorkflowReport.disabled = selectedAssetIds.size + marks.saved.size + marks.review.size === 0;
   elements.copyMarksBackup.disabled = marks.saved.size + marks.review.size === 0;
+  elements.copyCurationBackup.disabled = !hasCurationState();
   elements.clearSelection.disabled = selectedAssetIds.size === 0;
 }
 
@@ -811,6 +818,18 @@ async function copyMarksBackup() {
   await copyFromButton(elements.copyMarksBackup, backup);
 }
 
+async function copyCurationBackup() {
+  const backup = createCurationBackup({
+    generatedAt: new Date().toISOString(),
+    savedAssetIds: marks.saved,
+    reviewAssetIds: marks.review,
+    assetTags,
+    assetNotes,
+    savedFilterViews
+  });
+  await copyFromButton(elements.copyCurationBackup, backup);
+}
+
 async function importMarksBackup() {
   try {
     const imported = parseMarkBackup(await navigator.clipboard.readText());
@@ -822,6 +841,34 @@ async function importMarksBackup() {
   } catch {
     showButtonFeedback(elements.importMarksBackup, "Import failed");
   }
+}
+
+async function importCurationBackup() {
+  try {
+    const imported = parseCurationBackup(await navigator.clipboard.readText());
+    marks.saved = new Set(imported.saved);
+    marks.review = new Set(imported.review);
+    assetTags = imported.assetTags;
+    assetNotes = imported.assetNotes;
+    savedFilterViews = imported.savedFilterViews;
+    saveAllCurationState();
+    if (state.tag !== "all" && !getAllAssetTags(assetTags).includes(state.tag)) {
+      state.tag = "all";
+    }
+    syncControlsFromState();
+    render();
+    showButtonFeedback(elements.importCurationBackup, "Imported");
+  } catch {
+    showButtonFeedback(elements.importCurationBackup, "Import failed");
+  }
+}
+
+function hasCurationState() {
+  return marks.saved.size > 0
+    || marks.review.size > 0
+    || Object.keys(assetTags).length > 0
+    || Object.keys(assetNotes).length > 0
+    || savedFilterViews.length > 0;
 }
 
 function getSelectedAssets() {
@@ -905,6 +952,13 @@ function saveSavedFilterViews() {
   } catch {
     // Saved views are optional browser-local convenience state.
   }
+}
+
+function saveAllCurationState() {
+  saveMarks();
+  saveAssetTags();
+  saveAssetNotes();
+  saveSavedFilterViews();
 }
 
 function saveMarks() {

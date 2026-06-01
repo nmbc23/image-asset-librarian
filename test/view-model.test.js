@@ -7,6 +7,7 @@ import {
   createActiveFilterChips,
   createAssetDetails,
   createAssetCsv,
+  createCurationBackup,
   createDefaultViewState,
   createDuplicateGroupDetails,
   createLibraryView,
@@ -18,6 +19,7 @@ import {
   getAllAssetTags,
   getAssetNote,
   normalizeSavedFilterViews,
+  parseCurationBackup,
   parseMarkBackup,
   setAssetNote
 } from "../public/view-model.js";
@@ -321,6 +323,56 @@ test("createMarkBackup and parseMarkBackup round-trip saved and review ids", () 
 test("parseMarkBackup rejects malformed backups", () => {
   assert.throws(() => parseMarkBackup("{ bad json"), /valid JSON/);
   assert.throws(() => parseMarkBackup(JSON.stringify({ saved: "a", review: [] })), /saved and review arrays/);
+});
+
+test("createCurationBackup and parseCurationBackup round-trip local curation state", () => {
+  const savedView = createSavedFilterView("Needs export", {
+    tag: "keeper",
+    note: "with-notes",
+    duplicateOnly: true
+  }, {
+    id: "view-keeper",
+    createdAt: "2026-06-01T12:00:00.000Z"
+  });
+
+  const backup = createCurationBackup({
+    generatedAt: "2026-06-01T14:00:00.000Z",
+    savedAssetIds: new Set(["a", "a"]),
+    reviewAssetIds: ["b", "missing"],
+    assetTags: {
+      a: ["Keeper", "keeper", ""],
+      b: ["Publish candidate"]
+    },
+    assetNotes: {
+      a: "  Final pick  ",
+      b: 42,
+      c: "Needs cleanup"
+    },
+    savedFilterViews: [savedView, { id: "", name: "Broken" }]
+  });
+
+  assert.match(backup, /"schema": "image-asset-librarian-curation-v1"/);
+  assert.deepEqual(parseCurationBackup(backup), {
+    saved: ["a"],
+    review: ["b", "missing"],
+    assetTags: {
+      a: ["keeper"],
+      b: ["publish candidate"]
+    },
+    assetNotes: {
+      a: "Final pick",
+      c: "Needs cleanup"
+    },
+    savedFilterViews: [savedView]
+  });
+});
+
+test("parseCurationBackup rejects malformed or incompatible backups", () => {
+  assert.throws(() => parseCurationBackup("{ bad json"), /valid JSON/);
+  assert.throws(
+    () => parseCurationBackup(JSON.stringify({ schema: "image-asset-librarian-marks-v1", saved: [] })),
+    /Unsupported curation backup schema/
+  );
 });
 
 test("createDefaultViewState returns resettable filter defaults", () => {
