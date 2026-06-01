@@ -6,6 +6,7 @@ import {
   applyTagBatch,
   createActiveFilterChips,
   createAssetDetails,
+  createAssetNavigation,
   createAssetCsv,
   createAssetManifest,
   createCurationBackup,
@@ -315,6 +316,35 @@ test("createAssetDetails formats metadata and duplicate context", () => {
 
 test("createAssetDetails returns null for unknown assets", () => {
   assert.equal(createAssetDetails(index, "missing"), null);
+});
+
+test("createAssetNavigation returns adjacent visible assets", () => {
+  assert.deepEqual(createAssetNavigation(index.assets, "b"), {
+    index: 1,
+    total: 3,
+    previousAssetId: "a",
+    nextAssetId: "c",
+    hasPrevious: true,
+    hasNext: true
+  });
+
+  assert.deepEqual(createAssetNavigation(index.assets, "a"), {
+    index: 0,
+    total: 3,
+    previousAssetId: null,
+    nextAssetId: "b",
+    hasPrevious: false,
+    hasNext: true
+  });
+
+  assert.deepEqual(createAssetNavigation(index.assets, "missing"), {
+    index: -1,
+    total: 3,
+    previousAssetId: null,
+    nextAssetId: null,
+    hasPrevious: false,
+    hasNext: false
+  });
 });
 
 test("createDuplicateGroupDetails recommends a stable asset to keep and exports group paths", () => {

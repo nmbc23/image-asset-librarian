@@ -9,6 +9,20 @@ test("asset Open action navigates the current tab instead of relying on a new ta
   assert.match(appSource, /window\.location\.assign/);
 });
 
+test("detail drawer exposes previous and next asset navigation", async () => {
+  const [appSource, cssSource] = await Promise.all([
+    readFile(new URL("../public/app.js", import.meta.url), "utf8"),
+    readFile(new URL("../public/styles.css", import.meta.url), "utf8")
+  ]);
+
+  assert.match(appSource, /createAssetNavigation/);
+  assert.match(appSource, /data-show-adjacent-detail/);
+  assert.match(appSource, /showAdjacentDetails/);
+  assert.match(appSource, /event\.key === "ArrowLeft"/);
+  assert.match(appSource, /event\.key === "ArrowRight"/);
+  assert.match(cssSource, /\.drawer-nav/);
+});
+
 test("review workflow exposes saved, review, and selected asset controls", async () => {
   const [appSource, htmlSource] = await Promise.all([
     readFile(new URL("../public/app.js", import.meta.url), "utf8"),

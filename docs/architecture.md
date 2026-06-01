@@ -41,6 +41,7 @@ UI responsibilities:
 - Use source and file-type breakdowns as quick filter controls.
 - Sort by date, size, or name.
 - Highlight duplicate assets.
+- Inspect a filtered result set in a detail drawer with previous/next buttons and keyboard navigation.
 - Suggest a stable file to keep in each duplicate group, copy all group paths, and copy only cleanup-candidate paths that exclude the suggested keep file.
 - Store saved/review marks in browser local storage so the generated index stays disposable.
 - Apply saved/review/unmarked states to selected assets in batches for faster curation.

@@ -291,6 +291,22 @@ export function createAssetDetails(index, assetId) {
   };
 }
 
+export function createAssetNavigation(assets = [], assetId) {
+  const visibleAssets = Array.isArray(assets) ? assets : [];
+  const index = visibleAssets.findIndex((asset) => asset.id === assetId);
+  const previousAssetId = index > 0 ? visibleAssets[index - 1].id : null;
+  const nextAssetId = index >= 0 && index < visibleAssets.length - 1 ? visibleAssets[index + 1].id : null;
+
+  return {
+    index,
+    total: visibleAssets.length,
+    previousAssetId,
+    nextAssetId,
+    hasPrevious: Boolean(previousAssetId),
+    hasNext: Boolean(nextAssetId)
+  };
+}
+
 export function createDuplicateGroupDetails(index, group) {
   const assetsById = new Map((index?.assets ?? []).map((asset) => [asset.id, asset]));
   const assets = (group?.assetIds ?? []).map((assetId) => assetsById.get(assetId)).filter(Boolean);

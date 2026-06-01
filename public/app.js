@@ -5,6 +5,7 @@ import {
   createAssetCsv,
   createAssetDetails,
   createAssetManifest,
+  createAssetNavigation,
   createCurationBackup,
   createDefaultViewState,
   createDuplicateGroupDetails,
@@ -95,6 +96,7 @@ const selectedAssetIds = new Set();
 
 let libraryIndex = null;
 let currentView = null;
+let activeDetailAssetId = null;
 
 init();
 
@@ -283,6 +285,12 @@ function bindEvents() {
       return;
     }
 
+    const adjacentButton = event.target.closest("[data-show-adjacent-detail]");
+    if (adjacentButton) {
+      showDetails(adjacentButton.dataset.showAdjacentDetail);
+      return;
+    }
+
     const copyButton = event.target.closest("[data-copy-value]");
     if (copyButton) {
       await copyFromButton(copyButton, copyButton.dataset.copyValue);
@@ -295,8 +303,23 @@ function bindEvents() {
     }
   });
   document.addEventListener("keydown", (event) => {
-    if (event.key === "Escape" && elements.detailDrawer.getAttribute("aria-hidden") === "false") {
+    const drawerIsOpen = elements.detailDrawer.getAttribute("aria-hidden") === "false";
+    if (!drawerIsOpen) {
+      return;
+    }
+    if (event.key === "Escape") {
       hideDetails();
+      return;
+    }
+    if (isTextEditingTarget(event.target)) {
+      return;
+    }
+    if (event.key === "ArrowLeft") {
+      event.preventDefault();
+      showAdjacentDetails("previous");
+    } else if (event.key === "ArrowRight") {
+      event.preventDefault();
+      showAdjacentDetails("next");
     }
   });
 }
@@ -639,18 +662,22 @@ function showDetails(assetId) {
     return;
   }
 
+  activeDetailAssetId = assetId;
   details.note = getAssetNote(assetNotes, assetId);
+  details.navigation = createAssetNavigation(getDetailNavigationAssets(), assetId);
   elements.drawerTitle.textContent = details.name;
   elements.drawerContent.innerHTML = renderDetails(details);
   elements.detailDrawer.setAttribute("aria-hidden", "false");
 }
 
 function hideDetails() {
+  activeDetailAssetId = null;
   elements.detailDrawer.setAttribute("aria-hidden", "true");
 }
 
 function renderDetails(details) {
   return `
+    ${renderDetailNavigation(details.navigation)}
     <a class="drawer-preview" href="${details.imageUrl}" target="_blank" rel="noreferrer">
       <img src="${details.imageUrl}" alt="${escapeHtml(details.name)}">
     </a>
@@ -666,6 +693,43 @@ function renderDetails(details) {
       ${details.fields.map(renderDetailField).join("")}
     </dl>
   `;
+}
+
+function renderDetailNavigation(navigation) {
+  if (!navigation || navigation.index < 0 || navigation.total <= 1) {
+    return "";
+  }
+
+  return `
+    <nav class="drawer-nav" aria-label="Asset navigation">
+      <button type="button" data-show-adjacent-detail="${escapeHtml(navigation.previousAssetId ?? "")}" ${navigation.hasPrevious ? "" : "disabled"}>Previous</button>
+      <span>${navigation.index + 1} of ${navigation.total}</span>
+      <button type="button" data-show-adjacent-detail="${escapeHtml(navigation.nextAssetId ?? "")}" ${navigation.hasNext ? "" : "disabled"}>Next</button>
+    </nav>
+  `;
+}
+
+function showAdjacentDetails(direction) {
+  if (!activeDetailAssetId) {
+    return;
+  }
+
+  const navigation = createAssetNavigation(getDetailNavigationAssets(), activeDetailAssetId);
+  const nextAssetId = direction === "previous" ? navigation.previousAssetId : navigation.nextAssetId;
+  if (nextAssetId) {
+    showDetails(nextAssetId);
+  }
+}
+
+function getDetailNavigationAssets() {
+  return currentView?.assets?.length ? currentView.assets : libraryIndex?.assets ?? [];
+}
+
+function isTextEditingTarget(target) {
+  return target instanceof HTMLInputElement
+    || target instanceof HTMLTextAreaElement
+    || target instanceof HTMLSelectElement
+    || target?.isContentEditable === true;
 }
 
 function renderDetailField(field) {
