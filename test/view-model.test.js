@@ -4,6 +4,7 @@ import test from "node:test";
 import {
   createAssetDetails,
   createDefaultViewState,
+  createDuplicateGroupDetails,
   createLibraryView,
   createMarkBackup,
   createPathList,
@@ -175,6 +176,19 @@ test("createAssetDetails formats metadata and duplicate context", () => {
 
 test("createAssetDetails returns null for unknown assets", () => {
   assert.equal(createAssetDetails(index, "missing"), null);
+});
+
+test("createDuplicateGroupDetails recommends a stable asset to keep and exports group paths", () => {
+  const details = createDuplicateGroupDetails(index, index.duplicates[0]);
+
+  assert.equal(details.count, 2);
+  assert.equal(details.reclaimable, "1.2 KB");
+  assert.equal(details.recommendedKeepAsset.id, "a");
+  assert.deepEqual(details.assets.map((asset) => asset.id), ["a", "b"]);
+  assert.equal(details.pathList, [
+    "P:/AI/Codex/generated_images/rose.png",
+    "copies/rose-copy.png"
+  ].join("\n"));
 });
 
 test("createWorkflowReport exports selected, saved, and review queues as markdown", () => {

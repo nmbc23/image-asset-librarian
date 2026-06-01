@@ -306,6 +306,28 @@ a:focus-visible {
   white-space: nowrap;
 }
 
+.duplicate-group p {
+  margin-bottom: 8px;
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 0.82rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.duplicate-group button {
+  min-height: 32px;
+  margin-bottom: 10px;
+  border: 1px solid rgba(31, 138, 112, 0.35);
+  border-radius: 7px;
+  background: rgba(31, 138, 112, 0.1);
+  color: var(--accent);
+  cursor: pointer;
+  font-size: 0.78rem;
+  font-weight: 800;
+  padding: 0 10px;
+}
+
 .duplicate-group ul {
   display: grid;
   gap: 4px;

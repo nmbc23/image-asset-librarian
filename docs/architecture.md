@@ -36,6 +36,7 @@ UI responsibilities:
 - Filter by source, file type, orientation, age, duplicate state, and local review marks.
 - Sort by date, size, or name.
 - Highlight duplicate assets.
+- Suggest a stable file to keep in each duplicate group and copy that group's paths for cleanup.
 - Store saved/review marks in browser local storage so the generated index stays disposable.
 - Copy and import saved/review mark backups as JSON through the clipboard.
 - Select all currently visible filtered assets and copy selected or visible asset paths as a batch for downstream cleanup, curation, or prompt-tracking work.

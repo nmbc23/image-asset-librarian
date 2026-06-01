@@ -1,6 +1,7 @@
 import {
   createAssetDetails,
   createDefaultViewState,
+  createDuplicateGroupDetails,
   createLibraryView,
   createMarkBackup,
   createPathList,
@@ -122,6 +123,13 @@ function bindEvents() {
   elements.clearSelection.addEventListener("click", () => {
     selectedAssetIds.clear();
     render();
+  });
+  elements.duplicateList.addEventListener("click", async (event) => {
+    const button = event.target.closest("[data-copy-duplicate-group]");
+    if (!button) {
+      return;
+    }
+    await copyDuplicateGroupPaths(button, Number.parseInt(button.dataset.copyDuplicateGroup, 10));
   });
   elements.gallery.addEventListener("click", async (event) => {
     const openButton = event.target.closest("[data-open-asset]");
@@ -262,7 +270,6 @@ function renderBreakdownItem(item) {
 }
 
 function renderDuplicates(index) {
-  const assetsById = new Map(index.assets.map((asset) => [asset.id, asset]));
   const groups = index.duplicates ?? [];
   elements.duplicateSummary.textContent = `${groups.length} groups`;
 
@@ -273,16 +280,18 @@ function renderDuplicates(index) {
 
   elements.duplicateList.innerHTML = groups
     .slice(0, 8)
-    .map((group) => {
-      const assets = group.assetIds.map((id) => assetsById.get(id)).filter(Boolean);
+    .map((group, groupIndex) => {
+      const details = createDuplicateGroupDetails(index, group);
       return `
         <article class="duplicate-group">
           <div>
-            <strong>${group.count} matching files</strong>
-            <span>${formatBytes(group.reclaimableBytes)} reclaimable</span>
+            <strong>${details.count} matching files</strong>
+            <span>${details.reclaimable} reclaimable</span>
           </div>
+          ${details.recommendedKeepAsset ? `<p>Suggested keep: ${escapeHtml(details.recommendedKeepAsset.relativePath)}</p>` : ""}
+          <button type="button" data-copy-duplicate-group="${groupIndex}">Copy group paths</button>
           <ul>
-            ${assets.map((asset) => `<li>${escapeHtml(asset.relativePath)} <span>${escapeHtml(asset.rootName)}</span></li>`).join("")}
+            ${details.assets.map((asset) => `<li>${escapeHtml(asset.relativePath)} <span>${escapeHtml(asset.rootName)}</span></li>`).join("")}
           </ul>
         </article>
       `;
@@ -408,6 +417,15 @@ async function copyVisiblePaths() {
     return;
   }
   await copyFromButton(elements.copyVisiblePaths, createPathList(visibleAssets));
+}
+
+async function copyDuplicateGroupPaths(button, groupIndex) {
+  const group = libraryIndex?.duplicates?.[groupIndex];
+  if (!group) {
+    return;
+  }
+  const details = createDuplicateGroupDetails(libraryIndex, group);
+  await copyFromButton(button, details.pathList);
 }
 
 async function copyWorkflowReport() {

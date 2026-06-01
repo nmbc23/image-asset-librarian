@@ -105,6 +105,21 @@ export function createAssetDetails(index, assetId) {
   };
 }
 
+export function createDuplicateGroupDetails(index, group) {
+  const assetsById = new Map((index?.assets ?? []).map((asset) => [asset.id, asset]));
+  const assets = (group?.assetIds ?? []).map((assetId) => assetsById.get(assetId)).filter(Boolean);
+  const recommendedKeepAsset = [...assets].sort(compareDuplicateKeepCandidate)[0] ?? null;
+
+  return {
+    count: group?.count ?? assets.length,
+    reclaimable: formatBytes(group?.reclaimableBytes ?? 0),
+    hash: group?.hash,
+    assets,
+    recommendedKeepAsset,
+    pathList: createPathList(assets)
+  };
+}
+
 export function createWorkflowReport(index, options = {}) {
   const assets = Array.isArray(index?.assets) ? index.assets : [];
   const assetsById = new Map(assets.map((asset) => [asset.id, asset]));
@@ -221,6 +236,14 @@ function matchesMark(asset, mark, savedAssetIds, reviewAssetIds) {
     return !savedAssetIds.has(asset.id) && !reviewAssetIds.has(asset.id);
   }
   return true;
+}
+
+function compareDuplicateKeepCandidate(a, b) {
+  const byDate = Date.parse(a.modifiedAt) - Date.parse(b.modifiedAt);
+  if (Number.isFinite(byDate) && byDate !== 0) {
+    return byDate;
+  }
+  return (a.relativePath ?? a.name ?? "").localeCompare(b.relativePath ?? b.name ?? "");
 }
 
 function sortAssets(assets, sort) {
