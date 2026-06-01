@@ -33,6 +33,21 @@ textarea {
   font: inherit;
 }
 
+.primary-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 42px;
+  border: 1px solid rgba(31, 138, 112, 0.4);
+  border-radius: 7px;
+  background: var(--accent);
+  color: var(--accent-ink);
+  cursor: pointer;
+  font-weight: 800;
+  padding: 0 14px;
+  text-decoration: none;
+}
+
 .app-shell {
   width: min(1440px, 100%);
   margin: 0 auto;
@@ -98,12 +113,38 @@ h1 {
 }
 
 .scan-panel {
+  display: grid;
+  gap: 12px;
   margin-bottom: 16px;
   border: 1px solid var(--line);
   border-radius: 8px;
   background: rgba(255, 255, 255, 0.82);
   box-shadow: var(--shadow);
   padding: 14px;
+}
+
+.folder-picker-primary {
+  display: flex;
+}
+
+.folder-picker-primary .primary-action {
+  min-width: 170px;
+}
+
+.path-scan-fallback {
+  border-top: 1px solid var(--line);
+  padding-top: 10px;
+}
+
+.path-scan-fallback summary {
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 0.88rem;
+  font-weight: 800;
+}
+
+.path-scan-fallback[open] summary {
+  margin-bottom: 10px;
 }
 
 .scan-folder-form {

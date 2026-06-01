@@ -20,14 +20,20 @@
       </header>
 
       <section class="scan-panel" aria-label="Image folder scanner">
-        <form id="scan-folder-form" class="scan-folder-form">
-          <label>
-            <span>Image folder path</span>
-            <input id="folder-path-input" type="text" list="recent-folder-list" placeholder="D:/Images/generated" autocomplete="off">
-          </label>
-          <datalist id="recent-folder-list"></datalist>
-          <button type="submit" id="scan-folder-button" class="primary-action">Scan folder</button>
-        </form>
+        <div class="folder-picker-primary">
+          <button type="button" id="choose-folder-button" class="primary-action">Choose folder</button>
+        </div>
+        <details class="path-scan-fallback">
+          <summary>Scan by path</summary>
+          <form id="scan-folder-form" class="scan-folder-form">
+            <label>
+              <span>Image folder path</span>
+              <input id="folder-path-input" type="text" list="recent-folder-list" placeholder="D:/Images/generated" autocomplete="off">
+            </label>
+            <datalist id="recent-folder-list"></datalist>
+            <button type="submit" id="scan-folder-button" class="secondary-button">Scan path</button>
+          </form>
+        </details>
       </section>
 
       <section class="metrics" aria-label="Library summary">

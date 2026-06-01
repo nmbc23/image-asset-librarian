@@ -414,7 +414,7 @@ export function createAssetDetails(index, assetId) {
   return {
     id: asset.id,
     name: asset.name,
-    imageUrl: `/assets/${encodeURIComponent(asset.id)}`,
+    imageUrl: asset.objectUrl || `/assets/${encodeURIComponent(asset.id)}`,
     path: asset.path,
     hash: asset.hash,
     size: formatBytes(asset.sizeBytes),
@@ -1830,6 +1830,9 @@ function removeFileExtension(value) {
 }
 
 function createAssetContactSheetUrl(asset = {}, assetBaseUrl = "") {
+  if (asset.objectUrl && !assetBaseUrl) {
+    return asset.objectUrl;
+  }
   const route = `/assets/${encodeURIComponent(asset.id ?? "")}`;
   const base = String(assetBaseUrl ?? "").replace(/\/$/, "");
   return base ? `${base}${route}` : route;

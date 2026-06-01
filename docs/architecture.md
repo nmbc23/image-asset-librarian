@@ -29,6 +29,12 @@ Responsibilities:
 
 The server is intentionally small and uses Node.js built-ins only.
 
+## Browser Folder Picker
+
+`public/browser-folder-index.js` supports the "Choose folder" workflow in browsers with the File System Access API. It reads the selected directory handle in the browser, filters supported image files, hashes file contents with Web Crypto, creates browser object URLs for previews, detects exact duplicate hashes, and returns the same index shape used by the server-backed scanner.
+
+This picker does not expose absolute filesystem paths and does not update `data/index.json`. The server-backed "Scan by path" fallback remains available when users want a persistent index file.
+
 ## Browser UI
 
 `public/app.js` fetches the index and renders the gallery. `public/view-model.js` keeps filtering, sorting, duplicate detection state, and byte formatting as testable pure functions.
@@ -36,7 +42,7 @@ The server is intentionally small and uses Node.js built-ins only.
 UI responsibilities:
 
 - Search by name, relative path, source, extension, inferred theme, inferred color vibe, palette hex color, generated description, or embedded metadata.
-- Scan a local image folder from the top scanner panel, update the local index through `POST /api/scan`, refresh the gallery automatically, and remember recent folder paths in browser local storage.
+- Choose a local image folder through the browser folder picker for a temporary local gallery, or scan a typed local path through `POST /api/scan` to update the local index file.
 - Label the loaded index as a sample library or actual library from its root metadata so users can tell whether they are looking at the demo assets or their own folders.
 - Filter by source, file type, orientation, resolution bucket, inferred theme, inferred color vibe, local asset issue, age, duplicate state, and local review marks.
 - Apply browser-local tags to selected assets and use those tags as gallery filters.

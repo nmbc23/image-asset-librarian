@@ -29,7 +29,9 @@ Try this path through the app:
 
 The sample library proves the app works without publishing private local paths. It is small on purpose: it should explain the workflow, not pretend to be a full production asset archive.
 
-A real library starts when you scan your own folder from the top scanner or from `asset-librarian.config.local.json`. Recent folder paths are saved only in browser local storage. The generated `data/index.json` can include absolute paths and embedded prompt metadata, so it is ignored by git.
+A real library starts when you click "Choose folder" and pick an image folder. That browser-picked view is local and temporary: it creates preview URLs for the current browser session, but it does not reveal absolute filesystem paths or update `data/index.json`.
+
+Use "Scan by path" or `asset-librarian.config.local.json` when you want the Node server to write a persistent index. Recent typed folder paths are saved only in browser local storage. The generated `data/index.json` can include absolute paths and embedded prompt metadata, so it is ignored by git.
 
 ## Local Rules, Not Cloud AI
 
@@ -42,9 +44,9 @@ There are no OpenAI calls, no image uploads, no telemetry, and no required API k
 When testing a personal folder:
 
 1. Start the server with `npm run serve`.
-2. Paste an absolute image folder path into the "Image folder path" field.
-3. Click "Scan folder".
-4. Confirm the gallery refreshes and the badge no longer identifies the data as the sample library.
+2. Click "Choose folder" and select a folder from the system picker.
+3. Confirm the gallery refreshes and the badge no longer identifies the data as the sample library.
+4. Use "Scan by path" only when you need to update `data/index.json`.
 5. Try search, duplicate-only mode, similar groups, and one export action.
 
 Keep screenshots for the README based on the sample library unless you intentionally want to reveal real file names.

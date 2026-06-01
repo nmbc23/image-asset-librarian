@@ -1,0 +1,96 @@
+import assert from "node:assert/strict";
+import test from "node:test";
+
+import { createBrowserFolderIndex } from "../public/browser-folder-index.js";
+
+test("createBrowserFolderIndex builds a local index from a picked directory handle", async () => {
+  const root = createDirectoryHandle("Generated", [
+    createFileHandle("hero.png", "same pixels", { lastModified: 1_700_000_000_000 }),
+    createFileHandle("hero-copy.png", "same pixels", { lastModified: 1_700_000_000_500 }),
+    createFileHandle("notes.txt", "ignore me"),
+    createDirectoryHandle("archive", [
+      createFileHandle("mint-landscape.svg", "<svg></svg>", { lastModified: 1_700_000_001_000 })
+    ])
+  ]);
+
+  const progressEvents = [];
+  const index = await createBrowserFolderIndex(root, {
+    createObjectUrl: (file) => `blob:test/${file.name}`,
+    readDimensions: async (file) => file.name.endsWith(".svg")
+      ? { width: 900, height: 520 }
+      : { width: 1024, height: 1024 },
+    now: "2026-06-01T00:00:00.000Z",
+    onProgress: (event) => progressEvents.push(event)
+  });
+
+  assert.equal(index.version, 1);
+  assert.equal(index.mode, "browser-folder");
+  assert.equal(index.roots[0].name, "Generated");
+  assert.equal(index.summary.totalAssets, 3);
+  assert.equal(index.summary.duplicateGroups, 1);
+  assert.equal(index.summary.reclaimableBytes, "same pixels".length);
+  assert.equal(index.assets[0].rootName, "Generated");
+  assert.match(index.assets[0].objectUrl, /^blob:test\//);
+  assert.deepEqual(index.assets.map((asset) => asset.relativePath).sort(), [
+    "archive/mint-landscape.svg",
+    "hero-copy.png",
+    "hero.png"
+  ]);
+  assert.equal(index.duplicates[0].assetIds.length, 2);
+  assert.ok(index.similarGroups.length >= 1);
+  assert.ok(progressEvents.some((event) => event.phase === "indexing"));
+});
+
+test("createBrowserFolderIndex records inaccessible files without aborting the whole scan", async () => {
+  const root = createDirectoryHandle("Mixed", [
+    createFileHandle("good.png", "good"),
+    {
+      kind: "file",
+      name: "broken.png",
+      async getFile() {
+        throw new Error("permission denied");
+      }
+    }
+  ]);
+
+  const index = await createBrowserFolderIndex(root, {
+    createObjectUrl: (file) => `blob:test/${file.name}`,
+    readDimensions: async () => ({ width: 512, height: 512 }),
+    now: "2026-06-01T00:00:00.000Z"
+  });
+
+  assert.equal(index.summary.totalAssets, 1);
+  assert.equal(index.errors.length, 1);
+  assert.match(index.errors[0].message, /permission denied/);
+});
+
+function createDirectoryHandle(name, children) {
+  return {
+    kind: "directory",
+    name,
+    async *entries() {
+      for (const child of children) {
+        yield [child.name, child];
+      }
+    }
+  };
+}
+
+function createFileHandle(name, content, options = {}) {
+  const bytes = new TextEncoder().encode(content);
+  return {
+    kind: "file",
+    name,
+    async getFile() {
+      return {
+        name,
+        size: bytes.byteLength,
+        lastModified: options.lastModified ?? 1_700_000_000_000,
+        type: options.type ?? "",
+        async arrayBuffer() {
+          return bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength);
+        }
+      };
+    }
+  };
+}

@@ -45,10 +45,12 @@ import {
   parseMarkBackup,
   setAssetNote
 } from "./view-model.js";
+import { createBrowserFolderIndex } from "./browser-folder-index.js";
 
 const elements = {
   status: document.querySelector("#scan-status"),
   libraryKind: document.querySelector("#library-kind"),
+  chooseFolderButton: document.querySelector("#choose-folder-button"),
   scanFolderForm: document.querySelector("#scan-folder-form"),
   folderPathInput: document.querySelector("#folder-path-input"),
   scanFolderButton: document.querySelector("#scan-folder-button"),
@@ -184,6 +186,7 @@ const selectedAssetIds = new Set();
 let libraryIndex = null;
 let currentView = null;
 let activeDetailAssetId = null;
+let browserAssetObjectUrls = [];
 
 init();
 
@@ -199,11 +202,49 @@ async function loadIndex() {
     if (!response.ok) {
       throw new Error(`Index request failed with ${response.status}`);
     }
+    revokeBrowserAssetUrls();
     libraryIndex = await response.json();
     render();
   } catch (error) {
     elements.status.textContent = "Index not found";
     elements.gallery.innerHTML = `<div class="notice">${escapeHtml(error.message)}</div>`;
+  }
+}
+
+async function chooseFolderFromBrowser() {
+  if (typeof window.showDirectoryPicker !== "function") {
+    elements.status.textContent = "Folder picker is not supported. Use Scan by path instead.";
+    elements.folderPathInput.focus();
+    return;
+  }
+
+  setScanControlsBusy(true);
+  elements.status.textContent = "Choosing folder...";
+  try {
+    const directoryHandle = await window.showDirectoryPicker({ mode: "read" });
+    elements.status.textContent = `Indexing ${directoryHandle.name}...`;
+    const nextIndex = await createBrowserFolderIndex(directoryHandle, {
+      onProgress: (progress) => {
+        if (progress.phase === "indexing") {
+          elements.status.textContent = `Indexing ${directoryHandle.name}: ${progress.scanned}/${progress.total}`;
+        }
+      }
+    });
+
+    revokeBrowserAssetUrls();
+    browserAssetObjectUrls = nextIndex.assets.map((asset) => asset.objectUrl).filter(Boolean);
+    libraryIndex = nextIndex;
+    resetViewAfterScan();
+    render();
+    elements.status.textContent = `Loaded ${nextIndex.assets.length} asset(s) from ${directoryHandle.name}`;
+  } catch (error) {
+    if (error.name === "AbortError") {
+      elements.status.textContent = "Folder selection cancelled";
+    } else {
+      elements.status.textContent = `Folder pick failed: ${error.message}`;
+    }
+  } finally {
+    setScanControlsBusy(false);
   }
 }
 
@@ -229,6 +270,7 @@ async function scanFolderFromInput(event) {
       throw new Error(nextIndex.error ?? `Scan failed with ${response.status}`);
     }
 
+    revokeBrowserAssetUrls();
     libraryIndex = nextIndex;
     resetViewAfterScan();
     saveRecentFolder(folderPath);
@@ -249,13 +291,23 @@ function resetViewAfterScan() {
   syncControlsFromState();
 }
 
+function revokeBrowserAssetUrls() {
+  for (const objectUrl of browserAssetObjectUrls) {
+    URL.revokeObjectURL(objectUrl);
+  }
+  browserAssetObjectUrls = [];
+}
+
 function setScanControlsBusy(isBusy) {
+  elements.chooseFolderButton.disabled = isBusy;
+  elements.chooseFolderButton.textContent = isBusy ? "Working..." : "Choose folder";
   elements.folderPathInput.disabled = isBusy;
   elements.scanFolderButton.disabled = isBusy;
-  elements.scanFolderButton.textContent = isBusy ? "Scanning..." : "Scan folder";
+  elements.scanFolderButton.textContent = isBusy ? "Scanning..." : "Scan path";
 }
 
 function bindEvents() {
+  elements.chooseFolderButton.addEventListener("click", chooseFolderFromBrowser);
   elements.scanFolderForm.addEventListener("submit", scanFolderFromInput);
   elements.search.addEventListener("input", () => {
     state.query = elements.search.value;
@@ -1066,8 +1118,8 @@ function renderSimilarGroupPreview(assets = []) {
   return `
     <div class="similar-preview" aria-label="Similar asset thumbnails">
       ${previewAssets.map((asset) => `
-        <a class="similar-preview-tile" href="/assets/${encodeURIComponent(asset.id)}" target="_blank" rel="noreferrer" title="${escapeHtml(asset.relativePath ?? asset.name)}">
-          <img loading="lazy" src="/assets/${encodeURIComponent(asset.id)}" alt="${escapeHtml(asset.name)}">
+        <a class="similar-preview-tile" href="${escapeHtml(getAssetUrl(asset))}" target="_blank" rel="noreferrer" title="${escapeHtml(asset.relativePath ?? asset.name)}">
+          <img loading="lazy" src="${escapeHtml(getAssetUrl(asset))}" alt="${escapeHtml(asset.name)}">
         </a>
       `).join("")}
       ${hiddenCount ? `<span class="similar-preview-more">+${hiddenCount}</span>` : ""}
@@ -1091,6 +1143,10 @@ function renderGallery(view) {
   elements.gallery.innerHTML = view.assets.map((asset) => renderAssetCard(asset, view.duplicateAssetIds)).join("");
 }
 
+function getAssetUrl(asset) {
+  return asset.objectUrl || `/assets/${encodeURIComponent(asset.id)}`;
+}
+
 function renderAssetCard(asset, duplicateAssetIds) {
   const dimensions = asset.width && asset.height ? `${asset.width} x ${asset.height}` : "Unknown size";
   const isDuplicate = duplicateAssetIds.has(asset.id);
@@ -1100,10 +1156,11 @@ function renderAssetCard(asset, duplicateAssetIds) {
   const isSelected = selectedAssetIds.has(asset.id);
   const description = createAssetDescription(asset);
   const visualReview = createAssetVisualReview(asset, duplicateAssetIds);
+  const assetUrl = getAssetUrl(asset);
   return `
     <article class="asset-card${isSelected ? " selected" : ""}">
-      <a class="asset-preview" href="/assets/${encodeURIComponent(asset.id)}" target="_blank" rel="noreferrer">
-        <img loading="lazy" src="/assets/${encodeURIComponent(asset.id)}" alt="${escapeHtml(asset.name)}">
+      <a class="asset-preview" href="${escapeHtml(assetUrl)}" target="_blank" rel="noreferrer">
+        <img loading="lazy" src="${escapeHtml(assetUrl)}" alt="${escapeHtml(asset.name)}">
       </a>
       <div class="asset-body">
         <div class="asset-card-controls">
@@ -1136,7 +1193,7 @@ function renderAssetCard(asset, duplicateAssetIds) {
           <div><dt>Frame</dt><dd>${dimensions}</dd></div>
         </dl>
         <div class="asset-actions">
-          <button type="button" class="primary-action" data-open-asset="/assets/${encodeURIComponent(asset.id)}">Open</button>
+          <button type="button" class="primary-action" data-open-asset="${escapeHtml(assetUrl)}">Open</button>
           <button type="button" data-show-details="${escapeHtml(asset.id)}">Details</button>
           <button type="button" data-copy-path="${escapeHtml(asset.path)}">Copy path</button>
         </div>

@@ -23,7 +23,7 @@ The default config scans `sample-library/`, so a fresh clone opens with a safe d
 - Search for `terrace` or `mint`.
 - Open a card to inspect metadata, generated description, AI-style review, and copy buttons.
 - Use the duplicate and similar-group panels to see how cleanup candidates are surfaced.
-- Paste a real image folder into the top scanner when you are ready to scan your own library.
+- Click "Choose folder" when you are ready to browse for your own image library.
 
 ## Demo Scenario
 
@@ -51,7 +51,7 @@ This project focuses on one workflow: local image-library triage for generated a
 - Similar visual groups from local theme, orientation, color vibe, and palette signals.
 - Local descriptions, alt text, AI-style reviews, suggested filenames, contact sheets, CSV, JSON manifests, and Markdown reports.
 - Embedded SVG and PNG text metadata extraction for prompt/title search and provenance reports.
-- Folder scanner in the browser with recent folders saved in local storage.
+- Native browser folder picker for quick local previews, plus a path scanner for users who want to persist `data/index.json`.
 - No database, no telemetry, no external network calls in the default workflow.
 
 ## Local Rules vs. AI
@@ -64,7 +64,9 @@ Future AI features, such as real image captioning or embedding-based semantic se
 
 ## Scan Your Own Folders
 
-The fastest way is to start the server, paste an image folder path into the top scanner, and click "Scan folder". The gallery refreshes after the scan and remembers recent folders in your browser.
+The fastest way is to start the server and click "Choose folder". In browsers that support the File System Access API, this opens the system folder picker and builds a browser-only gallery from the selected files.
+
+Use "Scan by path" when you want the Node server to rescan an absolute local path and update `data/index.json`. The gallery refreshes after the scan and remembers recent typed paths in your browser.
 
 For a checked-in-safe config, copy the example file:
 

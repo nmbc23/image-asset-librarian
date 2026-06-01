@@ -97,6 +97,23 @@ test("folder scanning controls post to the server and refresh the gallery", asyn
   assert.match(cssSource, /\.library-kind/);
 });
 
+test("folder scanner exposes a native folder picker before the path fallback", async () => {
+  const [appSource, htmlSource, cssSource] = await Promise.all([
+    readFile(new URL("../public/app.js", import.meta.url), "utf8"),
+    readFile(new URL("../public/index.html", import.meta.url), "utf8"),
+    readFile(new URL("../public/styles.css", import.meta.url), "utf8")
+  ]);
+
+  assert.match(htmlSource, /id="choose-folder-button"/);
+  assert.match(htmlSource, /<summary>Scan by path<\/summary>/);
+  assert.match(appSource, /createBrowserFolderIndex/);
+  assert.match(appSource, /chooseFolderFromBrowser/);
+  assert.match(appSource, /showDirectoryPicker/);
+  assert.match(appSource, /revokeBrowserAssetUrls/);
+  assert.match(cssSource, /\.folder-picker-primary/);
+  assert.match(cssSource, /\.path-scan-fallback/);
+});
+
 test("folder scanner placeholder does not expose a machine-specific path", async () => {
   const htmlSource = await readFile(new URL("../public/index.html", import.meta.url), "utf8");
 
