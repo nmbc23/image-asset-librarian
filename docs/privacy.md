@@ -14,7 +14,7 @@ Image Asset Librarian is designed to run locally. The default workflow scans a l
 - Library health reports, which summarize local metadata and only leave the browser when copied or downloaded by the user.
 - Asset issue reports, which are generated locally and only leave the browser when copied or downloaded by the user.
 - Image embed snippets, which use local asset URLs and only leave the browser when copied or downloaded by the user.
-- Contact sheets, including similar-group contact sheets, which use local asset URLs and only leave the browser when copied by the user.
+- Contact sheets, including similar-group contact sheets, which use local asset URLs and only leave the browser when copied or downloaded by the user.
 - Publishing checklists, which combine local metadata, issue status, alt text, and local asset URLs only when copied or downloaded by the user.
 - Readiness reports, which summarize local issue status, suggested filenames, and generated alt text only when copied or downloaded by the user.
 - Provenance reports, which summarize embedded prompt/title/text metadata and only leave the browser when copied or downloaded by the user.

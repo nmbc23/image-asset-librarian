@@ -292,7 +292,7 @@ test("visible and selected alt text lists can be copied and downloaded", async (
   assert.match(appSource, /asset-alt-text/);
 });
 
-test("visible and selected contact sheets can be copied as markdown", async () => {
+test("visible and selected contact sheets can be copied and downloaded", async () => {
   const [appSource, htmlSource] = await Promise.all([
     readFile(new URL("../public/app.js", import.meta.url), "utf8"),
     readFile(new URL("../public/index.html", import.meta.url), "utf8")
@@ -300,9 +300,14 @@ test("visible and selected contact sheets can be copied as markdown", async () =
 
   assert.match(htmlSource, /id="copy-visible-contact-sheet"/);
   assert.match(htmlSource, /id="copy-selected-contact-sheet"/);
+  assert.match(htmlSource, /id="download-visible-contact-sheet"/);
+  assert.match(htmlSource, /id="download-selected-contact-sheet"/);
   assert.match(appSource, /createAssetContactSheet/);
   assert.match(appSource, /copyVisibleContactSheet/);
   assert.match(appSource, /copySelectedContactSheet/);
+  assert.match(appSource, /downloadVisibleContactSheet/);
+  assert.match(appSource, /downloadSelectedContactSheet/);
+  assert.match(appSource, /asset-contact-sheet/);
 });
 
 test("visible and selected image embeds can be copied and downloaded", async () => {

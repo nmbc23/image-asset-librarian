@@ -83,6 +83,8 @@ const elements = {
   downloadSelectedAltText: document.querySelector("#download-selected-alt-text"),
   copyVisibleContactSheet: document.querySelector("#copy-visible-contact-sheet"),
   copySelectedContactSheet: document.querySelector("#copy-selected-contact-sheet"),
+  downloadVisibleContactSheet: document.querySelector("#download-visible-contact-sheet"),
+  downloadSelectedContactSheet: document.querySelector("#download-selected-contact-sheet"),
   copyVisibleEmbeds: document.querySelector("#copy-visible-embeds"),
   copySelectedEmbeds: document.querySelector("#copy-selected-embeds"),
   downloadVisibleEmbeds: document.querySelector("#download-visible-embeds"),
@@ -283,6 +285,8 @@ function bindEvents() {
   elements.downloadSelectedAltText.addEventListener("click", downloadSelectedAltText);
   elements.copyVisibleContactSheet.addEventListener("click", copyVisibleContactSheet);
   elements.copySelectedContactSheet.addEventListener("click", copySelectedContactSheet);
+  elements.downloadVisibleContactSheet.addEventListener("click", downloadVisibleContactSheet);
+  elements.downloadSelectedContactSheet.addEventListener("click", downloadSelectedContactSheet);
   elements.copyVisibleEmbeds.addEventListener("click", copyVisibleEmbeds);
   elements.copySelectedEmbeds.addEventListener("click", copySelectedEmbeds);
   elements.downloadVisibleEmbeds.addEventListener("click", downloadVisibleEmbeds);
@@ -644,6 +648,8 @@ function renderWorkflow() {
   elements.downloadSelectedAltText.disabled = selectedAssetIds.size === 0;
   elements.copyVisibleContactSheet.disabled = !currentView?.assets.length;
   elements.copySelectedContactSheet.disabled = selectedAssetIds.size === 0;
+  elements.downloadVisibleContactSheet.disabled = !currentView?.assets.length;
+  elements.downloadSelectedContactSheet.disabled = selectedAssetIds.size === 0;
   elements.copyVisibleEmbeds.disabled = !currentView?.assets.length;
   elements.copySelectedEmbeds.disabled = selectedAssetIds.size === 0;
   elements.downloadVisibleEmbeds.disabled = !currentView?.assets.length;
@@ -1376,6 +1382,22 @@ async function copyVisibleContactSheet() {
   await copyFromButton(elements.copyVisibleContactSheet, createAssetContactSheet(visibleAssets, createContactSheetOptions()));
 }
 
+function downloadSelectedContactSheet() {
+  const selectedAssets = getSelectedAssets();
+  if (!selectedAssets.length) {
+    return;
+  }
+  downloadContactSheet(selectedAssets, "selected", elements.downloadSelectedContactSheet);
+}
+
+function downloadVisibleContactSheet() {
+  const visibleAssets = currentView?.assets ?? [];
+  if (!visibleAssets.length) {
+    return;
+  }
+  downloadContactSheet(visibleAssets, "visible", elements.downloadVisibleContactSheet);
+}
+
 async function copySelectedEmbeds() {
   const selectedAssets = getSelectedAssets();
   if (!selectedAssets.length) {
@@ -1734,6 +1756,13 @@ function createCollectionBriefOptions(label, generatedAt = new Date().toISOStrin
   };
 }
 
+function createContactSheetOptionsWithTimestamp(generatedAt = new Date().toISOString()) {
+  return {
+    ...createContactSheetOptions(),
+    generatedAt
+  };
+}
+
 function downloadAltTextList(assets, label, button) {
   const generatedAt = new Date().toISOString();
   const list = createAssetAltTextList(assets, createAltTextOptions(label, generatedAt));
@@ -1746,6 +1775,13 @@ function downloadEmbedList(assets, label, button) {
   const list = createAssetEmbedList(assets, createEmbedOptions(label, generatedAt));
   const fileName = createExportFileName(`asset-embeds-${label}`, "md", { generatedAt });
   downloadTextFile(button, list, fileName, "text/markdown");
+}
+
+function downloadContactSheet(assets, label, button) {
+  const generatedAt = new Date().toISOString();
+  const sheet = createAssetContactSheet(assets, createContactSheetOptionsWithTimestamp(generatedAt));
+  const fileName = createExportFileName(`asset-contact-sheet-${label}`, "md", { generatedAt });
+  downloadTextFile(button, sheet, fileName, "text/markdown");
 }
 
 function downloadPublishingChecklist(assets, label, button) {

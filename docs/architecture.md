@@ -47,7 +47,7 @@ UI responsibilities:
 - Generate concise local image descriptions from indexed visual signals, show them on asset cards, copy them one-by-one, export selected/visible description batches, or save them as local notes.
 - Generate accessibility-oriented alt text from the same local visual signals, then copy or download selected/visible Markdown alt text lists for publishing workflows.
 - Generate stable suggested filenames from local theme, color, dimension, and source-name signals, then copy or download selected/visible Markdown rename plans without modifying files.
-- Copy selected or visible assets as Markdown contact sheets with local preview links, descriptions, paths, dimensions, and file sizes.
+- Copy or download selected or visible assets as Markdown contact sheets with local preview links, descriptions, paths, dimensions, and file sizes.
 - Show embedded metadata in the detail drawer with copy controls.
 - Sort by date, file size, resolution, or name.
 - Highlight duplicate assets.
