@@ -35,6 +35,8 @@ test("scanLibrary indexes image assets with searchable metadata", async () => {
     assert.equal(index.assets[0].width, 120);
     assert.equal(index.assets[0].height, 80);
     assert.equal(index.assets[0].hash.length, 64);
+    assert.deepEqual(index.summary.extensions, { ".svg": 1 });
+    assert.deepEqual(index.summary.sources, { Demo: 1 });
     assert.equal(index.errors.length, 0);
   });
 });

@@ -163,8 +163,18 @@ function summarize(assets, duplicates) {
     duplicateGroups: duplicates.length,
     duplicateAssets: duplicates.reduce((sum, group) => sum + group.count, 0),
     reclaimableBytes: duplicates.reduce((sum, group) => sum + group.reclaimableBytes, 0),
-    roots: new Set(assets.map((asset) => asset.rootName)).size
+    roots: new Set(assets.map((asset) => asset.rootName)).size,
+    extensions: countBy(assets, "extension"),
+    sources: countBy(assets, "rootName")
   };
+}
+
+function countBy(assets, field) {
+  return assets.reduce((counts, asset) => {
+    const value = asset[field];
+    counts[value] = (counts[value] ?? 0) + 1;
+    return counts;
+  }, {});
 }
 
 function readDimensions(extension, bytes) {
