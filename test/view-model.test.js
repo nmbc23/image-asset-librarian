@@ -5,6 +5,8 @@ import {
   applyMarkBatch,
   applyTagBatch,
   createActiveFilterChips,
+  createAssetAltText,
+  createAssetAltTextList,
   createAssetIssueReport,
   createAssetDetails,
   createAssetDescription,
@@ -829,6 +831,27 @@ test("createAssetDescriptionList exports markdown descriptions in display order"
   assert.equal(createAssetDescriptionList([index.assets[0], index.assets[2]]), [
     "- **rose.png**: A portrait character image with warm, vivid colors and a rose, teal palette. Metadata suggests: Soft light portrait.",
     "- **mint.svg**: A logo vector image with cool, green colors and a teal palette.",
+    ""
+  ].join("\n"));
+});
+
+test("createAssetAltTextList exports accessibility alt text in display order", () => {
+  assert.equal(createAssetAltText(index.assets[0]), "Portrait character visual with warm, vivid colors and a rose, teal palette. Metadata suggests: Soft light portrait.");
+
+  assert.equal(createAssetAltTextList([index.assets[0], index.assets[2]], {
+    generatedAt: "2026-06-01T18:00:00.000Z",
+    label: "selected"
+  }), [
+    "# Image Asset Alt Text",
+    "",
+    "Generated: 2026-06-01T18:00:00.000Z",
+    "Scope: selected",
+    "Count: 2",
+    "",
+    "| Asset | Alt text |",
+    "| --- | --- |",
+    "| `flowers/rose.png` | Portrait character visual with warm, vivid colors and a rose, teal palette. Metadata suggests: Soft light portrait. |",
+    "| `mint.svg` | Logo vector visual with cool, green colors and a teal palette. |",
     ""
   ].join("\n"));
 });

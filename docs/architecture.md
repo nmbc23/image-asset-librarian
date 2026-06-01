@@ -45,6 +45,7 @@ UI responsibilities:
 - Review similar visual groups and jump into the matching search query.
 - Show compact palette swatches on asset cards and in the detail drawer.
 - Generate concise local image descriptions from indexed visual signals, then copy them one-by-one, export selected/visible description batches, or save them as local notes.
+- Generate accessibility-oriented alt text from the same local visual signals, then copy or download selected/visible Markdown alt text lists for publishing workflows.
 - Generate stable suggested filenames from local theme, color, dimension, and source-name signals, then copy or download selected/visible Markdown rename plans without modifying files.
 - Copy selected or visible assets as Markdown contact sheets with local preview links, descriptions, paths, dimensions, and file sizes.
 - Show embedded metadata in the detail drawer with copy controls.
@@ -57,6 +58,7 @@ UI responsibilities:
 - Copy, download, and import saved/review mark backups as JSON.
 - Copy and import full curation backups containing marks, asset tags, asset notes, and saved filter views, and download those backups as timestamped JSON files.
 - Select all currently visible filtered assets and copy selected or visible asset paths as a batch for downstream cleanup, curation, or prompt-tracking work.
+- Copy or download selected or visible alt text lists as Markdown for README, documentation, and web publishing tasks.
 - Copy selected or visible asset metadata, including palettes, generated descriptions, and embedded prompt/title metadata, as CSV for spreadsheets, issue reports, and lightweight inventory work.
 - Copy selected or visible asset metadata, including palettes, generated descriptions, and embedded prompt/title metadata, as a structured JSON manifest that can include local curation annotations for automation and reproducible downstream workflows.
 - Copy or download selected or visible rename plans as Markdown so downstream cleanup can review proposed filenames before any file operation happens.

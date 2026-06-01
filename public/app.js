@@ -2,6 +2,7 @@ import {
   applyMarkBatch,
   applyTagBatch,
   createActiveFilterChips,
+  createAssetAltTextList,
   createAssetContactSheet,
   createAssetCsv,
   createAssetDescriptionList,
@@ -68,6 +69,10 @@ const elements = {
   copySelectedPaths: document.querySelector("#copy-selected-paths"),
   copyVisibleDescriptions: document.querySelector("#copy-visible-descriptions"),
   copySelectedDescriptions: document.querySelector("#copy-selected-descriptions"),
+  copyVisibleAltText: document.querySelector("#copy-visible-alt-text"),
+  copySelectedAltText: document.querySelector("#copy-selected-alt-text"),
+  downloadVisibleAltText: document.querySelector("#download-visible-alt-text"),
+  downloadSelectedAltText: document.querySelector("#download-selected-alt-text"),
   copyVisibleContactSheet: document.querySelector("#copy-visible-contact-sheet"),
   copySelectedContactSheet: document.querySelector("#copy-selected-contact-sheet"),
   copyVisibleCsv: document.querySelector("#copy-visible-csv"),
@@ -238,6 +243,10 @@ function bindEvents() {
   elements.copySelectedPaths.addEventListener("click", copySelectedPaths);
   elements.copyVisibleDescriptions.addEventListener("click", copyVisibleDescriptions);
   elements.copySelectedDescriptions.addEventListener("click", copySelectedDescriptions);
+  elements.copyVisibleAltText.addEventListener("click", copyVisibleAltText);
+  elements.copySelectedAltText.addEventListener("click", copySelectedAltText);
+  elements.downloadVisibleAltText.addEventListener("click", downloadVisibleAltText);
+  elements.downloadSelectedAltText.addEventListener("click", downloadSelectedAltText);
   elements.copyVisibleContactSheet.addEventListener("click", copyVisibleContactSheet);
   elements.copySelectedContactSheet.addEventListener("click", copySelectedContactSheet);
   elements.copyVisibleCsv.addEventListener("click", copyVisibleCsv);
@@ -554,6 +563,10 @@ function renderWorkflow() {
   elements.copySelectedPaths.disabled = selectedAssetIds.size === 0;
   elements.copyVisibleDescriptions.disabled = !currentView?.assets.length;
   elements.copySelectedDescriptions.disabled = selectedAssetIds.size === 0;
+  elements.copyVisibleAltText.disabled = !currentView?.assets.length;
+  elements.copySelectedAltText.disabled = selectedAssetIds.size === 0;
+  elements.downloadVisibleAltText.disabled = !currentView?.assets.length;
+  elements.downloadSelectedAltText.disabled = selectedAssetIds.size === 0;
   elements.copyVisibleContactSheet.disabled = !currentView?.assets.length;
   elements.copySelectedContactSheet.disabled = selectedAssetIds.size === 0;
   elements.copyVisibleCsv.disabled = !currentView?.assets.length;
@@ -1177,6 +1190,38 @@ async function copyVisibleDescriptions() {
   await copyFromButton(elements.copyVisibleDescriptions, createAssetDescriptionList(visibleAssets));
 }
 
+async function copySelectedAltText() {
+  const selectedAssets = getSelectedAssets();
+  if (!selectedAssets.length) {
+    return;
+  }
+  await copyFromButton(elements.copySelectedAltText, createAssetAltTextList(selectedAssets, createAltTextOptions("selected")));
+}
+
+async function copyVisibleAltText() {
+  const visibleAssets = currentView?.assets ?? [];
+  if (!visibleAssets.length) {
+    return;
+  }
+  await copyFromButton(elements.copyVisibleAltText, createAssetAltTextList(visibleAssets, createAltTextOptions("visible")));
+}
+
+function downloadSelectedAltText() {
+  const selectedAssets = getSelectedAssets();
+  if (!selectedAssets.length) {
+    return;
+  }
+  downloadAltTextList(selectedAssets, "selected", elements.downloadSelectedAltText);
+}
+
+function downloadVisibleAltText() {
+  const visibleAssets = currentView?.assets ?? [];
+  if (!visibleAssets.length) {
+    return;
+  }
+  downloadAltTextList(visibleAssets, "visible", elements.downloadVisibleAltText);
+}
+
 async function copySelectedContactSheet() {
   const selectedAssets = getSelectedAssets();
   if (!selectedAssets.length) {
@@ -1273,6 +1318,20 @@ function createRenamePlanOptions(label, generatedAt = new Date().toISOString()) 
     generatedAt,
     label
   };
+}
+
+function createAltTextOptions(label, generatedAt = new Date().toISOString()) {
+  return {
+    generatedAt,
+    label
+  };
+}
+
+function downloadAltTextList(assets, label, button) {
+  const generatedAt = new Date().toISOString();
+  const list = createAssetAltTextList(assets, createAltTextOptions(label, generatedAt));
+  const fileName = createExportFileName(`asset-alt-text-${label}`, "md", { generatedAt });
+  downloadTextFile(button, list, fileName, "text/markdown");
 }
 
 function downloadRenamePlan(assets, label, button) {

@@ -652,6 +652,41 @@ export function createAssetDescriptionList(assets) {
   return `${lines.join("\n")}${lines.length ? "\n" : ""}`;
 }
 
+export function createAssetAltText(asset = {}) {
+  const description = createAssetDescription(asset)
+    .replace(/^A\s+/i, "")
+    .replace(/\bimage\b/i, "visual")
+    .trim();
+
+  return description ? `${description.charAt(0).toUpperCase()}${description.slice(1)}` : "Visual asset.";
+}
+
+export function createAssetAltTextList(assets, options = {}) {
+  const altTextAssets = Array.isArray(assets) ? assets : [];
+  const lines = [
+    "# Image Asset Alt Text",
+    "",
+    `Generated: ${options.generatedAt ?? new Date().toISOString()}`,
+    `Scope: ${String(options.label ?? "assets")}`,
+    `Count: ${altTextAssets.length}`,
+    "",
+    "| Asset | Alt text |",
+    "| --- | --- |"
+  ];
+
+  for (const asset of altTextAssets) {
+    const path = asset.relativePath ?? asset.path ?? asset.name ?? asset.id ?? "";
+    const cells = [
+      `\`${escapeMarkdownCodeText(path)}\``,
+      escapeMarkdownTableText(createAssetAltText(asset))
+    ];
+    lines.push(`| ${cells.join(" | ")} |`);
+  }
+
+  lines.push("");
+  return lines.join("\n");
+}
+
 export function createSuggestedFileName(asset = {}) {
   const themes = getAssetThemes(asset);
   const colorThemes = getAssetColorThemes(asset);

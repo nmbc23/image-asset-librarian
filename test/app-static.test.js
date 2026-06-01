@@ -248,6 +248,24 @@ test("visible and selected image descriptions can be copied in batches", async (
   assert.match(appSource, /copySelectedDescriptions/);
 });
 
+test("visible and selected alt text lists can be copied and downloaded", async () => {
+  const [appSource, htmlSource] = await Promise.all([
+    readFile(new URL("../public/app.js", import.meta.url), "utf8"),
+    readFile(new URL("../public/index.html", import.meta.url), "utf8")
+  ]);
+
+  assert.match(htmlSource, /id="copy-visible-alt-text"/);
+  assert.match(htmlSource, /id="copy-selected-alt-text"/);
+  assert.match(htmlSource, /id="download-visible-alt-text"/);
+  assert.match(htmlSource, /id="download-selected-alt-text"/);
+  assert.match(appSource, /createAssetAltTextList/);
+  assert.match(appSource, /copyVisibleAltText/);
+  assert.match(appSource, /copySelectedAltText/);
+  assert.match(appSource, /downloadVisibleAltText/);
+  assert.match(appSource, /downloadSelectedAltText/);
+  assert.match(appSource, /asset-alt-text/);
+});
+
 test("visible and selected contact sheets can be copied as markdown", async () => {
   const [appSource, htmlSource] = await Promise.all([
     readFile(new URL("../public/app.js", import.meta.url), "utf8"),

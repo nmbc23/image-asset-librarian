@@ -9,6 +9,7 @@ Image Asset Librarian is designed to run locally. The default workflow scans a l
 - File names, sizes, hashes, dimensions, and modification times.
 - Embedded SVG/PNG text metadata, including prompts or titles when present.
 - Generated descriptions derived from local file metadata, color labels, palettes, and embedded metadata.
+- Generated alt text derived from local file metadata, color labels, palettes, and embedded metadata.
 - Duplicate group information.
 - Asset issue reports, which are generated locally and only leave the browser when copied or downloaded by the user.
 - Rename plans, which can include local relative paths and only leave the browser when copied or downloaded by the user.
