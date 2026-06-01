@@ -43,6 +43,31 @@ test("scanLibrary indexes image assets with searchable metadata", async () => {
   });
 });
 
+test("scanLibrary accepts common JPEG filename variants", async () => {
+  await withTempLibrary(async (dir) => {
+    const jpeg = createMinimalJpeg(3, 2);
+    await writeFile(path.join(dir, "portrait.JPG"), jpeg);
+    await writeFile(path.join(dir, "download.jfif"), jpeg);
+    await writeFile(path.join(dir, "camera.JPE"), jpeg);
+
+    const index = await scanLibrary({
+      roots: [{ name: "JPEG Demo", path: dir }],
+      generatedAt: "2026-06-01T00:00:00.000Z"
+    });
+
+    assert.deepEqual(index.assets.map((asset) => asset.extension).sort(), [".jfif", ".jpe", ".jpg"]);
+    assert.equal(index.summary.totalAssets, 3);
+    assert.deepEqual(
+      index.assets.map((asset) => [asset.name, asset.width, asset.height]).sort(),
+      [
+        ["camera.JPE", 3, 2],
+        ["download.jfif", 3, 2],
+        ["portrait.JPG", 3, 2]
+      ]
+    );
+  });
+});
+
 test("scanLibrary infers local visual themes from image metadata and paths", async () => {
   await withTempLibrary(async (dir) => {
     await writeFile(path.join(dir, "portrait-avatar.svg"), svgA);
@@ -220,6 +245,25 @@ function createSolidPng(width, height, rgba, extraChunks = []) {
     ...extraChunks,
     createPngChunk("IDAT", deflateSync(raw)),
     createPngChunk("IEND", Buffer.alloc(0))
+  ]);
+}
+
+function createMinimalJpeg(width, height) {
+  const frame = Buffer.from([
+    0xff, 0xc0,
+    0x00, 0x11,
+    0x08,
+    (height >> 8) & 0xff, height & 0xff,
+    (width >> 8) & 0xff, width & 0xff,
+    0x03,
+    0x01, 0x11, 0x00,
+    0x02, 0x11, 0x00,
+    0x03, 0x11, 0x00
+  ]);
+  return Buffer.concat([
+    Buffer.from([0xff, 0xd8]),
+    frame,
+    Buffer.from([0xff, 0xd9])
   ]);
 }
 

@@ -7,7 +7,9 @@ export const IMAGE_EXTENSIONS = new Set([
   ".avif",
   ".bmp",
   ".gif",
+  ".jpe",
   ".jpeg",
+  ".jfif",
   ".jpg",
   ".png",
   ".svg",
@@ -343,7 +345,7 @@ function readDimensions(extension, bytes) {
   if (extension === ".gif") {
     return readGifDimensions(bytes);
   }
-  if (extension === ".jpg" || extension === ".jpeg") {
+  if (extension === ".jpg" || extension === ".jpeg" || extension === ".jpe" || extension === ".jfif") {
     return readJpegDimensions(bytes);
   }
   if (extension === ".webp") {

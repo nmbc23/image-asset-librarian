@@ -64,6 +64,21 @@ test("createBrowserFolderIndex renders browser-picked folders without reading ev
   assert.match(index.assets[0].objectUrl, /^blob:test\//);
 });
 
+test("createBrowserFolderIndex accepts common JPEG filename variants", async () => {
+  const root = createDirectoryHandle("JPEGs", [
+    createFileHandle("portrait.JPG", "jpg"),
+    createFileHandle("download.jfif", "jfif"),
+    createFileHandle("camera.JPE", "jpe")
+  ]);
+
+  const index = await createBrowserFolderIndex(root, {
+    createObjectUrl: (file) => `blob:test/${file.name}`,
+    now: "2026-06-01T00:00:00.000Z"
+  });
+
+  assert.deepEqual(index.assets.map((asset) => asset.extension).sort(), [".jfif", ".jpe", ".jpg"]);
+});
+
 test("createBrowserFolderIndex records inaccessible files without aborting the whole scan", async () => {
   const root = createDirectoryHandle("Mixed", [
     createFileHandle("good.png", "good"),
