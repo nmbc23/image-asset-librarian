@@ -1,0 +1,23 @@
+{
+  "name": "image-asset-librarian",
+  "version": "0.1.0",
+  "description": "A fast local gallery and duplicate finder for AI-generated image assets.",
+  "type": "module",
+  "scripts": {
+    "scan": "node src/cli.js scan",
+    "serve": "node src/server.js",
+    "start": "node src/server.js",
+    "test": "node --test"
+  },
+  "keywords": [
+    "image-library",
+    "asset-management",
+    "ai-art",
+    "duplicates",
+    "gallery"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">=20"
+  }
+}

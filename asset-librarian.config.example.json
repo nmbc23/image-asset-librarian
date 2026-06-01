@@ -1,0 +1,13 @@
+{
+  "roots": [
+    {
+      "name": "Generated Images",
+      "path": "./sample-library"
+    },
+    {
+      "name": "Archive",
+      "path": "./another-image-folder"
+    }
+  ],
+  "output": "data/index.json"
+}

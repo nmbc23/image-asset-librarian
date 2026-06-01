@@ -1,0 +1,9 @@
+{
+  "roots": [
+    {
+      "name": "Sample Library",
+      "path": "sample-library"
+    }
+  ],
+  "output": "data/index.json"
+}

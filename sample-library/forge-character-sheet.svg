@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="820" height="1080" viewBox="0 0 820 1080">
+  <rect width="820" height="1080" fill="#f6f7f3"/>
+  <rect x="54" y="56" width="712" height="968" rx="12" fill="#ffffff" stroke="#d9e0de" stroke-width="4"/>
+  <circle cx="410" cy="250" r="128" fill="#3949ab"/>
+  <path d="M288 262c42 82 194 82 244 0 16 42 26 88 26 136 0 118-66 214-148 214s-148-96-148-214c0-48 10-94 26-136z" fill="#1f8a70"/>
+  <rect x="118" y="690" width="584" height="24" rx="12" fill="#d94f70"/>
+  <rect x="118" y="752" width="440" height="20" rx="10" fill="#68737a"/>
+  <rect x="118" y="806" width="520" height="20" rx="10" fill="#68737a"/>
+  <text x="118" y="128" fill="#1e2528" font-family="Segoe UI, sans-serif" font-size="42" font-weight="800">character sheet</text>
+</svg>

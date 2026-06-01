@@ -1,0 +1,8 @@
+node_modules/
+data/index.json
+asset-librarian.config.local.json
+.logs/
+.chrome-profile/
+.edge-profile/
+.DS_Store
+*.log

@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Image Asset Librarian</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <main class="app-shell">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">Local Library</p>
+          <h1>Image Asset Librarian</h1>
+        </div>
+        <div class="scan-status" id="scan-status">Loading index...</div>
+      </header>
+
+      <section class="metrics" aria-label="Library summary">
+        <div>
+          <span id="metric-assets">0</span>
+          <small>Assets</small>
+        </div>
+        <div>
+          <span id="metric-size">0 B</span>
+          <small>Total size</small>
+        </div>
+        <div>
+          <span id="metric-duplicates">0</span>
+          <small>Duplicate groups</small>
+        </div>
+        <div>
+          <span id="metric-reclaimable">0 B</span>
+          <small>Reclaimable</small>
+        </div>
+      </section>
+
+      <section class="toolbar" aria-label="Gallery filters">
+        <label class="search-field">
+          <span>Search</span>
+          <input id="search-input" type="search" placeholder="Name, folder, source, type">
+        </label>
+        <label>
+          <span>Source</span>
+          <select id="root-filter"></select>
+        </label>
+        <label>
+          <span>Type</span>
+          <select id="extension-filter"></select>
+        </label>
+        <label>
+          <span>Sort</span>
+          <select id="sort-select">
+            <option value="newest">Newest</option>
+            <option value="oldest">Oldest</option>
+            <option value="largest">Largest</option>
+            <option value="smallest">Smallest</option>
+            <option value="name">Name</option>
+          </select>
+        </label>
+        <label class="toggle">
+          <input id="duplicate-toggle" type="checkbox">
+          <span>Duplicates only</span>
+        </label>
+      </section>
+
+      <section class="duplicates-panel" aria-label="Duplicate groups">
+        <div class="section-heading">
+          <h2>Duplicates</h2>
+          <span id="duplicate-summary">0 groups</span>
+        </div>
+        <div id="duplicate-list" class="duplicate-list"></div>
+      </section>
+
+      <section class="gallery-section" aria-label="Image gallery">
+        <div class="section-heading">
+          <h2>Gallery</h2>
+          <span id="result-count">0 assets</span>
+        </div>
+        <div id="gallery" class="gallery"></div>
+        <div id="empty-state" class="empty-state" hidden>No assets match the current filters.</div>
+      </section>
+    </main>
+
+    <script type="module" src="/app.js"></script>
+  </body>
+</html>
