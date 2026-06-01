@@ -138,6 +138,27 @@ export function getAssetPalette(asset = {}) {
   return uniqueStrings((Array.isArray(asset.palette) ? asset.palette : []).map(normalizePaletteColor));
 }
 
+export function getAssetMetadataEntries(asset = {}) {
+  const metadata = normalizeEmbeddedMetadata(asset.metadata);
+  const entries = [];
+
+  if (metadata.title) {
+    entries.push({ label: "Title", value: metadata.title });
+  }
+  if (metadata.description) {
+    entries.push({ label: "Description", value: metadata.description });
+  }
+
+  for (const entry of metadata.text) {
+    entries.push({
+      label: entry.key || "Text",
+      value: entry.value
+    });
+  }
+
+  return entries;
+}
+
 export function setAssetNote(assetNotes = {}, assetId, note) {
   const updatedNotes = normalizeAssetNotes(assetNotes);
   const normalizedId = String(assetId ?? "").trim();
@@ -311,6 +332,8 @@ export function createAssetDetails(index, assetId) {
   const colorThemeLabel = colorThemes.length ? colorThemes.join(", ") : "Uncategorized";
   const palette = getAssetPalette(asset);
   const paletteLabel = palette.length ? palette.join(", ") : "Unavailable";
+  const metadataEntries = getAssetMetadataEntries(asset);
+  const metadataSummary = formatAssetMetadata(asset);
 
   return {
     id: asset.id,
@@ -321,6 +344,8 @@ export function createAssetDetails(index, assetId) {
     size: formatBytes(asset.sizeBytes),
     dimensions,
     palette,
+    metadataEntries,
+    metadataSummary,
     modified: formatDate(asset.modifiedAt),
     isDuplicate: Boolean(duplicateGroup),
     duplicateGroup: duplicateGroup
@@ -338,6 +363,7 @@ export function createAssetDetails(index, assetId) {
       { label: "Themes", value: themeLabel },
       { label: "Color vibes", value: colorThemeLabel },
       { label: "Palette", value: paletteLabel },
+      { label: "Metadata", value: metadataSummary || "Unavailable", copyValue: metadataSummary },
       { label: "Modified", value: formatDate(asset.modifiedAt) },
       { label: "Hash", value: asset.hash ?? "Unknown", copyValue: asset.hash },
       { label: "Path", value: asset.path ?? "Unknown", copyValue: asset.path }
@@ -514,6 +540,7 @@ export function createAssetCsv(assets) {
     ["themes", (asset) => getAssetThemes(asset).join("; ")],
     ["colorThemes", (asset) => getAssetColorThemes(asset).join("; ")],
     ["palette", (asset) => getAssetPalette(asset).join("; ")],
+    ["metadata", (asset) => formatAssetMetadata(asset)],
     ["modifiedAt", (asset) => asset.modifiedAt],
     ["relativePath", (asset) => asset.relativePath],
     ["path", (asset) => asset.path],
@@ -547,6 +574,7 @@ export function createAssetManifest(assets, options = {}) {
       themes: getAssetThemes(asset),
       colorThemes: getAssetColorThemes(asset),
       palette: getAssetPalette(asset),
+      metadata: normalizeEmbeddedMetadata(asset.metadata),
       modifiedAt: asset.modifiedAt ?? null,
       relativePath: asset.relativePath ?? null,
       path: asset.path ?? null,
@@ -617,6 +645,7 @@ function matchesSearch(asset, query, assetNotes = {}) {
     getAssetThemes(asset).join(" "),
     getAssetColorThemes(asset).join(" "),
     getAssetPalette(asset).join(" "),
+    formatAssetMetadata(asset),
     assetNotes[asset.id]
   ].join(" ").toLowerCase();
 
@@ -856,6 +885,30 @@ function normalizeColorTheme(value) {
 function normalizePaletteColor(value) {
   const normalized = String(value ?? "").trim().toLowerCase();
   return /^#[0-9a-f]{6}$/.test(normalized) ? normalized : "";
+}
+
+function normalizeEmbeddedMetadata(value) {
+  const metadata = value && typeof value === "object" && !Array.isArray(value) ? value : {};
+  return {
+    title: normalizeMetadataText(metadata.title),
+    description: normalizeMetadataText(metadata.description),
+    text: (Array.isArray(metadata.text) ? metadata.text : [])
+      .map((entry) => ({
+        key: normalizeMetadataText(entry?.key),
+        value: normalizeMetadataText(entry?.value)
+      }))
+      .filter((entry) => entry.key && entry.value)
+  };
+}
+
+function formatAssetMetadata(asset) {
+  return getAssetMetadataEntries(asset)
+    .map((entry) => `${entry.label}: ${entry.value}`)
+    .join("; ");
+}
+
+function normalizeMetadataText(value) {
+  return String(value ?? "").replace(/\s+/g, " ").trim();
 }
 
 function createSavedFilterViewId(createdAt, name) {

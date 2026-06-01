@@ -386,6 +386,12 @@ function bindEvents() {
       return;
     }
 
+    const metadataCopyButton = event.target.closest("[data-copy-metadata-value]");
+    if (metadataCopyButton) {
+      await copyFromButton(metadataCopyButton, metadataCopyButton.dataset.copyMetadataValue);
+      return;
+    }
+
     const copyButton = event.target.closest("[data-copy-value]");
     if (copyButton) {
       await copyFromButton(copyButton, copyButton.dataset.copyValue);
@@ -913,6 +919,7 @@ function renderDetails(details) {
     </a>
     ${details.isDuplicate ? `<div class="drawer-alert">${details.duplicateGroup.count} duplicate files, ${details.duplicateGroup.reclaimable} reclaimable</div>` : ""}
     ${renderDetailPalette(details)}
+    ${renderDetailMetadata(details)}
     <section class="note-editor" aria-label="Local asset note">
       <label>
         <span>Local note</span>
@@ -923,6 +930,27 @@ function renderDetails(details) {
     <dl class="detail-list">
       ${details.fields.map(renderDetailField).join("")}
     </dl>
+  `;
+}
+
+function renderDetailMetadata(details) {
+  if (!details.metadataEntries?.length) {
+    return "";
+  }
+
+  return `
+    <section class="detail-metadata" aria-label="Embedded asset metadata">
+      <h3>Embedded Metadata</h3>
+      <dl>
+        ${details.metadataEntries.map((entry) => `
+          <div>
+            <dt>${escapeHtml(entry.label)}</dt>
+            <dd>${escapeHtml(entry.value)}</dd>
+            <button type="button" data-copy-metadata-value="${escapeHtml(entry.value)}">Copy</button>
+          </div>
+        `).join("")}
+      </dl>
+    </section>
   `;
 }
 

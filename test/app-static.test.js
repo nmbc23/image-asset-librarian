@@ -172,6 +172,20 @@ test("asset palettes are exposed as swatches on cards and details", async () => 
   assert.match(cssSource, /\.detail-palette/);
 });
 
+test("embedded asset metadata is exposed in details and exports", async () => {
+  const [appSource, cssSource, viewModelSource] = await Promise.all([
+    readFile(new URL("../public/app.js", import.meta.url), "utf8"),
+    readFile(new URL("../public/styles.css", import.meta.url), "utf8"),
+    readFile(new URL("../public/view-model.js", import.meta.url), "utf8")
+  ]);
+
+  assert.match(viewModelSource, /getAssetMetadataEntries/);
+  assert.match(viewModelSource, /metadataSummary/);
+  assert.match(appSource, /renderDetailMetadata/);
+  assert.match(appSource, /data-copy-metadata-value/);
+  assert.match(cssSource, /\.detail-metadata/);
+});
+
 test("selected assets can be bulk marked from the workflow panel", async () => {
   const [appSource, htmlSource] = await Promise.all([
     readFile(new URL("../public/app.js", import.meta.url), "utf8"),

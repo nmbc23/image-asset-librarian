@@ -7,6 +7,7 @@ Image Asset Librarian is designed to run locally. The default workflow scans a l
 - Image files.
 - Absolute paths in the generated index.
 - File names, sizes, hashes, dimensions, and modification times.
+- Embedded SVG/PNG text metadata, including prompts or titles when present.
 - Duplicate group information.
 - Saved and review marks, which are stored in browser local storage as asset ids and can be copied as a JSON backup only when the user clicks the backup control.
 
@@ -24,4 +25,4 @@ Optional AI-assisted tagging and semantic search should remain explicit opt-in f
 
 ## Local Path Caution
 
-The generated index can contain absolute filesystem paths. Keep `data/index.json` out of public commits when scanning private folders. The repository `.gitignore` already ignores that file.
+The generated index can contain absolute filesystem paths and embedded prompt metadata. Keep `data/index.json` out of public commits when scanning private folders. The repository `.gitignore` already ignores that file.

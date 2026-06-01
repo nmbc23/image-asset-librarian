@@ -1,4 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="820" height="1080" viewBox="0 0 820 1080">
+  <title>Forge character sheet</title>
+  <desc>Prompt metadata sample: emerald cloak character study with rose accent bars</desc>
   <rect width="820" height="1080" fill="#f6f7f3"/>
   <rect x="54" y="56" width="712" height="968" rx="12" fill="#ffffff" stroke="#d9e0de" stroke-width="4"/>
   <circle cx="410" cy="250" r="128" fill="#3949ab"/>

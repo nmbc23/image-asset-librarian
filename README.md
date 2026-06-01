@@ -8,6 +8,7 @@ A zero-dependency local gallery for AI-generated image folders. It scans one or 
 
 - Local-first scanner for PNG, JPG, GIF, SVG, WebP, AVIF, BMP, and TIFF files
 - Browser gallery with search, saved filter views, inferred theme, color-vibe and visual-similarity grouping, palette swatches, clickable source/type/resolution/theme/color breakdowns, local asset tags and notes, active filter chips, detail drawer previous/next navigation and marking controls, age/orientation/resolution/theme/color-vibe/mark filters, duplicate-only mode, and size/date/name/resolution sorting
+- Embedded SVG/PNG text metadata extraction for prompt/title search, detail inspection, CSV export, and JSON manifests
 - Saved and review marks stored in your browser, with batch marking, marks-only backup/restore, full curation backup/restore, selected/visible path, CSV, curation-aware JSON manifest exports, and Markdown workflow reports that include local tags and notes
 - Duplicate groups with reclaimable storage estimates, suggested keep files, and copy actions for full groups or cleanup candidates
 - Similar visual groups built from local themes, orientation, color vibes, and dominant palette colors, with one-click filtering and copyable group paths
@@ -64,7 +65,7 @@ node src/server.js --config asset-librarian.config.local.json
 
 ## How It Works
 
-The scanner walks each configured root, records file metadata, extracts basic dimensions when possible, infers local theme labels, samples SVG/PNG colors for color-vibe labels and compact palettes, groups visually similar assets from those local signatures, hashes file contents with SHA-256, and writes a static JSON index. The server exposes that index at `/api/index` and serves image files by indexed asset id at `/assets/:id`.
+The scanner walks each configured root, records file metadata, extracts basic dimensions when possible, reads embedded SVG title/description and PNG text metadata, infers local theme labels, samples SVG/PNG colors for color-vibe labels and compact palettes, groups visually similar assets from those local signatures, hashes file contents with SHA-256, and writes a static JSON index. The server exposes that index at `/api/index` and serves image files by indexed asset id at `/assets/:id`.
 
 For a deeper overview, see [docs/architecture.md](docs/architecture.md). Planned improvements live in [ROADMAP.md](ROADMAP.md).
 

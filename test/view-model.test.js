@@ -41,6 +41,11 @@ const index = {
       themes: ["portrait", "character"],
       colorThemes: ["warm", "vivid"],
       palette: ["#d94f70", "#1f8a70"],
+      metadata: {
+        title: "Rose prompt",
+        description: "Soft light portrait",
+        text: [{ key: "parameters", value: "pink rose, macro lens" }]
+      },
       hash: "hash-a",
       path: "P:/AI/Codex/generated_images/rose.png",
       modifiedAt: "2026-06-01T01:00:00.000Z"
@@ -211,6 +216,15 @@ test("createLibraryView filters by inferred color vibe", () => {
 
   const searchView = createLibraryView(index, { query: "vivid", sort: "name" });
   assert.deepEqual(searchView.assets.map((asset) => asset.id), ["a"]);
+});
+
+test("createLibraryView searches embedded asset metadata", () => {
+  const view = createLibraryView(index, {
+    query: "macro lens",
+    sort: "name"
+  });
+
+  assert.deepEqual(view.assets.map((asset) => asset.id), ["a"]);
 });
 
 test("createLibraryView filters and searches browser-local asset notes", () => {
@@ -497,9 +511,15 @@ test("createAssetDetails formats metadata and duplicate context", () => {
     "Themes",
     "Color vibes",
     "Palette",
+    "Metadata",
     "Modified",
     "Hash",
     "Path"
+  ]);
+  assert.deepEqual(details.metadataEntries, [
+    { label: "Title", value: "Rose prompt" },
+    { label: "Description", value: "Soft light portrait" },
+    { label: "parameters", value: "pink rose, macro lens" }
   ]);
 });
 
@@ -610,9 +630,9 @@ test("createAssetCsv exports escaped asset metadata in display order", () => {
   ]);
 
   assert.equal(csv, [
-    "id,name,source,type,sizeBytes,width,height,themes,colorThemes,palette,modifiedAt,relativePath,path,hash",
-    '"a","rose, ""study"".png","Codex",".png","1200","512","768","portrait; character","warm; vivid","#d94f70; #1f8a70","2026-06-01T01:00:00.000Z","flowers/rose.png","P:/AI/Codex/generated_images/rose.png","hash-a"',
-    '"c","mint.svg","Codex",".svg","90","","","logo; vector","cool; green","#1f8a70","2026-05-30T00:00:00.000Z","mint.svg","",""',
+    "id,name,source,type,sizeBytes,width,height,themes,colorThemes,palette,metadata,modifiedAt,relativePath,path,hash",
+    '"a","rose, ""study"".png","Codex",".png","1200","512","768","portrait; character","warm; vivid","#d94f70; #1f8a70","Title: Rose prompt; Description: Soft light portrait; parameters: pink rose, macro lens","2026-06-01T01:00:00.000Z","flowers/rose.png","P:/AI/Codex/generated_images/rose.png","hash-a"',
+    '"c","mint.svg","Codex",".svg","90","","","logo; vector","cool; green","#1f8a70","","2026-05-30T00:00:00.000Z","mint.svg","",""',
     ""
   ].join("\n"));
 });
@@ -643,6 +663,11 @@ test("createAssetManifest exports selected asset metadata as stable JSON", () =>
         themes: ["portrait", "character"],
         colorThemes: ["warm", "vivid"],
         palette: ["#d94f70", "#1f8a70"],
+        metadata: {
+          title: "Rose prompt",
+          description: "Soft light portrait",
+          text: [{ key: "parameters", value: "pink rose, macro lens" }]
+        },
         modifiedAt: "2026-06-01T01:00:00.000Z",
         relativePath: "flowers/rose.png",
         path: "P:/AI/Codex/generated_images/rose.png",
@@ -659,6 +684,11 @@ test("createAssetManifest exports selected asset metadata as stable JSON", () =>
         themes: ["logo", "vector"],
         colorThemes: ["cool", "green"],
         palette: ["#1f8a70"],
+        metadata: {
+          title: "",
+          description: "",
+          text: []
+        },
         modifiedAt: "2026-05-30T00:00:00.000Z",
         relativePath: "mint.svg",
         path: null,

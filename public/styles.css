@@ -949,6 +949,51 @@ button:disabled {
   padding: 10px;
 }
 
+.detail-metadata {
+  display: grid;
+  gap: 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fbfcfb;
+  padding: 12px;
+}
+
+.detail-metadata h3 {
+  font-size: 0.9rem;
+}
+
+.detail-metadata dl {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+}
+
+.detail-metadata div {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: start;
+}
+
+.detail-metadata dt {
+  grid-column: 1 / -1;
+}
+
+.detail-metadata dd {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.detail-metadata button {
+  min-height: 30px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: var(--surface);
+  color: var(--ink);
+  cursor: pointer;
+  padding: 0 10px;
+}
+
 .note-editor {
   display: grid;
   gap: 10px;

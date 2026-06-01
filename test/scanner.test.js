@@ -119,6 +119,34 @@ test("scanLibrary extracts a compact color palette from SVG and PNG data", async
   });
 });
 
+test("scanLibrary extracts embedded SVG and PNG text metadata", async () => {
+  await withTempLibrary(async (dir) => {
+    await writeFile(path.join(dir, "prompt-card.svg"), `<svg xmlns="http://www.w3.org/2000/svg" width="120" height="160"><title>Rose prompt</title><desc>Golden hour portrait &amp; soft light</desc><rect width="120" height="160" fill="#d94f70"/></svg>`);
+    await writeFile(path.join(dir, "prompted.png"), createSolidPng(2, 2, [217, 79, 112, 255], [
+      createPngTextChunk("parameters", "castle garden, cinematic light")
+    ]));
+
+    const index = await scanLibrary({
+      roots: [{ name: "Metadata Demo", path: dir }],
+      generatedAt: "2026-06-01T00:00:00.000Z"
+    });
+
+    const byName = new Map(index.assets.map((asset) => [asset.name, asset]));
+
+    assert.deepEqual(byName.get("prompt-card.svg").metadata, {
+      title: "Rose prompt",
+      description: "Golden hour portrait & soft light",
+      text: []
+    });
+    assert.deepEqual(byName.get("prompted.png").metadata, {
+      title: "",
+      description: "",
+      text: [{ key: "parameters", value: "castle garden, cinematic light" }]
+    });
+    assert.equal(index.summary.metadataAssets, 2);
+  });
+});
+
 test("scanLibrary groups duplicate files by content hash", async () => {
   await withTempLibrary(async (dir) => {
     await writeFile(path.join(dir, "first.svg"), svgA);
@@ -161,7 +189,7 @@ test("scanLibrary groups visually similar non-duplicate assets by local signatur
   });
 });
 
-function createSolidPng(width, height, rgba) {
+function createSolidPng(width, height, rgba, extraChunks = []) {
   const signature = Buffer.from("89504e470d0a1a0a", "hex");
   const ihdr = Buffer.alloc(13);
   ihdr.writeUInt32BE(width, 0);
@@ -189,9 +217,18 @@ function createSolidPng(width, height, rgba) {
   return Buffer.concat([
     signature,
     createPngChunk("IHDR", ihdr),
+    ...extraChunks,
     createPngChunk("IDAT", deflateSync(raw)),
     createPngChunk("IEND", Buffer.alloc(0))
   ]);
+}
+
+function createPngTextChunk(keyword, value) {
+  return createPngChunk("tEXt", Buffer.concat([
+    Buffer.from(keyword, "latin1"),
+    Buffer.from([0]),
+    Buffer.from(value, "latin1")
+  ]));
 }
 
 function createPngChunk(type, data) {

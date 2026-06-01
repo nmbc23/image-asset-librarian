@@ -46,6 +46,8 @@ const SIMILAR_GROUP_COLOR_THEMES = new Set(["warm", "cool", "green", "dark", "li
 const PNG_COLOR_SAMPLE_LIMIT = 256;
 const PNG_COLOR_MAX_PIXELS = 4_000_000;
 const PALETTE_COLOR_LIMIT = 5;
+const METADATA_ENTRY_LIMIT = 12;
+const METADATA_TEXT_LIMIT = 2_000;
 
 const NAMED_COLORS = new Map([
   ["black", "#000000"],
@@ -195,6 +197,10 @@ async function createAssetRecord(root, filePath, extension) {
       width: dimensions.width,
       height: dimensions.height,
       bytes
+    }),
+    metadata: inferAssetMetadata({
+      extension,
+      bytes
     })
   };
 }
@@ -311,6 +317,7 @@ function summarize(assets, duplicates, similarGroups = []) {
     duplicateAssets: duplicates.reduce((sum, group) => sum + group.count, 0),
     similarGroups: similarGroups.length,
     similarAssets: similarGroups.reduce((sum, group) => sum + group.count, 0),
+    metadataAssets: assets.filter(hasEmbeddedMetadata).length,
     reclaimableBytes: duplicates.reduce((sum, group) => sum + group.reclaimableBytes, 0),
     roots: new Set(assets.map((asset) => asset.rootName)).size,
     extensions: countBy(assets, "extension"),
@@ -403,6 +410,33 @@ function inferAssetPalette(asset) {
   return [];
 }
 
+function inferAssetMetadata(asset) {
+  if (asset.extension === ".svg") {
+    return extractSvgMetadata(asset.bytes.toString("utf8"));
+  }
+  if (asset.extension === ".png") {
+    return {
+      title: "",
+      description: "",
+      text: extractPngTextMetadata(asset.bytes)
+    };
+  }
+  return createEmptyMetadata();
+}
+
+function createEmptyMetadata() {
+  return {
+    title: "",
+    description: "",
+    text: []
+  };
+}
+
+function hasEmbeddedMetadata(asset) {
+  const metadata = asset.metadata ?? {};
+  return Boolean(metadata.title || metadata.description || metadata.text?.length);
+}
+
 function createColorPalette(colors) {
   const colorCounts = new Map();
 
@@ -467,6 +501,133 @@ function extractSvgColors(svg) {
   }
 
   return [...colors.values()];
+}
+
+function extractSvgMetadata(svg) {
+  return {
+    title: decodeXmlEntities(extractSvgElementText(svg, "title")),
+    description: decodeXmlEntities(extractSvgElementText(svg, "desc")),
+    text: []
+  };
+}
+
+function extractSvgElementText(svg, elementName) {
+  const match = String(svg ?? "").match(new RegExp(`<${elementName}\\b[^>]*>([\\s\\S]*?)<\\/${elementName}>`, "i"));
+  return normalizeMetadataText(match?.[1]?.replace(/<[^>]+>/g, " ") ?? "");
+}
+
+function decodeXmlEntities(value) {
+  return String(value ?? "")
+    .replaceAll("&amp;", "&")
+    .replaceAll("&lt;", "<")
+    .replaceAll("&gt;", ">")
+    .replaceAll("&quot;", "\"")
+    .replaceAll("&apos;", "'");
+}
+
+function extractPngTextMetadata(bytes) {
+  const entries = [];
+
+  for (const chunk of readPngChunks(bytes)) {
+    if (chunk.type === "tEXt") {
+      const entry = parsePngTextChunk(chunk.data);
+      if (entry) {
+        entries.push(entry);
+      }
+    } else if (chunk.type === "zTXt") {
+      const entry = parsePngCompressedTextChunk(chunk.data);
+      if (entry) {
+        entries.push(entry);
+      }
+    } else if (chunk.type === "iTXt") {
+      const entry = parsePngInternationalTextChunk(chunk.data);
+      if (entry) {
+        entries.push(entry);
+      }
+    }
+
+    if (entries.length >= METADATA_ENTRY_LIMIT) {
+      break;
+    }
+  }
+
+  return entries.slice(0, METADATA_ENTRY_LIMIT);
+}
+
+function parsePngTextChunk(data) {
+  const separatorIndex = data.indexOf(0);
+  if (separatorIndex <= 0) {
+    return null;
+  }
+  return createMetadataEntry(
+    data.subarray(0, separatorIndex).toString("latin1"),
+    data.subarray(separatorIndex + 1).toString("latin1")
+  );
+}
+
+function parsePngCompressedTextChunk(data) {
+  const separatorIndex = data.indexOf(0);
+  if (separatorIndex <= 0 || separatorIndex + 2 > data.length || data[separatorIndex + 1] !== 0) {
+    return null;
+  }
+
+  try {
+    return createMetadataEntry(
+      data.subarray(0, separatorIndex).toString("latin1"),
+      inflateSync(data.subarray(separatorIndex + 2)).toString("latin1")
+    );
+  } catch {
+    return null;
+  }
+}
+
+function parsePngInternationalTextChunk(data) {
+  const keywordEnd = data.indexOf(0);
+  if (keywordEnd <= 0 || keywordEnd + 3 > data.length) {
+    return null;
+  }
+
+  const compressionFlag = data[keywordEnd + 1];
+  const compressionMethod = data[keywordEnd + 2];
+  let offset = keywordEnd + 3;
+  const languageEnd = data.indexOf(0, offset);
+  if (languageEnd < 0) {
+    return null;
+  }
+  offset = languageEnd + 1;
+  const translatedKeywordEnd = data.indexOf(0, offset);
+  if (translatedKeywordEnd < 0) {
+    return null;
+  }
+  offset = translatedKeywordEnd + 1;
+
+  try {
+    const textBytes = compressionFlag === 1 && compressionMethod === 0
+      ? inflateSync(data.subarray(offset))
+      : data.subarray(offset);
+    return createMetadataEntry(
+      data.subarray(0, keywordEnd).toString("latin1"),
+      textBytes.toString("utf8")
+    );
+  } catch {
+    return null;
+  }
+}
+
+function createMetadataEntry(key, value) {
+  const normalizedKey = normalizeMetadataText(key).slice(0, 80);
+  const normalizedValue = normalizeMetadataText(value).slice(0, METADATA_TEXT_LIMIT);
+  if (!normalizedKey || !normalizedValue) {
+    return null;
+  }
+  return {
+    key: normalizedKey,
+    value: normalizedValue
+  };
+}
+
+function normalizeMetadataText(value) {
+  return String(value ?? "").replace(/\s+/g, " ").trim();
 }
 
 function extractPngSampleColors(bytes, width, height) {
@@ -570,6 +731,36 @@ function readPngColorData(bytes) {
   }
 
   return Number.isFinite(png.width) && Number.isFinite(png.height) ? png : null;
+}
+
+function readPngChunks(bytes) {
+  const chunks = [];
+  if (bytes.length < 12 || bytes.toString("ascii", 1, 4) !== "PNG") {
+    return chunks;
+  }
+
+  let offset = 8;
+  while (offset + 8 <= bytes.length) {
+    const length = bytes.readUInt32BE(offset);
+    const type = bytes.toString("ascii", offset + 4, offset + 8);
+    const dataStart = offset + 8;
+    const dataEnd = dataStart + length;
+    if (dataEnd > bytes.length) {
+      return chunks;
+    }
+
+    chunks.push({
+      type,
+      data: bytes.subarray(dataStart, dataEnd)
+    });
+
+    offset = dataEnd + 4;
+    if (type === "IEND") {
+      break;
+    }
+  }
+
+  return chunks;
 }
 
 function readPngPalette(data) {
