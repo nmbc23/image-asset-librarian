@@ -1,5 +1,6 @@
 node_modules/
 data/index.json
+reports/*.md
 asset-librarian.config.local.json
 .logs/
 .chrome-profile/

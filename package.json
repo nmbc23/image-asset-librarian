@@ -4,6 +4,7 @@
   "description": "A fast local gallery and duplicate finder for AI-generated image assets.",
   "type": "module",
   "scripts": {
+    "report": "node src/cli.js report",
     "scan": "node src/cli.js scan",
     "serve": "node src/server.js",
     "start": "node src/server.js",

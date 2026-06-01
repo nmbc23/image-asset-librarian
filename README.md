@@ -57,6 +57,7 @@ node src/server.js --config asset-librarian.config.local.json
 
 - `npm test` runs the Node test suite.
 - `npm run scan` builds `data/index.json` from `asset-librarian.config.json`.
+- `npm run report` writes a duplicate review report to `reports/duplicates.md`.
 - `npm run serve` starts the local gallery at `http://127.0.0.1:4173`.
 
 ## How It Works

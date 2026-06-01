@@ -1,8 +1,9 @@
-import { mkdir, writeFile } from "node:fs/promises";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { loadConfig } from "./config.js";
+import { createDuplicateReport } from "./report.js";
 import { scanLibrary } from "./scanner.js";
 
 const modulePath = fileURLToPath(import.meta.url);
@@ -29,11 +30,26 @@ export async function runCli(argv = process.argv.slice(2)) {
     return;
   }
 
+  if (command === "report") {
+    const indexPath = path.resolve(readFlag(argv, "--index") ?? path.join(projectRoot, "data", "index.json"));
+    const outputPath = path.resolve(readFlag(argv, "--out") ?? path.join(projectRoot, "reports", "duplicates.md"));
+    const index = JSON.parse(await readFile(indexPath, "utf8"));
+    const report = createDuplicateReport(index);
+
+    await mkdir(path.dirname(outputPath), { recursive: true });
+    await writeFile(outputPath, report, "utf8");
+
+    console.log(`Wrote duplicate report to ${outputPath}`);
+    return;
+  }
+
   console.log(`Usage:
   node src/cli.js scan [--config asset-librarian.config.json] [--out data/index.json]
+  node src/cli.js report [--index data/index.json] [--out reports/duplicates.md]
 
 Examples:
   npm run scan
+  npm run report
   node src/cli.js scan --config examples/local.config.json --out data/index.json`);
 }
 
