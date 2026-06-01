@@ -22,6 +22,8 @@ import {
   createAssetProvenanceReport,
   createAssetPromptKeywordReport,
   createAssetReadinessReport,
+  createAssetVisualReview,
+  createAssetVisualReviewList,
   createCurationBackup,
   createDefaultViewState,
   createDuplicateGroupDetails,
@@ -722,6 +724,17 @@ test("createAssetDescription writes a concise local image description", () => {
   );
 });
 
+test("createAssetVisualReview writes a short AI-style image evaluation", () => {
+  assert.equal(
+    createAssetVisualReview(index.assets[0], new Set(["a"])),
+    "AI review: Strong portrait character read with warm, vivid color direction and rose, teal palette. Review before publishing: duplicate file, tiny resolution. Metadata cue: Soft light portrait."
+  );
+  assert.equal(
+    createAssetVisualReview(index.assets[2]),
+    "AI review: Strong logo vector read with cool, green color direction and teal palette. Review before publishing: missing dimensions."
+  );
+});
+
 test("createAssetDetails formats metadata and duplicate context", () => {
   const details = createAssetDetails(index, "a");
 
@@ -730,6 +743,7 @@ test("createAssetDetails formats metadata and duplicate context", () => {
   assert.equal(details.size, "1.2 KB");
   assert.equal(details.dimensions, "512 x 768");
   assert.equal(details.description, "A portrait character image with warm, vivid colors and a rose, teal palette. Metadata suggests: Soft light portrait.");
+  assert.equal(details.visualReview, "AI review: Strong portrait character read with warm, vivid color direction and rose, teal palette. Review before publishing: duplicate file, tiny resolution. Metadata cue: Soft light portrait.");
   assert.equal(details.isDuplicate, true);
   assert.equal(details.duplicateGroup.count, 2);
   assert.equal(details.duplicateGroup.reclaimable, "1.2 KB");
@@ -899,6 +913,24 @@ test("createAssetDescriptionList exports markdown descriptions in display order"
   assert.equal(createAssetDescriptionList([index.assets[0], index.assets[2]]), [
     "- **rose.png**: A portrait character image with warm, vivid colors and a rose, teal palette. Metadata suggests: Soft light portrait.",
     "- **mint.svg**: A logo vector image with cool, green colors and a teal palette.",
+    ""
+  ].join("\n"));
+});
+
+test("createAssetVisualReviewList exports markdown reviews in display order", () => {
+  assert.equal(createAssetVisualReviewList([index.assets[0], index.assets[2]], {
+    generatedAt: "2026-06-02T02:00:00.000Z",
+    label: "selected",
+    duplicateAssetIds: new Set(["a"])
+  }), [
+    "# Image Asset AI Reviews",
+    "",
+    "Generated: 2026-06-02T02:00:00.000Z",
+    "Scope: selected",
+    "Count: 2",
+    "",
+    "- **rose.png**: AI review: Strong portrait character read with warm, vivid color direction and rose, teal palette. Review before publishing: duplicate file, tiny resolution. Metadata cue: Soft light portrait.",
+    "- **mint.svg**: AI review: Strong logo vector read with cool, green color direction and teal palette. Review before publishing: missing dimensions.",
     ""
   ].join("\n"));
 });

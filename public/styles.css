@@ -812,6 +812,47 @@ a:focus-visible {
   padding: 0 8px;
 }
 
+.asset-card .ai-review {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 6px 8px;
+  border: 1px solid rgba(68, 91, 143, 0.22);
+  border-radius: 8px;
+  background: #f2f4f8;
+  padding: 8px;
+}
+
+.asset-card .ai-review strong {
+  grid-column: 1 / -1;
+  color: #445b8f;
+  font-size: 0.68rem;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.asset-card .ai-review span {
+  display: -webkit-box;
+  overflow: hidden;
+  color: var(--ink);
+  font-size: 0.78rem;
+  line-height: 1.35;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
+.asset-card .ai-review button {
+  min-height: 28px;
+  border: 1px solid rgba(68, 91, 143, 0.34);
+  border-radius: 7px;
+  background: rgba(68, 91, 143, 0.1);
+  color: #445b8f;
+  cursor: pointer;
+  font-size: 0.72rem;
+  font-weight: 800;
+  padding: 0 8px;
+}
+
 dl {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1073,7 +1114,8 @@ button:disabled {
   padding: 0 10px;
 }
 
-.suggested-description {
+.suggested-description,
+.drawer-content .ai-review {
   display: grid;
   gap: 10px;
   border: 1px solid rgba(31, 138, 112, 0.24);
@@ -1082,23 +1124,32 @@ button:disabled {
   padding: 12px;
 }
 
-.suggested-description h3 {
+.drawer-content .ai-review {
+  border-color: rgba(68, 91, 143, 0.24);
+  background: #f2f4f8;
+}
+
+.suggested-description h3,
+.drawer-content .ai-review h3 {
   font-size: 0.9rem;
 }
 
-.suggested-description p {
+.suggested-description p,
+.drawer-content .ai-review p {
   color: var(--ink);
   font-size: 0.9rem;
   line-height: 1.45;
 }
 
-.suggested-description div {
+.suggested-description div,
+.drawer-content .ai-review div {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
 }
 
-.suggested-description button {
+.suggested-description button,
+.drawer-content .ai-review button {
   min-height: 32px;
   border: 1px solid rgba(31, 138, 112, 0.35);
   border-radius: 7px;
@@ -1108,6 +1159,12 @@ button:disabled {
   font-size: 0.78rem;
   font-weight: 800;
   padding: 0 10px;
+}
+
+.drawer-content .ai-review button {
+  border-color: rgba(68, 91, 143, 0.34);
+  background: rgba(68, 91, 143, 0.1);
+  color: #445b8f;
 }
 
 .note-editor {

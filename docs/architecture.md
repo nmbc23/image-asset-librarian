@@ -45,6 +45,7 @@ UI responsibilities:
 - Review similar visual groups with thumbnail previews, jump into the matching search query, copy group paths, or copy a Markdown contact sheet for the group.
 - Show compact palette swatches on asset cards and in the detail drawer.
 - Generate concise local image descriptions from indexed visual signals, show them on asset cards, copy them one-by-one, export selected/visible description batches, or save them as local notes.
+- Generate short AI-style visual reviews from indexed theme, color, palette, metadata, and issue signals, then copy them on cards, save them as notes from the detail drawer, or export selected/visible review batches.
 - Generate accessibility-oriented alt text from the same local visual signals, then copy or download selected/visible Markdown alt text lists for publishing workflows.
 - Generate stable suggested filenames from local theme, color, dimension, and source-name signals, then copy or download selected/visible Markdown rename plans without modifying files.
 - Copy or download selected or visible assets as Markdown contact sheets with local preview links, descriptions, paths, dimensions, and file sizes.

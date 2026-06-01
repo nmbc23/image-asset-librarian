@@ -210,6 +210,23 @@ export function createAssetDescription(asset = {}) {
   return `A ${subject} image with ${colorPhrase}${palettePhrase}.${metadataPhrase}`;
 }
 
+export function createAssetVisualReview(asset = {}, duplicateAssetIds = new Set()) {
+  const themes = getAssetThemes(asset);
+  const focus = uniqueStrings(themes.slice(0, 2)).join(" ") || "visual asset";
+  const colorThemes = getDescriptionColorThemes(asset);
+  const colorPhrase = colorThemes.length ? `${colorThemes.join(", ")} color direction` : "an uncategorized color direction";
+  const paletteNames = uniqueStrings(getAssetPalette(asset).slice(0, 2).map(getPaletteColorName));
+  const palettePhrase = paletteNames.length ? ` and ${paletteNames.join(", ")} palette` : "";
+  const reviewIssues = getAssetIssues(asset, duplicateAssetIds).map(formatReviewIssue);
+  const issuePhrase = reviewIssues.length
+    ? ` Review before publishing: ${reviewIssues.join(", ")}.`
+    : " Ready for publishing: no obvious local issues.";
+  const metadataHint = getDescriptionMetadataHint(asset);
+  const metadataPhrase = metadataHint ? ` Metadata cue: ${metadataHint}.` : "";
+
+  return `AI review: Strong ${focus} read with ${colorPhrase}${palettePhrase}.${issuePhrase}${metadataPhrase}`;
+}
+
 export function setAssetNote(assetNotes = {}, assetId, note) {
   const updatedNotes = normalizeAssetNotes(assetNotes);
   const normalizedId = String(assetId ?? "").trim();
@@ -392,6 +409,7 @@ export function createAssetDetails(index, assetId) {
   const metadataEntries = getAssetMetadataEntries(asset);
   const metadataSummary = formatAssetMetadata(asset);
   const description = createAssetDescription(asset);
+  const visualReview = createAssetVisualReview(asset, duplicateGroup ? new Set([assetId]) : new Set());
 
   return {
     id: asset.id,
@@ -403,6 +421,7 @@ export function createAssetDetails(index, assetId) {
     dimensions,
     palette,
     description,
+    visualReview,
     metadataEntries,
     metadataSummary,
     modified: formatDate(asset.modifiedAt),
@@ -689,6 +708,27 @@ export function createAssetDescriptionList(assets) {
     return `- **${escapeMarkdownText(name)}**: ${createAssetDescription(asset)}`;
   });
   return `${lines.join("\n")}${lines.length ? "\n" : ""}`;
+}
+
+export function createAssetVisualReviewList(assets, options = {}) {
+  const reviewAssets = Array.isArray(assets) ? assets : [];
+  const duplicateAssetIds = toAssetIdSet(options.duplicateAssetIds);
+  const lines = [
+    "# Image Asset AI Reviews",
+    "",
+    `Generated: ${options.generatedAt ?? new Date().toISOString()}`,
+    `Scope: ${String(options.label ?? "assets")}`,
+    `Count: ${reviewAssets.length}`,
+    ""
+  ];
+
+  for (const asset of reviewAssets) {
+    const name = asset.name ?? asset.relativePath ?? asset.id ?? "Asset";
+    lines.push(`- **${escapeMarkdownText(name)}**: ${createAssetVisualReview(asset, duplicateAssetIds)}`);
+  }
+
+  lines.push("");
+  return lines.join("\n");
 }
 
 export function createAssetAltText(asset = {}) {
@@ -1493,6 +1533,19 @@ function normalizeTheme(value) {
 
 function normalizeColorTheme(value) {
   return normalizeTheme(value);
+}
+
+function formatReviewIssue(issue = {}) {
+  if (issue.value === "duplicate") {
+    return "duplicate file";
+  }
+  if (issue.value === "missing-dimensions") {
+    return "missing dimensions";
+  }
+  if (issue.value === "tiny-resolution") {
+    return "tiny resolution";
+  }
+  return String(issue.label ?? issue.value ?? "review item").toLowerCase();
 }
 
 function normalizePaletteColor(value) {

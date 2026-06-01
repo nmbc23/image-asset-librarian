@@ -249,6 +249,23 @@ test("suggested image descriptions can be copied or saved as local notes", async
   assert.match(cssSource, /\.suggested-description/);
 });
 
+test("AI visual reviews can be copied from cards and details", async () => {
+  const [appSource, cssSource, viewModelSource] = await Promise.all([
+    readFile(new URL("../public/app.js", import.meta.url), "utf8"),
+    readFile(new URL("../public/styles.css", import.meta.url), "utf8"),
+    readFile(new URL("../public/view-model.js", import.meta.url), "utf8")
+  ]);
+
+  assert.match(viewModelSource, /createAssetVisualReview/);
+  assert.match(appSource, /renderAssetAiReview/);
+  assert.match(appSource, /renderAiReview/);
+  assert.match(appSource, /data-copy-card-review/);
+  assert.match(appSource, /data-copy-visual-review/);
+  assert.match(appSource, /data-save-review-note/);
+  assert.match(appSource, /saveVisualReviewAsNote/);
+  assert.match(cssSource, /\.ai-review/);
+});
+
 test("asset cards show generated image descriptions with copy actions", async () => {
   const [appSource, cssSource] = await Promise.all([
     readFile(new URL("../public/app.js", import.meta.url), "utf8"),
@@ -259,6 +276,19 @@ test("asset cards show generated image descriptions with copy actions", async ()
   assert.match(appSource, /renderAssetCaption/);
   assert.match(appSource, /data-copy-card-description/);
   assert.match(cssSource, /\.asset-caption/);
+});
+
+test("visible and selected AI visual reviews can be copied in batches", async () => {
+  const [appSource, htmlSource] = await Promise.all([
+    readFile(new URL("../public/app.js", import.meta.url), "utf8"),
+    readFile(new URL("../public/index.html", import.meta.url), "utf8")
+  ]);
+
+  assert.match(htmlSource, /id="copy-visible-ai-reviews"/);
+  assert.match(htmlSource, /id="copy-selected-ai-reviews"/);
+  assert.match(appSource, /createAssetVisualReviewList/);
+  assert.match(appSource, /copyVisibleAiReviews/);
+  assert.match(appSource, /copySelectedAiReviews/);
 });
 
 test("visible and selected image descriptions can be copied in batches", async () => {

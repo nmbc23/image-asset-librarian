@@ -10,6 +10,8 @@ import {
   createAssetDescriptionList,
   createAssetEmbedList,
   createAssetDetails,
+  createAssetVisualReview,
+  createAssetVisualReviewList,
   createAssetIssueReport,
   createAssetManifest,
   createAssetNavigation,
@@ -77,6 +79,8 @@ const elements = {
   copySelectedPaths: document.querySelector("#copy-selected-paths"),
   copyVisibleDescriptions: document.querySelector("#copy-visible-descriptions"),
   copySelectedDescriptions: document.querySelector("#copy-selected-descriptions"),
+  copyVisibleAiReviews: document.querySelector("#copy-visible-ai-reviews"),
+  copySelectedAiReviews: document.querySelector("#copy-selected-ai-reviews"),
   copyVisibleAltText: document.querySelector("#copy-visible-alt-text"),
   copySelectedAltText: document.querySelector("#copy-selected-alt-text"),
   downloadVisibleAltText: document.querySelector("#download-visible-alt-text"),
@@ -279,6 +283,8 @@ function bindEvents() {
   elements.copySelectedPaths.addEventListener("click", copySelectedPaths);
   elements.copyVisibleDescriptions.addEventListener("click", copyVisibleDescriptions);
   elements.copySelectedDescriptions.addEventListener("click", copySelectedDescriptions);
+  elements.copyVisibleAiReviews.addEventListener("click", copyVisibleAiReviews);
+  elements.copySelectedAiReviews.addEventListener("click", copySelectedAiReviews);
   elements.copyVisibleAltText.addEventListener("click", copyVisibleAltText);
   elements.copySelectedAltText.addEventListener("click", copySelectedAltText);
   elements.downloadVisibleAltText.addEventListener("click", downloadVisibleAltText);
@@ -491,6 +497,12 @@ function bindEvents() {
       return;
     }
 
+    const cardReviewCopyButton = event.target.closest("[data-copy-card-review]");
+    if (cardReviewCopyButton) {
+      await copyFromButton(cardReviewCopyButton, cardReviewCopyButton.dataset.copyCardReview);
+      return;
+    }
+
     const button = event.target.closest("[data-copy-path]");
     if (!button) {
       return;
@@ -542,6 +554,18 @@ function bindEvents() {
     const descriptionNoteButton = event.target.closest("[data-save-description-note]");
     if (descriptionNoteButton) {
       saveSuggestedDescriptionAsNote(descriptionNoteButton.dataset.saveDescriptionNote);
+      return;
+    }
+
+    const reviewCopyButton = event.target.closest("[data-copy-visual-review]");
+    if (reviewCopyButton) {
+      await copyFromButton(reviewCopyButton, reviewCopyButton.dataset.copyVisualReview);
+      return;
+    }
+
+    const reviewNoteButton = event.target.closest("[data-save-review-note]");
+    if (reviewNoteButton) {
+      saveVisualReviewAsNote(reviewNoteButton.dataset.saveReviewNote);
       return;
     }
 
@@ -642,6 +666,8 @@ function renderWorkflow() {
   elements.copySelectedPaths.disabled = selectedAssetIds.size === 0;
   elements.copyVisibleDescriptions.disabled = !currentView?.assets.length;
   elements.copySelectedDescriptions.disabled = selectedAssetIds.size === 0;
+  elements.copyVisibleAiReviews.disabled = !currentView?.assets.length;
+  elements.copySelectedAiReviews.disabled = selectedAssetIds.size === 0;
   elements.copyVisibleAltText.disabled = !currentView?.assets.length;
   elements.copySelectedAltText.disabled = selectedAssetIds.size === 0;
   elements.downloadVisibleAltText.disabled = !currentView?.assets.length;
@@ -997,6 +1023,7 @@ function renderAssetCard(asset, duplicateAssetIds) {
   const isReview = marks.review.has(asset.id);
   const isSelected = selectedAssetIds.has(asset.id);
   const description = createAssetDescription(asset);
+  const visualReview = createAssetVisualReview(asset, duplicateAssetIds);
   return `
     <article class="asset-card${isSelected ? " selected" : ""}">
       <a class="asset-preview" href="/assets/${encodeURIComponent(asset.id)}" target="_blank" rel="noreferrer">
@@ -1019,6 +1046,7 @@ function renderAssetCard(asset, duplicateAssetIds) {
         </div>
         <p title="${escapeHtml(asset.relativePath)}">${escapeHtml(asset.relativePath)}</p>
         ${renderAssetCaption(description)}
+        ${renderAssetAiReview(visualReview)}
         ${renderAssetPalette(asset)}
         ${renderAssetThemes(asset)}
         ${renderAssetColorThemes(asset)}
@@ -1050,6 +1078,20 @@ function renderAssetCaption(description) {
     <div class="asset-caption" aria-label="Generated image description">
       <span title="${escapeHtml(description)}">${escapeHtml(description)}</span>
       <button type="button" data-copy-card-description="${escapeHtml(description)}">Copy</button>
+    </div>
+  `;
+}
+
+function renderAssetAiReview(review) {
+  if (!review) {
+    return "";
+  }
+
+  return `
+    <div class="ai-review" aria-label="AI visual review">
+      <strong>AI Review</strong>
+      <span title="${escapeHtml(review)}">${escapeHtml(review)}</span>
+      <button type="button" data-copy-card-review="${escapeHtml(review)}">Copy</button>
     </div>
   `;
 }
@@ -1179,6 +1221,7 @@ function renderDetails(details) {
     ${renderDetailPalette(details)}
     ${renderDetailMetadata(details)}
     ${renderSuggestedDescription(details)}
+    ${renderAiReview(details)}
     <section class="note-editor" aria-label="Local asset note">
       <label>
         <span>Local note</span>
@@ -1204,6 +1247,23 @@ function renderSuggestedDescription(details) {
       <div>
         <button type="button" data-copy-description="${escapeHtml(details.description)}">Copy description</button>
         <button type="button" data-save-description-note="${escapeHtml(details.id)}">Save as note</button>
+      </div>
+    </section>
+  `;
+}
+
+function renderAiReview(details) {
+  if (!details.visualReview) {
+    return "";
+  }
+
+  return `
+    <section class="ai-review" aria-label="AI visual review">
+      <h3>AI Review</h3>
+      <p>${escapeHtml(details.visualReview)}</p>
+      <div>
+        <button type="button" data-copy-visual-review="${escapeHtml(details.visualReview)}">Copy review</button>
+        <button type="button" data-save-review-note="${escapeHtml(details.id)}">Save as note</button>
       </div>
     </section>
   `;
@@ -1332,6 +1392,22 @@ async function copyVisibleDescriptions() {
     return;
   }
   await copyFromButton(elements.copyVisibleDescriptions, createAssetDescriptionList(visibleAssets));
+}
+
+async function copySelectedAiReviews() {
+  const selectedAssets = getSelectedAssets();
+  if (!selectedAssets.length) {
+    return;
+  }
+  await copyFromButton(elements.copySelectedAiReviews, createAssetVisualReviewList(selectedAssets, createAiReviewOptions("selected")));
+}
+
+async function copyVisibleAiReviews() {
+  const visibleAssets = currentView?.assets ?? [];
+  if (!visibleAssets.length) {
+    return;
+  }
+  await copyFromButton(elements.copyVisibleAiReviews, createAssetVisualReviewList(visibleAssets, createAiReviewOptions("visible")));
 }
 
 async function copySelectedAltText() {
@@ -1709,6 +1785,14 @@ function createAltTextOptions(label, generatedAt = new Date().toISOString()) {
   };
 }
 
+function createAiReviewOptions(label, generatedAt = new Date().toISOString()) {
+  return {
+    generatedAt,
+    label,
+    duplicateAssetIds: currentView?.duplicateAssetIds
+  };
+}
+
 function createEmbedOptions(label, generatedAt = new Date().toISOString()) {
   return {
     generatedAt,
@@ -1910,6 +1994,18 @@ function saveSuggestedDescriptionAsNote(assetId) {
   }
 
   assetNotes = setAssetNote(assetNotes, assetId, details.description);
+  saveAssetNotes();
+  render();
+  showDetails(assetId);
+}
+
+function saveVisualReviewAsNote(assetId) {
+  const details = createAssetDetails(libraryIndex, assetId);
+  if (!details?.visualReview) {
+    return;
+  }
+
+  assetNotes = setAssetNote(assetNotes, assetId, details.visualReview);
   saveAssetNotes();
   render();
   showDetails(assetId);
