@@ -12,13 +12,15 @@ const SUPPORTED_IMAGE_EXTENSIONS = new Set([
   ".tiff",
   ".webp"
 ]);
+const DEFAULT_BROWSER_FOLDER_ASSET_LIMIT = 2000;
 
 export async function createBrowserFolderIndex(directoryHandle, options = {}) {
   const rootName = String(directoryHandle?.name ?? "Selected folder").trim() || "Selected folder";
   const errors = [];
   const files = [];
+  const maxAssets = getBrowserFolderAssetLimit(options);
 
-  await collectImageFiles(directoryHandle, "", files, errors, options.onProgress);
+  await collectImageFiles(directoryHandle, "", files, errors, options.onProgress, maxAssets);
 
   return createBrowserIndex(rootName, files, errors, options);
 }
@@ -28,8 +30,13 @@ export async function createBrowserFileListIndex(fileList, options = {}) {
   const rootName = getFileListRootName(sourceFiles, options.rootName);
   const errors = [];
   const files = [];
+  const maxAssets = getBrowserFolderAssetLimit(options);
 
   for (const file of sourceFiles) {
+    if (files.length >= maxAssets) {
+      addLimitError(errors, maxAssets);
+      break;
+    }
     const relativePath = getFileListRelativePath(file, rootName);
     const extension = getExtension(file?.name || relativePath);
     if (!SUPPORTED_IMAGE_EXTENSIONS.has(extension)) {
@@ -127,12 +134,16 @@ async function createBrowserIndex(rootName, files, errors, options = {}) {
   };
 }
 
-async function collectImageFiles(directoryHandle, prefix, files, errors, onProgress) {
+async function collectImageFiles(directoryHandle, prefix, files, errors, onProgress, maxAssets) {
   try {
     for await (const [name, handle] of getDirectoryEntries(directoryHandle)) {
+      if (files.length >= maxAssets) {
+        addLimitError(errors, maxAssets);
+        return;
+      }
       const relativePath = prefix ? `${prefix}/${name}` : name;
       if (handle.kind === "directory") {
-        await collectImageFiles(handle, relativePath, files, errors, onProgress);
+        await collectImageFiles(handle, relativePath, files, errors, onProgress, maxAssets);
         continue;
       }
       if (handle.kind !== "file") {
@@ -159,6 +170,22 @@ async function collectImageFiles(directoryHandle, prefix, files, errors, onProgr
   } catch (error) {
     errors.push({ path: prefix || directoryHandle?.name || "", message: error.message });
   }
+}
+
+function getBrowserFolderAssetLimit(options = {}) {
+  const limit = Number(options.maxAssets ?? DEFAULT_BROWSER_FOLDER_ASSET_LIMIT);
+  return Number.isFinite(limit) && limit > 0 ? Math.floor(limit) : DEFAULT_BROWSER_FOLDER_ASSET_LIMIT;
+}
+
+function addLimitError(errors, maxAssets) {
+  if (errors.some((error) => error.code === "browser-folder-limit")) {
+    return;
+  }
+  errors.push({
+    code: "browser-folder-limit",
+    path: "",
+    message: `Stopped after ${maxAssets} image files to keep the browser responsive. Use Scan by path for very large libraries.`
+  });
 }
 
 function getDirectoryEntries(directoryHandle) {

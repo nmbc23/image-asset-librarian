@@ -126,6 +126,15 @@ test("folder scanner placeholder does not expose a machine-specific path", async
   assert.doesNotMatch(htmlSource, /P:\/AI\/Codex\/generated_images/);
 });
 
+test("gallery rendering limits large folders to avoid tab crashes", async () => {
+  const appSource = await readFile(new URL("../public/app.js", import.meta.url), "utf8");
+
+  assert.match(appSource, /GALLERY_RENDER_LIMIT/);
+  assert.match(appSource, /view\.assets\.slice\(0, GALLERY_RENDER_LIMIT\)/);
+  assert.match(appSource, /gallery-limit-notice/);
+  assert.match(appSource, /Refine filters to render fewer cards/);
+});
+
 test("workflow actions are grouped so exports do not overwhelm the first screen", async () => {
   const [htmlSource, cssSource] = await Promise.all([
     readFile(new URL("../public/index.html", import.meta.url), "utf8"),

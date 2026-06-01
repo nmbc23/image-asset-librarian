@@ -177,6 +177,7 @@ const TAG_STORAGE_KEY = "image-asset-librarian:asset-tags:v1";
 const NOTE_STORAGE_KEY = "image-asset-librarian:asset-notes:v1";
 const FILTER_VIEWS_STORAGE_KEY = "image-asset-librarian:filter-views:v1";
 const RECENT_FOLDERS_STORAGE_KEY = "image-asset-librarian:recent-folders:v1";
+const GALLERY_RENDER_LIMIT = 240;
 const state = createDefaultViewState();
 const marks = loadMarks();
 let assetTags = loadAssetTags();
@@ -298,8 +299,9 @@ function applyBrowserIndex(nextIndex) {
   libraryIndex = nextIndex;
   resetViewAfterScan();
   render();
+  const limitError = nextIndex.errors?.find((error) => error.code === "browser-folder-limit");
   elements.status.textContent = nextIndex.assets.length
-    ? `Loaded ${nextIndex.assets.length} asset(s) from ${nextIndex.roots[0]?.name ?? "selected folder"}. Use Scan by path for exact duplicate hashes.`
+    ? `${limitError ? "Loaded first" : "Loaded"} ${nextIndex.assets.length} asset(s) from ${nextIndex.roots[0]?.name ?? "selected folder"}. Use Scan by path for exact duplicate hashes and very large folders.`
     : `No supported image files found in ${nextIndex.roots[0]?.name ?? "selected folder"}`;
 }
 
@@ -1185,6 +1187,8 @@ function renderSimilarGroupPreview(assets = []) {
 }
 
 function renderGallery(view) {
+  const renderedAssets = view.assets.slice(0, GALLERY_RENDER_LIMIT);
+  const hiddenRenderCount = Math.max(view.assets.length - renderedAssets.length, 0);
   elements.resultCount.textContent = `${view.assets.length} assets`;
   elements.filteredSummary.innerHTML = `
     <div><strong>${formatBytes(view.filteredSummary.totalBytes)}</strong><span>shown size</span></div>
@@ -1197,7 +1201,10 @@ function renderGallery(view) {
     <div><strong>${view.filteredSummary.extensions}</strong><span>types shown</span></div>
   `;
   elements.emptyState.hidden = view.assets.length > 0;
-  elements.gallery.innerHTML = view.assets.map((asset) => renderAssetCard(asset, view.duplicateAssetIds)).join("");
+  const limitNotice = hiddenRenderCount
+    ? `<div class="notice gallery-limit-notice">Showing ${renderedAssets.length} of ${view.assets.length} assets. Refine filters to render fewer cards and keep the browser responsive.</div>`
+    : "";
+  elements.gallery.innerHTML = `${limitNotice}${renderedAssets.map((asset) => renderAssetCard(asset, view.duplicateAssetIds)).join("")}`;
 }
 
 function getAssetUrl(asset) {

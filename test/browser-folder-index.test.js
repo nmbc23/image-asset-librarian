@@ -103,6 +103,24 @@ test("createBrowserFileListIndex builds a local index from a directory file inpu
   ]);
 });
 
+test("createBrowserFileListIndex caps very large browser-picked folders", async () => {
+  const files = [
+    createBrowserFile("one.png", "one", "Huge/one.png"),
+    createBrowserFile("two.png", "two", "Huge/two.png"),
+    createBrowserFile("three.png", "three", "Huge/three.png")
+  ];
+
+  const index = await createBrowserFileListIndex(files, {
+    createObjectUrl: (file) => `blob:test/${file.name}`,
+    maxAssets: 2,
+    now: "2026-06-01T00:00:00.000Z"
+  });
+
+  assert.equal(index.summary.totalAssets, 2);
+  assert.deepEqual(index.assets.map((asset) => asset.name), ["one.png", "two.png"]);
+  assert.match(index.errors[0].message, /Stopped after 2 image files/);
+});
+
 test("createBrowserFolderIndex records inaccessible files without aborting the whole scan", async () => {
   const root = createDirectoryHandle("Mixed", [
     createFileHandle("good.png", "good"),
