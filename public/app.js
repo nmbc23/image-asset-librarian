@@ -5,12 +5,14 @@ import {
   createAssetAltTextList,
   createAssetContactSheet,
   createAssetCsv,
+  createAssetDescription,
   createAssetDescriptionList,
   createAssetEmbedList,
   createAssetDetails,
   createAssetIssueReport,
   createAssetManifest,
   createAssetNavigation,
+  createAssetPublishingChecklist,
   createAssetRenamePlan,
   createCurationBackup,
   createDefaultViewState,
@@ -81,6 +83,10 @@ const elements = {
   copySelectedEmbeds: document.querySelector("#copy-selected-embeds"),
   downloadVisibleEmbeds: document.querySelector("#download-visible-embeds"),
   downloadSelectedEmbeds: document.querySelector("#download-selected-embeds"),
+  copyVisiblePublishingChecklist: document.querySelector("#copy-visible-publishing-checklist"),
+  copySelectedPublishingChecklist: document.querySelector("#copy-selected-publishing-checklist"),
+  downloadVisiblePublishingChecklist: document.querySelector("#download-visible-publishing-checklist"),
+  downloadSelectedPublishingChecklist: document.querySelector("#download-selected-publishing-checklist"),
   copyVisibleCsv: document.querySelector("#copy-visible-csv"),
   copySelectedCsv: document.querySelector("#copy-selected-csv"),
   copyVisibleManifest: document.querySelector("#copy-visible-manifest"),
@@ -261,6 +267,10 @@ function bindEvents() {
   elements.copySelectedEmbeds.addEventListener("click", copySelectedEmbeds);
   elements.downloadVisibleEmbeds.addEventListener("click", downloadVisibleEmbeds);
   elements.downloadSelectedEmbeds.addEventListener("click", downloadSelectedEmbeds);
+  elements.copyVisiblePublishingChecklist.addEventListener("click", copyVisiblePublishingChecklist);
+  elements.copySelectedPublishingChecklist.addEventListener("click", copySelectedPublishingChecklist);
+  elements.downloadVisiblePublishingChecklist.addEventListener("click", downloadVisiblePublishingChecklist);
+  elements.downloadSelectedPublishingChecklist.addEventListener("click", downloadSelectedPublishingChecklist);
   elements.copyVisibleCsv.addEventListener("click", copyVisibleCsv);
   elements.copySelectedCsv.addEventListener("click", copySelectedCsv);
   elements.copyVisibleManifest.addEventListener("click", copyVisibleManifest);
@@ -426,6 +436,12 @@ function bindEvents() {
       return;
     }
 
+    const captionCopyButton = event.target.closest("[data-copy-card-description]");
+    if (captionCopyButton) {
+      await copyFromButton(captionCopyButton, captionCopyButton.dataset.copyCardDescription);
+      return;
+    }
+
     const button = event.target.closest("[data-copy-path]");
     if (!button) {
       return;
@@ -587,6 +603,10 @@ function renderWorkflow() {
   elements.copySelectedEmbeds.disabled = selectedAssetIds.size === 0;
   elements.downloadVisibleEmbeds.disabled = !currentView?.assets.length;
   elements.downloadSelectedEmbeds.disabled = selectedAssetIds.size === 0;
+  elements.copyVisiblePublishingChecklist.disabled = !currentView?.assets.length;
+  elements.copySelectedPublishingChecklist.disabled = selectedAssetIds.size === 0;
+  elements.downloadVisiblePublishingChecklist.disabled = !currentView?.assets.length;
+  elements.downloadSelectedPublishingChecklist.disabled = selectedAssetIds.size === 0;
   elements.copyVisibleCsv.disabled = !currentView?.assets.length;
   elements.copySelectedCsv.disabled = selectedAssetIds.size === 0;
   elements.copyVisibleManifest.disabled = !currentView?.assets.length;
@@ -887,6 +907,7 @@ function renderAssetCard(asset, duplicateAssetIds) {
   const isSaved = marks.saved.has(asset.id);
   const isReview = marks.review.has(asset.id);
   const isSelected = selectedAssetIds.has(asset.id);
+  const description = createAssetDescription(asset);
   return `
     <article class="asset-card${isSelected ? " selected" : ""}">
       <a class="asset-preview" href="/assets/${encodeURIComponent(asset.id)}" target="_blank" rel="noreferrer">
@@ -908,6 +929,7 @@ function renderAssetCard(asset, duplicateAssetIds) {
           ${duplicateBadge}
         </div>
         <p title="${escapeHtml(asset.relativePath)}">${escapeHtml(asset.relativePath)}</p>
+        ${renderAssetCaption(description)}
         ${renderAssetPalette(asset)}
         ${renderAssetThemes(asset)}
         ${renderAssetColorThemes(asset)}
@@ -927,6 +949,19 @@ function renderAssetCard(asset, duplicateAssetIds) {
         </div>
       </div>
     </article>
+  `;
+}
+
+function renderAssetCaption(description) {
+  if (!description) {
+    return "";
+  }
+
+  return `
+    <div class="asset-caption" aria-label="Generated image description">
+      <span title="${escapeHtml(description)}">${escapeHtml(description)}</span>
+      <button type="button" data-copy-card-description="${escapeHtml(description)}">Copy</button>
+    </div>
   `;
 }
 
@@ -1290,6 +1325,44 @@ function downloadVisibleEmbeds() {
   downloadEmbedList(visibleAssets, "visible", elements.downloadVisibleEmbeds);
 }
 
+async function copySelectedPublishingChecklist() {
+  const selectedAssets = getSelectedAssets();
+  if (!selectedAssets.length) {
+    return;
+  }
+  await copyFromButton(
+    elements.copySelectedPublishingChecklist,
+    createAssetPublishingChecklist(selectedAssets, createPublishingChecklistOptions("selected"))
+  );
+}
+
+async function copyVisiblePublishingChecklist() {
+  const visibleAssets = currentView?.assets ?? [];
+  if (!visibleAssets.length) {
+    return;
+  }
+  await copyFromButton(
+    elements.copyVisiblePublishingChecklist,
+    createAssetPublishingChecklist(visibleAssets, createPublishingChecklistOptions("visible"))
+  );
+}
+
+function downloadSelectedPublishingChecklist() {
+  const selectedAssets = getSelectedAssets();
+  if (!selectedAssets.length) {
+    return;
+  }
+  downloadPublishingChecklist(selectedAssets, "selected", elements.downloadSelectedPublishingChecklist);
+}
+
+function downloadVisiblePublishingChecklist() {
+  const visibleAssets = currentView?.assets ?? [];
+  if (!visibleAssets.length) {
+    return;
+  }
+  downloadPublishingChecklist(visibleAssets, "visible", elements.downloadVisiblePublishingChecklist);
+}
+
 async function copySelectedCsv() {
   const selectedAssets = getSelectedAssets();
   if (!selectedAssets.length) {
@@ -1387,6 +1460,15 @@ function createEmbedOptions(label, generatedAt = new Date().toISOString()) {
   };
 }
 
+function createPublishingChecklistOptions(label, generatedAt = new Date().toISOString()) {
+  return {
+    generatedAt,
+    label,
+    assetBaseUrl: window.location.origin,
+    duplicateAssetIds: currentView?.duplicateAssetIds
+  };
+}
+
 function downloadAltTextList(assets, label, button) {
   const generatedAt = new Date().toISOString();
   const list = createAssetAltTextList(assets, createAltTextOptions(label, generatedAt));
@@ -1399,6 +1481,13 @@ function downloadEmbedList(assets, label, button) {
   const list = createAssetEmbedList(assets, createEmbedOptions(label, generatedAt));
   const fileName = createExportFileName(`asset-embeds-${label}`, "md", { generatedAt });
   downloadTextFile(button, list, fileName, "text/markdown");
+}
+
+function downloadPublishingChecklist(assets, label, button) {
+  const generatedAt = new Date().toISOString();
+  const checklist = createAssetPublishingChecklist(assets, createPublishingChecklistOptions(label, generatedAt));
+  const fileName = createExportFileName(`asset-publishing-checklist-${label}`, "md", { generatedAt });
+  downloadTextFile(button, checklist, fileName, "text/markdown");
 }
 
 function downloadRenamePlan(assets, label, button) {

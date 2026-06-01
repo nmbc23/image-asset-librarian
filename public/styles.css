@@ -741,6 +741,39 @@ a:focus-visible {
   padding: 7px 9px;
 }
 
+.asset-caption {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 8px;
+  border: 1px solid rgba(31, 138, 112, 0.22);
+  border-radius: 8px;
+  background: #f3f7f5;
+  padding: 8px;
+}
+
+.asset-caption span {
+  display: -webkit-box;
+  overflow: hidden;
+  color: var(--ink);
+  font-size: 0.78rem;
+  line-height: 1.35;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
+.asset-caption button {
+  min-height: 28px;
+  border: 1px solid rgba(31, 138, 112, 0.35);
+  border-radius: 7px;
+  background: rgba(31, 138, 112, 0.1);
+  color: var(--accent);
+  cursor: pointer;
+  font-size: 0.72rem;
+  font-weight: 800;
+  padding: 0 8px;
+}
+
 dl {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

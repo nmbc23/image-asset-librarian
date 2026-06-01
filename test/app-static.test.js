@@ -249,6 +249,18 @@ test("suggested image descriptions can be copied or saved as local notes", async
   assert.match(cssSource, /\.suggested-description/);
 });
 
+test("asset cards show generated image descriptions with copy actions", async () => {
+  const [appSource, cssSource] = await Promise.all([
+    readFile(new URL("../public/app.js", import.meta.url), "utf8"),
+    readFile(new URL("../public/styles.css", import.meta.url), "utf8")
+  ]);
+
+  assert.match(appSource, /createAssetDescription/);
+  assert.match(appSource, /renderAssetCaption/);
+  assert.match(appSource, /data-copy-card-description/);
+  assert.match(cssSource, /\.asset-caption/);
+});
+
 test("visible and selected image descriptions can be copied in batches", async () => {
   const [appSource, htmlSource] = await Promise.all([
     readFile(new URL("../public/app.js", import.meta.url), "utf8"),
@@ -309,6 +321,24 @@ test("visible and selected image embeds can be copied and downloaded", async () 
   assert.match(appSource, /downloadVisibleEmbeds/);
   assert.match(appSource, /downloadSelectedEmbeds/);
   assert.match(appSource, /asset-embeds/);
+});
+
+test("visible and selected publishing checklists can be copied and downloaded", async () => {
+  const [appSource, htmlSource] = await Promise.all([
+    readFile(new URL("../public/app.js", import.meta.url), "utf8"),
+    readFile(new URL("../public/index.html", import.meta.url), "utf8")
+  ]);
+
+  assert.match(htmlSource, /id="copy-visible-publishing-checklist"/);
+  assert.match(htmlSource, /id="copy-selected-publishing-checklist"/);
+  assert.match(htmlSource, /id="download-visible-publishing-checklist"/);
+  assert.match(htmlSource, /id="download-selected-publishing-checklist"/);
+  assert.match(appSource, /createAssetPublishingChecklist/);
+  assert.match(appSource, /copyVisiblePublishingChecklist/);
+  assert.match(appSource, /copySelectedPublishingChecklist/);
+  assert.match(appSource, /downloadVisiblePublishingChecklist/);
+  assert.match(appSource, /downloadSelectedPublishingChecklist/);
+  assert.match(appSource, /asset-publishing-checklist/);
 });
 
 test("selected assets can be bulk marked from the workflow panel", async () => {

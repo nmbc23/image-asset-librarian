@@ -17,6 +17,7 @@ import {
   createAssetCsv,
   createAssetManifest,
   createAssetRenamePlan,
+  createAssetPublishingChecklist,
   createCurationBackup,
   createDefaultViewState,
   createDuplicateGroupDetails,
@@ -940,6 +941,38 @@ test("createAssetEmbedList exports markdown and HTML image snippets", () => {
     "",
     "<img src=\"http://127.0.0.1:4173/assets/a\" alt=\"Portrait character visual with warm, vivid colors and a rose, teal palette. Metadata suggests: Soft light portrait.\" width=\"512\" height=\"768\">",
     "<img src=\"http://127.0.0.1:4173/assets/c\" alt=\"Logo vector visual with cool, green colors and a teal palette.\">",
+    ""
+  ].join("\n"));
+});
+
+test("createAssetPublishingChecklist exports per-asset publishing tasks", () => {
+  assert.equal(createAssetPublishingChecklist([index.assets[0], index.assets[2]], {
+    generatedAt: "2026-06-01T21:00:00.000Z",
+    label: "selected",
+    assetBaseUrl: "http://127.0.0.1:4173",
+    duplicateAssetIds: new Set(["a"])
+  }), [
+    "# Image Asset Publishing Checklist",
+    "",
+    "Generated: 2026-06-01T21:00:00.000Z",
+    "Scope: selected",
+    "Count: 2",
+    "",
+    "## flowers/rose.png",
+    "",
+    "- Suggested filename: `portrait-character-warm-vivid-512x768.png`",
+    "- Alt text: Portrait character visual with warm, vivid colors and a rose, teal palette. Metadata suggests: Soft light portrait.",
+    "- Dimensions: 512 x 768",
+    "- Issues: Duplicate, Tiny resolution",
+    "- Markdown embed: `![Portrait character visual with warm, vivid colors and a rose, teal palette. Metadata suggests: Soft light portrait.](http://127.0.0.1:4173/assets/a)`",
+    "",
+    "## mint.svg",
+    "",
+    "- Suggested filename: `logo-vector-cool-green.svg`",
+    "- Alt text: Logo vector visual with cool, green colors and a teal palette.",
+    "- Dimensions: Unknown dimensions",
+    "- Issues: Missing dimensions",
+    "- Markdown embed: `![Logo vector visual with cool, green colors and a teal palette.](http://127.0.0.1:4173/assets/c)`",
     ""
   ].join("\n"));
 });

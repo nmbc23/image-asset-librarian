@@ -734,7 +734,7 @@ export function createAssetEmbedList(assets, options = {}) {
   for (const asset of embedAssets) {
     const url = createAssetContactSheetUrl(asset, options.assetBaseUrl);
     const altText = createAssetAltText(asset);
-    markdownLines.push(`![${escapeMarkdownImageAlt(altText)}](${url})`);
+    markdownLines.push(createAssetMarkdownEmbed(asset, url));
     htmlLines.push(createAssetHtmlEmbed(asset, url, altText));
   }
 
@@ -754,6 +754,38 @@ export function createAssetEmbedList(assets, options = {}) {
     ...htmlLines,
     ""
   ].join("\n");
+}
+
+export function createAssetPublishingChecklist(assets, options = {}) {
+  const checklistAssets = Array.isArray(assets) ? assets : [];
+  const duplicateAssetIds = toAssetIdSet(options.duplicateAssetIds);
+  const lines = [
+    "# Image Asset Publishing Checklist",
+    "",
+    `Generated: ${options.generatedAt ?? new Date().toISOString()}`,
+    `Scope: ${String(options.label ?? "assets")}`,
+    `Count: ${checklistAssets.length}`
+  ];
+
+  for (const asset of checklistAssets) {
+    const path = asset.relativePath ?? asset.path ?? asset.name ?? asset.id ?? "Asset";
+    const url = createAssetContactSheetUrl(asset, options.assetBaseUrl);
+    const issues = getAssetIssues(asset, duplicateAssetIds).map((issue) => issue.label);
+
+    lines.push(
+      "",
+      `## ${escapeMarkdownText(path)}`,
+      "",
+      `- Suggested filename: \`${escapeMarkdownCodeText(createSuggestedFileName(asset))}\``,
+      `- Alt text: ${escapeMarkdownText(createAssetAltText(asset))}`,
+      `- Dimensions: ${formatPublishingDimensions(asset)}`,
+      `- Issues: ${issues.length ? issues.map(escapeMarkdownText).join(", ") : "None"}`,
+      `- Markdown embed: \`${escapeMarkdownCodeText(createAssetMarkdownEmbed(asset, url))}\``
+    );
+  }
+
+  lines.push("");
+  return lines.join("\n");
 }
 
 export function createSuggestedFileName(asset = {}) {
@@ -1429,6 +1461,10 @@ function formatContactSheetDimensions(asset = {}) {
   return asset.width && asset.height ? `${asset.width}x${asset.height}` : "Unknown dimensions";
 }
 
+function formatPublishingDimensions(asset = {}) {
+  return asset.width && asset.height ? `${asset.width} x ${asset.height}` : "Unknown dimensions";
+}
+
 function formatSuggestedFileNameDimensions(asset = {}) {
   return asset.width && asset.height ? `${asset.width}x${asset.height}` : "";
 }
@@ -1480,6 +1516,10 @@ function createAssetContactSheetUrl(asset = {}, assetBaseUrl = "") {
   const route = `/assets/${encodeURIComponent(asset.id ?? "")}`;
   const base = String(assetBaseUrl ?? "").replace(/\/$/, "");
   return base ? `${base}${route}` : route;
+}
+
+function createAssetMarkdownEmbed(asset = {}, url) {
+  return `![${escapeMarkdownImageAlt(createAssetAltText(asset))}](${url})`;
 }
 
 function createAssetHtmlEmbed(asset = {}, url, altText) {
