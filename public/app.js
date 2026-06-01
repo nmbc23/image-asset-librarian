@@ -2,6 +2,7 @@ import {
   applyMarkBatch,
   applyTagBatch,
   createActiveFilterChips,
+  createAssetContactSheet,
   createAssetCsv,
   createAssetDescriptionList,
   createAssetDetails,
@@ -62,6 +63,8 @@ const elements = {
   copySelectedPaths: document.querySelector("#copy-selected-paths"),
   copyVisibleDescriptions: document.querySelector("#copy-visible-descriptions"),
   copySelectedDescriptions: document.querySelector("#copy-selected-descriptions"),
+  copyVisibleContactSheet: document.querySelector("#copy-visible-contact-sheet"),
+  copySelectedContactSheet: document.querySelector("#copy-selected-contact-sheet"),
   copyVisibleCsv: document.querySelector("#copy-visible-csv"),
   copySelectedCsv: document.querySelector("#copy-selected-csv"),
   copyVisibleManifest: document.querySelector("#copy-visible-manifest"),
@@ -215,6 +218,8 @@ function bindEvents() {
   elements.copySelectedPaths.addEventListener("click", copySelectedPaths);
   elements.copyVisibleDescriptions.addEventListener("click", copyVisibleDescriptions);
   elements.copySelectedDescriptions.addEventListener("click", copySelectedDescriptions);
+  elements.copyVisibleContactSheet.addEventListener("click", copyVisibleContactSheet);
+  elements.copySelectedContactSheet.addEventListener("click", copySelectedContactSheet);
   elements.copyVisibleCsv.addEventListener("click", copyVisibleCsv);
   elements.copySelectedCsv.addEventListener("click", copySelectedCsv);
   elements.copyVisibleManifest.addEventListener("click", copyVisibleManifest);
@@ -505,6 +510,8 @@ function renderWorkflow() {
   elements.copySelectedPaths.disabled = selectedAssetIds.size === 0;
   elements.copyVisibleDescriptions.disabled = !currentView?.assets.length;
   elements.copySelectedDescriptions.disabled = selectedAssetIds.size === 0;
+  elements.copyVisibleContactSheet.disabled = !currentView?.assets.length;
+  elements.copySelectedContactSheet.disabled = selectedAssetIds.size === 0;
   elements.copyVisibleCsv.disabled = !currentView?.assets.length;
   elements.copySelectedCsv.disabled = selectedAssetIds.size === 0;
   elements.copyVisibleManifest.disabled = !currentView?.assets.length;
@@ -1095,6 +1102,22 @@ async function copyVisibleDescriptions() {
   await copyFromButton(elements.copyVisibleDescriptions, createAssetDescriptionList(visibleAssets));
 }
 
+async function copySelectedContactSheet() {
+  const selectedAssets = getSelectedAssets();
+  if (!selectedAssets.length) {
+    return;
+  }
+  await copyFromButton(elements.copySelectedContactSheet, createAssetContactSheet(selectedAssets, createContactSheetOptions()));
+}
+
+async function copyVisibleContactSheet() {
+  const visibleAssets = currentView?.assets ?? [];
+  if (!visibleAssets.length) {
+    return;
+  }
+  await copyFromButton(elements.copyVisibleContactSheet, createAssetContactSheet(visibleAssets, createContactSheetOptions()));
+}
+
 async function copySelectedCsv() {
   const selectedAssets = getSelectedAssets();
   if (!selectedAssets.length) {
@@ -1135,6 +1158,12 @@ function createManifestOptions(label) {
     assetTags,
     assetNotes,
     duplicateAssetIds: currentView?.duplicateAssetIds
+  };
+}
+
+function createContactSheetOptions() {
+  return {
+    assetBaseUrl: window.location.origin
   };
 }
 

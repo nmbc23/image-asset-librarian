@@ -565,6 +565,40 @@ export function createAssetDescriptionList(assets) {
   return `${lines.join("\n")}${lines.length ? "\n" : ""}`;
 }
 
+export function createAssetContactSheet(assets, options = {}) {
+  const sheetAssets = Array.isArray(assets) ? assets : [];
+  const lines = [
+    "# Image Asset Contact Sheet",
+    "",
+    `Generated: ${options.generatedAt ?? new Date().toISOString()}`,
+    `Count: ${sheetAssets.length}`,
+    "",
+    "| Preview | Asset | Description | Details |",
+    "| --- | --- | --- | --- |"
+  ];
+
+  for (const asset of sheetAssets) {
+    const name = asset.name ?? asset.relativePath ?? asset.id ?? "Asset";
+    const path = asset.relativePath ?? asset.path ?? asset.id ?? "";
+    const dimensions = formatContactSheetDimensions(asset);
+    const details = [asset.rootName, asset.extension, dimensions, formatBytes(asset.sizeBytes)]
+      .filter(Boolean)
+      .map(escapeMarkdownTableText)
+      .join(" · ");
+
+    const cells = [
+      `![${escapeMarkdownImageAlt(name)}](${createAssetContactSheetUrl(asset, options.assetBaseUrl)})`,
+      `**${escapeMarkdownTableText(name)}**${path ? `<br>\`${escapeMarkdownCodeText(path)}\`` : ""}`,
+      escapeMarkdownTableText(createAssetDescription(asset)),
+      details
+    ];
+    lines.push(`| ${cells.join(" | ")} |`);
+  }
+
+  lines.push("");
+  return lines.join("\n");
+}
+
 export function createAssetCsv(assets) {
   const columns = [
     ["id", (asset) => asset.id],
@@ -1089,6 +1123,28 @@ function formatCsvCell(value) {
 
 function escapeMarkdownText(value) {
   return String(value ?? "").replaceAll("\\", "\\\\").replaceAll("*", "\\*").replaceAll("_", "\\_").replaceAll("`", "\\`");
+}
+
+function escapeMarkdownTableText(value) {
+  return escapeMarkdownText(value).replaceAll("|", "\\|").replace(/\s+/g, " ").trim();
+}
+
+function escapeMarkdownCodeText(value) {
+  return String(value ?? "").replaceAll("`", "'").replaceAll("|", "\\|").trim();
+}
+
+function escapeMarkdownImageAlt(value) {
+  return String(value ?? "").replaceAll("[", "(").replaceAll("]", ")").replace(/\s+/g, " ").trim();
+}
+
+function formatContactSheetDimensions(asset = {}) {
+  return asset.width && asset.height ? `${asset.width}x${asset.height}` : "Unknown dimensions";
+}
+
+function createAssetContactSheetUrl(asset = {}, assetBaseUrl = "") {
+  const route = `/assets/${encodeURIComponent(asset.id ?? "")}`;
+  const base = String(assetBaseUrl ?? "").replace(/\/$/, "");
+  return base ? `${base}${route}` : route;
 }
 
 function summarizeAssets(assets, duplicateAssetIds, savedAssetIds, reviewAssetIds, assetTags = {}, assetNotes = {}) {

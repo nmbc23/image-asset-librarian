@@ -214,6 +214,19 @@ test("visible and selected image descriptions can be copied in batches", async (
   assert.match(appSource, /copySelectedDescriptions/);
 });
 
+test("visible and selected contact sheets can be copied as markdown", async () => {
+  const [appSource, htmlSource] = await Promise.all([
+    readFile(new URL("../public/app.js", import.meta.url), "utf8"),
+    readFile(new URL("../public/index.html", import.meta.url), "utf8")
+  ]);
+
+  assert.match(htmlSource, /id="copy-visible-contact-sheet"/);
+  assert.match(htmlSource, /id="copy-selected-contact-sheet"/);
+  assert.match(appSource, /createAssetContactSheet/);
+  assert.match(appSource, /copyVisibleContactSheet/);
+  assert.match(appSource, /copySelectedContactSheet/);
+});
+
 test("selected assets can be bulk marked from the workflow panel", async () => {
   const [appSource, htmlSource] = await Promise.all([
     readFile(new URL("../public/app.js", import.meta.url), "utf8"),
