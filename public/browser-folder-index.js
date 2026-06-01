@@ -15,6 +15,8 @@ export async function createBrowserFolderIndex(directoryHandle, options = {}) {
   const rootName = String(directoryHandle?.name ?? "Selected folder").trim() || "Selected folder";
   const errors = [];
   const files = [];
+  const hashFiles = Boolean(options.hashFiles);
+  const readDimensions = Boolean(options.readImageDimensions) || typeof options.readDimensions === "function";
 
   await collectImageFiles(directoryHandle, "", files, errors, options.onProgress);
 
@@ -28,9 +30,11 @@ export async function createBrowserFolderIndex(directoryHandle, options = {}) {
     });
 
     const objectUrl = (options.createObjectUrl ?? defaultCreateObjectUrl)(entry.file);
-    const hash = await digestFile(entry.file);
-    const dimensions = await safeReadDimensions(entry.file, objectUrl, entry.extension, entry.relativePath, options.readDimensions);
-    const assetId = (await digestText(`${entry.relativePath}:${hash}`)).slice(0, 20);
+    const hash = hashFiles ? await safeDigestFile(entry.file, entry.relativePath, errors) : null;
+    const dimensions = readDimensions
+      ? await safeReadDimensions(entry.file, objectUrl, entry.extension, entry.relativePath, options.readDimensions)
+      : { width: null, height: null };
+    const assetId = (await digestText(`${entry.relativePath}:${entry.file.size}:${entry.file.lastModified ?? ""}:${hash ?? ""}`)).slice(0, 20);
 
     assets.push({
       id: assetId,
@@ -204,13 +208,35 @@ async function digestFile(file) {
   return digestBuffer(await file.arrayBuffer());
 }
 
+async function safeDigestFile(file, relativePath, errors) {
+  try {
+    return await digestFile(file);
+  } catch (error) {
+    errors.push({ path: relativePath, message: `Could not hash file: ${error.message}` });
+    return null;
+  }
+}
+
 async function digestText(value) {
   return digestBuffer(new TextEncoder().encode(value));
 }
 
 async function digestBuffer(buffer) {
+  if (!globalThis.crypto?.subtle) {
+    return digestBufferFallback(buffer);
+  }
   const digest = await crypto.subtle.digest("SHA-256", buffer);
   return [...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, "0")).join("");
+}
+
+function digestBufferFallback(buffer) {
+  const bytes = new Uint8Array(buffer);
+  let hash = 2166136261;
+  for (const byte of bytes) {
+    hash ^= byte;
+    hash = Math.imul(hash, 16777619);
+  }
+  return hash.toString(16).padStart(8, "0");
 }
 
 function createDuplicateGroups(assets) {

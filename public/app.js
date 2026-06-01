@@ -225,6 +225,9 @@ async function chooseFolderFromBrowser() {
     elements.status.textContent = `Indexing ${directoryHandle.name}...`;
     const nextIndex = await createBrowserFolderIndex(directoryHandle, {
       onProgress: (progress) => {
+        if (progress.phase === "collecting") {
+          elements.status.textContent = `Found ${progress.scanned} image file(s) in ${directoryHandle.name}`;
+        }
         if (progress.phase === "indexing") {
           elements.status.textContent = `Indexing ${directoryHandle.name}: ${progress.scanned}/${progress.total}`;
         }
@@ -236,7 +239,9 @@ async function chooseFolderFromBrowser() {
     libraryIndex = nextIndex;
     resetViewAfterScan();
     render();
-    elements.status.textContent = `Loaded ${nextIndex.assets.length} asset(s) from ${directoryHandle.name}`;
+    elements.status.textContent = nextIndex.assets.length
+      ? `Loaded ${nextIndex.assets.length} asset(s) from ${directoryHandle.name}. Use Scan by path for exact duplicate hashes.`
+      : `No supported image files found in ${directoryHandle.name}`;
   } catch (error) {
     if (error.name === "AbortError") {
       elements.status.textContent = "Folder selection cancelled";

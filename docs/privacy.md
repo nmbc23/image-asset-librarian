@@ -35,7 +35,7 @@ The current app does not make external network requests. Browser requests are lo
 - `/api/scan`
 - Static files from `public/`
 
-The "Choose folder" workflow uses browser file APIs instead of a network upload. The server-backed "Scan by path" workflow calls only the local `/api/scan` route.
+The "Choose folder" workflow uses browser file APIs instead of a network upload, and it avoids full-file hashing by default so large folders can render quickly. The server-backed "Scan by path" workflow calls only the local `/api/scan` route.
 
 ## Future AI Features
 

@@ -29,9 +29,9 @@ Try this path through the app:
 
 The sample library proves the app works without publishing private local paths. It is small on purpose: it should explain the workflow, not pretend to be a full production asset archive.
 
-A real library starts when you click "Choose folder" and pick an image folder. That browser-picked view is local and temporary: it creates preview URLs for the current browser session, but it does not reveal absolute filesystem paths or update `data/index.json`.
+A real library starts when you click "Choose folder" and pick an image folder. That browser-picked view is local, temporary, and optimized to appear quickly: it creates preview URLs for the current browser session, but it does not reveal absolute filesystem paths or update `data/index.json`.
 
-Use "Scan by path" or `asset-librarian.config.local.json` when you want the Node server to write a persistent index. Recent typed folder paths are saved only in browser local storage. The generated `data/index.json` can include absolute paths and embedded prompt metadata, so it is ignored by git.
+Use "Scan by path" or `asset-librarian.config.local.json` when you want the Node server to write a persistent index with exact duplicate hashes and dimensions. Recent typed folder paths are saved only in browser local storage. The generated `data/index.json` can include absolute paths and embedded prompt metadata, so it is ignored by git.
 
 ## Local Rules, Not Cloud AI
 

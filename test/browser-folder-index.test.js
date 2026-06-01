@@ -15,6 +15,7 @@ test("createBrowserFolderIndex builds a local index from a picked directory hand
 
   const progressEvents = [];
   const index = await createBrowserFolderIndex(root, {
+    hashFiles: true,
     createObjectUrl: (file) => `blob:test/${file.name}`,
     readDimensions: async (file) => file.name.endsWith(".svg")
       ? { width: 900, height: 520 }
@@ -39,6 +40,28 @@ test("createBrowserFolderIndex builds a local index from a picked directory hand
   assert.equal(index.duplicates[0].assetIds.length, 2);
   assert.ok(index.similarGroups.length >= 1);
   assert.ok(progressEvents.some((event) => event.phase === "indexing"));
+});
+
+test("createBrowserFolderIndex renders browser-picked folders without reading every file byte by default", async () => {
+  const root = createDirectoryHandle("Fast", [
+    createFileHandle("large.png", "large", {
+      arrayBuffer: async () => {
+        throw new Error("byte read should not be required for quick gallery mode");
+      }
+    })
+  ]);
+
+  const index = await createBrowserFolderIndex(root, {
+    createObjectUrl: (file) => `blob:test/${file.name}`,
+    now: "2026-06-01T00:00:00.000Z"
+  });
+
+  assert.equal(index.summary.totalAssets, 1);
+  assert.equal(index.summary.duplicateGroups, 0);
+  assert.equal(index.assets[0].hash, null);
+  assert.equal(index.assets[0].width, null);
+  assert.equal(index.assets[0].height, null);
+  assert.match(index.assets[0].objectUrl, /^blob:test\//);
 });
 
 test("createBrowserFolderIndex records inaccessible files without aborting the whole scan", async () => {
@@ -88,6 +111,9 @@ function createFileHandle(name, content, options = {}) {
         lastModified: options.lastModified ?? 1_700_000_000_000,
         type: options.type ?? "",
         async arrayBuffer() {
+          if (options.arrayBuffer) {
+            return options.arrayBuffer();
+          }
           return bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength);
         }
       };

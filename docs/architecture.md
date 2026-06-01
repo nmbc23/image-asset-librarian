@@ -31,9 +31,9 @@ The server is intentionally small and uses Node.js built-ins only.
 
 ## Browser Folder Picker
 
-`public/browser-folder-index.js` supports the "Choose folder" workflow in browsers with the File System Access API. It reads the selected directory handle in the browser, filters supported image files, hashes file contents with Web Crypto, creates browser object URLs for previews, detects exact duplicate hashes, and returns the same index shape used by the server-backed scanner.
+`public/browser-folder-index.js` supports the "Choose folder" workflow in browsers with the File System Access API. It reads the selected directory handle in the browser, filters supported image files, creates browser object URLs for previews, and returns the same index shape used by the server-backed scanner.
 
-This picker does not expose absolute filesystem paths and does not update `data/index.json`. The server-backed "Scan by path" fallback remains available when users want a persistent index file.
+This picker is optimized for fast first render, so it does not hash every file or read every image dimension by default. It also does not expose absolute filesystem paths and does not update `data/index.json`. The server-backed "Scan by path" fallback remains available when users want a persistent index file with exact duplicate hashes and dimensions.
 
 ## Browser UI
 
