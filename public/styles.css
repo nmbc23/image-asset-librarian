@@ -480,6 +480,44 @@ a:focus-visible {
   margin-bottom: 10px;
 }
 
+.similar-preview {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  align-items: stretch;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.similar-preview-tile,
+.similar-preview-more {
+  display: grid;
+  min-width: 0;
+  aspect-ratio: 1;
+  place-items: center;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background:
+    linear-gradient(45deg, #e7eceb 25%, transparent 25%),
+    linear-gradient(-45deg, #e7eceb 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #e7eceb 75%),
+    linear-gradient(-45deg, transparent 75%, #e7eceb 75%);
+  background-color: #f8faf9;
+  background-position: 0 0, 0 8px, 8px -8px, -8px 0;
+  background-size: 16px 16px;
+}
+
+.similar-preview-tile img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.similar-preview-more {
+  color: var(--accent);
+  font-weight: 900;
+}
+
 .duplicate-group ul,
 .similar-group ul {
   display: grid;

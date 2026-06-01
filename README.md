@@ -11,7 +11,7 @@ A zero-dependency local gallery for AI-generated image folders. It scans one or 
 - Embedded SVG/PNG text metadata extraction for prompt/title search, detail inspection, suggested descriptions, CSV export, and JSON manifests
 - Saved and review marks stored in your browser, with batch marking, marks-only backup/restore, full curation backup/restore, selected/visible path, description, alt text, Markdown/HTML image embeds, publishing checklists, contact sheet, CSV, curation-aware JSON manifest exports, safe Markdown rename plans with suggested filenames, Markdown library health reports, Markdown workflow reports that include local tags and notes, and Markdown asset issue reports for duplicate/missing/tiny files, with key reports/backups available as copyable text or downloadable files
 - Duplicate groups with reclaimable storage estimates, suggested keep files, and copy actions for full groups or cleanup candidates
-- Similar visual groups built from local themes, orientation, color vibes, and dominant palette colors, with one-click filtering and copyable group paths
+- Similar visual groups built from local themes, orientation, color vibes, and dominant palette colors, with thumbnail previews, one-click filtering, copyable group paths, and copyable Markdown contact sheets
 - No database and no external services
 - Public-repo friendly sample library and config
 

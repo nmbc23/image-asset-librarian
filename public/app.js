@@ -358,6 +358,15 @@ function bindEvents() {
       return;
     }
 
+    const contactSheetButton = event.target.closest("[data-copy-similar-contact-sheet]");
+    if (contactSheetButton) {
+      await copySimilarGroupContactSheet(
+        contactSheetButton,
+        Number.parseInt(contactSheetButton.dataset.copySimilarContactSheet, 10)
+      );
+      return;
+    }
+
     const copyButton = event.target.closest("[data-copy-similar-group]");
     if (!copyButton) {
       return;
@@ -874,7 +883,9 @@ function renderSimilarGroups(index) {
           <div class="similar-actions">
             <button type="button" data-set-similar-query="${escapeHtml(details.query)}">Show group</button>
             <button type="button" data-copy-similar-group="${groupIndex}">Copy group paths</button>
+            <button type="button" data-copy-similar-contact-sheet="${groupIndex}">Copy contact sheet</button>
           </div>
+          ${renderSimilarGroupPreview(details.assets)}
           <ul>
             ${details.assets.map((asset) => `<li>${escapeHtml(asset.relativePath)} <span>${escapeHtml(asset.rootName)}</span></li>`).join("")}
           </ul>
@@ -882,6 +893,26 @@ function renderSimilarGroups(index) {
       `;
     })
     .join("");
+}
+
+function renderSimilarGroupPreview(assets = []) {
+  const previewAssets = assets.slice(0, 4);
+  if (!previewAssets.length) {
+    return "";
+  }
+
+  const hiddenCount = Math.max(assets.length - previewAssets.length, 0);
+
+  return `
+    <div class="similar-preview" aria-label="Similar asset thumbnails">
+      ${previewAssets.map((asset) => `
+        <a class="similar-preview-tile" href="/assets/${encodeURIComponent(asset.id)}" target="_blank" rel="noreferrer" title="${escapeHtml(asset.relativePath ?? asset.name)}">
+          <img loading="lazy" src="/assets/${encodeURIComponent(asset.id)}" alt="${escapeHtml(asset.name)}">
+        </a>
+      `).join("")}
+      ${hiddenCount ? `<span class="similar-preview-more">+${hiddenCount}</span>` : ""}
+    </div>
+  `;
 }
 
 function renderGallery(view) {
@@ -1629,6 +1660,15 @@ async function copySimilarGroupPaths(button, groupIndex) {
   }
   const details = createSimilarGroupDetails(libraryIndex, group);
   await copyFromButton(button, details.pathList);
+}
+
+async function copySimilarGroupContactSheet(button, groupIndex) {
+  const group = libraryIndex?.similarGroups?.[groupIndex];
+  if (!group) {
+    return;
+  }
+  const details = createSimilarGroupDetails(libraryIndex, group);
+  await copyFromButton(button, createAssetContactSheet(details.assets, createContactSheetOptions()));
 }
 
 async function copyWorkflowReport() {

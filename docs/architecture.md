@@ -42,7 +42,7 @@ UI responsibilities:
 - Store named filter views in browser local storage so common curation workflows can be reapplied quickly.
 - Use source, file-type, resolution, asset issue, inferred theme, and color-vibe breakdowns as quick filter controls.
 - Copy or download a Markdown asset issue report that groups duplicate, missing-dimension, and tiny-resolution files for cleanup planning.
-- Review similar visual groups and jump into the matching search query.
+- Review similar visual groups with thumbnail previews, jump into the matching search query, copy group paths, or copy a Markdown contact sheet for the group.
 - Show compact palette swatches on asset cards and in the detail drawer.
 - Generate concise local image descriptions from indexed visual signals, show them on asset cards, copy them one-by-one, export selected/visible description batches, or save them as local notes.
 - Generate accessibility-oriented alt text from the same local visual signals, then copy or download selected/visible Markdown alt text lists for publishing workflows.

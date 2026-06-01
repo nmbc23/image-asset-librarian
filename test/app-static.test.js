@@ -373,6 +373,20 @@ test("similar asset groups are exposed as a workflow panel", async () => {
   assert.match(cssSource, /\.similar-group/);
 });
 
+test("similar asset groups show thumbnails and copy contact sheets", async () => {
+  const [appSource, cssSource] = await Promise.all([
+    readFile(new URL("../public/app.js", import.meta.url), "utf8"),
+    readFile(new URL("../public/styles.css", import.meta.url), "utf8")
+  ]);
+
+  assert.match(appSource, /renderSimilarGroupPreview/);
+  assert.match(appSource, /data-copy-similar-contact-sheet/);
+  assert.match(appSource, /copySimilarGroupContactSheet/);
+  assert.match(appSource, /createAssetContactSheet/);
+  assert.match(cssSource, /\.similar-preview/);
+  assert.match(cssSource, /\.similar-preview-tile/);
+});
+
 test("visible and selected asset metadata can be copied as CSV", async () => {
   const [appSource, htmlSource] = await Promise.all([
     readFile(new URL("../public/app.js", import.meta.url), "utf8"),
